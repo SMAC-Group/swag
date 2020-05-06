@@ -1,0 +1,228 @@
+require(caret)
+require(doParallel)
+
+
+## Meta parameters
+q0 <- .05 # quantile for screening
+dmax <- 8 # max model size (Sam stops at models with 10 predictors)
+mod_max <- 4e4 # model explored at each step
+
+
+# data storage
+CVs <- vector("list",dmax)
+IDs <- vector("list",dmax)
+VarMat <- vector("list",dmax)
+set.seed(163L)
+
+graine <- sample.int(1e6,dmax)
+
+##
+
+
+# Initial step: (dimension 1)
+# EXAMPLE FOR D=1
+cv_errors <- vector("numeric",ncol(x_train))
+nc = detectCores()
+cl <- makeCluster(nc)
+registerDoParallel(cl)
+
+trctrl <- trainControl(method = "repeatedcv", number = 10, repeats = 1) #10 fold CV repeated 10 times as PANNING
+
+cv_errors <- foreach(i = seq_along(cv_errors), .combine = c, .packages=c("caret")) %dopar% {
+  seed <- graine[1] + i
+  X <- as.matrix(x_train[,i])
+  y <- as.factor(y_train)
+  breast_1 = data.frame(y,X)
+  obj = train(y ~., data = breast_1, method = "svmLinear", trControl=trctrl, preProcess = c("center", "scale"),tuneLength = 10)
+  cv_errors = 1 - max(obj$results$Accuracy)
+}
+stopCluster(cl)
+
+CVs[[1]] <- cv_errors
+VarMat[[1]] <- seq_along(cv_errors)
+
+cv_errors <- cv_errors[!is.na(cv_errors)]
+
+IDs[[1]] <- which(cv_errors <= quantile(cv_errors,q0))
+
+save(CVs,file="CVs_svml_metera.rda")
+save(IDs,file="IDs_svml_metera.rda")
+save(VarMat,file="VarMat_svml_metera.rda") #each row of VarMat gives me the tested regressors (at most 40000)
+id_screening <- IDs[[1]]
+
+
+# Dimension d >= 2
+
+for(d in 2:dmax){
+  
+  # cv0 <- cv1
+  idRow <- IDs[[d-1]]
+  if(d==2){
+    idVar <- VarMat[[d-1]][idRow]
+    nrv <- length(idVar)
+  }else{
+    idVar <- VarMat[[d-1]][idRow,]
+    nrv <- nrow(idVar)
+  }
+  # build all possible 
+  A <- matrix(nr=nrv*length(id_screening),nc=d)
+  A[,1:(d-1)] <- kronecker(cbind(rep(1,length(id_screening))),idVar)
+  A[,d] <- rep(id_screening,each=nrv)
+  B <- unique(t(apply(A,1,sort)))
+  id_ndup <- which(apply(B,1,anyDuplicated) == 0)
+  var_mat <- B[id_ndup,]
+  rm(list=c("A","B"))
+  
+  if(nrow(var_mat)>mod_max){
+    set.seed(graine[d]+1)
+    VarMat[[d]] <- var_mat[sample.int(nrow(var_mat),mod_max),]
+  }else{
+    VarMat[[d]] <- var_mat
+  }
+  
+  var_mat <- VarMat[[d]]
+  
+  cv_errors <- rep(NA,nrow(var_mat))
+  nc = detectCores()
+  cl <- makeCluster(nc)
+  registerDoParallel(cl)
+  
+  trctrl <- trainControl(method = "repeatedcv", number = 10, repeats = 1) #10 fold CV repeated 10 times as PANNING
+
+  cv_errors <- foreach(i = seq_along(cv_errors), .combine = c, .packages=c("caret")) %dopar% {
+    rc <- var_mat[i,]
+    seed <- graine[1] + i
+    X <- as.matrix(x_train[,rc])
+    y <- as.factor(y_train)
+    breast_1 = data.frame(y,X)
+    obj = train(y ~., data = breast_1, method = "svmLinear", trControl=trctrl, preProcess = c("center", "scale"),tuneLength = 10)
+    cv_errors = 1 - max(obj$results$Accuracy)
+  }
+  stopCluster(cl)
+  
+  
+  attr(cv_errors,"rng") <- NULL
+  
+  CVs[[d]] <- cv_errors
+  cv1 <- quantile(cv_errors,probs=q0,na.rm=T)
+  IDs[[d]] <- which(cv_errors<=cv1)
+  
+  save(CVs,file="CVs_svml_metera.rda")
+  save(IDs,file="IDs_svml_metera.rda")
+  save(VarMat,file="VarMat_svml_metera.rda")
+  print(d)
+}
+
+# Graph of CV errors
+
+m_vector <- sapply(CVs, function(x) summary(x)[4])
+
+l_vector <- sapply(CVs, function(x) summary(x)[1])
+
+u_vector <- sapply(CVs, function(x) summary(x)[6])
+
+plot(1:length(CVs),m_vector,main = "Average CV Errors Hamming",ylab = "Average cv-error",xlab = "Model Dimension")
+
+# Rule thumb: q0 either 0.05 or 0.01 (better for selection 0.01)
+
+# Range graph of Panning solutions
+
+u <- 6 #upper model size 
+
+q0 <- 0.01
+
+
+cv_target <- quantile(CVs[[u]],probs=q0,na.rm=T)
+
+
+l <- ifelse(l_vector <= cv_target, 1,0) #lower model size
+
+l <- match(1,l) #gives you first match
+
+install.packages("plotrix")
+
+require(plotrix)
+
+plotCI(1:length(CVs), m_vector, ui=u_vector, li=l_vector, scol = "grey", col="red", pch = 16, main = "Ranges 10-fold CV Misclassification Errors",ylab = "Range CV Error",xlab = "Model Size")
+
+plotCI(1:length(CVs), m_vector, ui=u_vector, li=l_vector, scol = "grey", col="red", pch = 16, main = "Set of Highly Predictive Models - III Cartesian Quadrant",ylab = "Range CV Error",xlab = "Model Size")
+abline(v = u , col="blue",lwd=2)
+abline(h = cv_target, col="blue",lwd=2)
+
+# Vector of dimention of the model selected 
+dim_model = l:u
+
+### Gaetan functions
+
+# Find the index of model selected and number of models in the chosen configuration
+
+source("mod_ind_numb.R")
+
+res <- mod_ind_numb(dim_model,CVs,cv_target)
+
+## function to get the selected covariate name, frequency and position in the X matrix
+
+source("list_sel_cov.R") 
+
+# Outputs are: a list in which we have all the models of a given size and a table with all
+
+# the names of variables present in the pool and their numerosity in the chosen models
+
+res_2 <- list_sel_cov(VarMat,dim_model,res$sel_mod)
+
+
+sel_list <- res_2$model_select
+
+
+### Cesare functions
+
+# To get biggie
+
+source("mat_mod.R")
+
+fil <- mat_mod(sel_list,dim_model)
+
+# To get MA, counting error etc.
+
+source("svm_lin_eval.R")
+
+out <- svm_lin_eval(dim_model,fil,x_train,x_test,y_train,y_test)
+
+barplot(table(out$c_e), main = "Counting Error for LSVT Dataset SVM lin",ylab = "Number of Models",xlab = "Counting Error Measure",ylim = range(0,50))# Lasso is at 4 errors but with models with at least 13 up to 39 regressors while PANNING does this with less than 8 regressors
+abline(v = 3.25, col="blue",lwd=2) 
+abline(v = 3.15, col="red",lwd=2)
+#abline(v = 1.95, col="green",lwd=2)
+#legend("topright", legend=c("PANNING ma", "SVM Radial","Lasso"),
+#    col=c("red", "green", "blue"), lty=1, cex=0.8, box.lty=0)
+
+legend("topright", legend=c("PANNING ma SVM lin","SVM lin"),
+       col=c("red", "blue"), lty=1, cex=0.8, box.lty=0)
+
+
+### Full model ###
+
+y <- factor(y_train,levels = c("0","1"))
+
+partial <- data.frame(y,x_train)
+
+svm_obj <-  caret::train(y ~., data = partial, method = "svmLinear", trControl=trctrl, preProcess = c("center", "scale"),tuneLength = 10)
+
+y <- factor(y_test,levels = c("0","1"))
+
+partial <- data.frame(y,x_test)
+
+test_pred <- predict(svm_obj, newdata = partial)
+
+#test_pred <- ifelse(test_pred >= 0.5,1,0)
+
+#test_pred <- factor(test_pred,levels = c("0","1"))
+
+final <- length(which(y!=test_pred))
+
+
+conf_mat_pan_full <- caret::confusionMatrix(data = test_pred,reference = y,positive = "1")
+
+
+
+save.image("env_svm_linear_lsvt.Rdata")
+

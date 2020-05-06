@@ -1,0 +1,115 @@
+# Copyright (C) 2018 Gaetan Bakalli, Samuel Orso
+#
+# This file is part of seer R Methods Package
+#
+# The `seer` R package is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as
+# published by the Free Software Foundation, either version 3 of the
+# License, or (at your option) any later version.
+#
+# The `seer` R package is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+#' @title SEER wrapper algorithm for ML method.
+#'
+#' @description
+#' @param y A \code{vector} of binary response variable.
+#' @param X A \code{matrix} or \code{data.frame} of attributes
+#' @param q0 A \code{numeric} value for the quantile of variable screening.
+#' @param dmax A \code{double} representing the maximum number of attributes per learner.
+#' @param m A \code{double} representing the maximum number learner per dimension explored
+#' @param seed  An \code{integer} that controls the reproducibility.
+#' @return A \code{seer} object with the structure:
+#' \describe{
+#' \item{}{}
+#' @author Gaetan Bakalli and Samuel Orso
+#' @import caret
+#' @import doParallel
+#' @export
+#' @examples
+#'
+seer = function(y, X,learner = NULL, q0 = NULL, dmax = NULL, m = NULL,seed = 666,parallel_comput = T,
+                nc = NULL){
+
+  if(is.null(learner)){
+    stop("No learning method specified. Please specify a `learner`")
+  }
+
+  if(is.null(y)){
+    stop("Please provide a response vector `y`")
+  }
+
+  if(is.null(y)){
+    stop("Please provide an attributes matrix `X`")
+  }
+
+
+  ## Meta-parameter decision rule.
+  # Quantile for attributes selection
+  if(is.null(q0)){
+    # define the rule of thumb for quantile in screening
+  }
+
+  # Maximum number of attributes per learner
+  if(is.null(dmax)){
+    # define the rule of thumb max model dimension (EPV)
+  }
+
+  # Maximum number of learner per dimension
+  if(is.null(m)){
+    # define the rule of thumb max number of learner computed at each dimension
+  }
+
+  # Define parallelisation parameter
+  if(isTRUE(parallel_comput)){
+    if(is.null(nc)){
+      nc = detectCores()
+      cl <- makePSOCKcluster(nc)
+      registerDoParallel(cl)
+    }else{
+      nc = nc
+      cl <- makePSOCKcluster(nc)
+      registerDoParallel(cl)
+    }
+  }
+
+
+  ## Seed
+  set.seed(seed)
+  graine <- sample.int(1e6,dmax)
+
+  ## Object storage
+  CVs <- vector("list",dmax)
+  IDs <- vector("list",dmax)
+  VarMat <- vector("list",dmax)
+
+  ## Screening step
+
+  cv_errors <- vector("numeric",ncol(x_train))
+  #10 fold CV repeated 10 times as PANNING
+  trctrl <- trainControl(method = "repeatedcv", number = 10, repeats = 10)
+
+  for(i in seq_along(cv_errors)){
+    X <- as.matrix(x_train[,i])
+    y <- as.factor(y_train)
+    df = data.frame(y,X)
+    obj = train(y ~., data = df, method = learner, trControl=trctrl, preProcess = c("center", "scale"),tuneLength = 10)
+    cv_errors[i] = 1 - max(obj$results$Accuracy)
+  }
+  stopCluster(cl)
+
+
+  CVs[[1]] <- cv_errors
+  VarMat[[1]] <- seq_along(cv_errors)
+
+  cv_errors <- cv_errors[!is.na(cv_errors)]
+
+  IDs[[1]] <- which(cv_errors <= quantile(cv_errors,q0))
+
+  class(obj) = "seer"
+  obj
+}

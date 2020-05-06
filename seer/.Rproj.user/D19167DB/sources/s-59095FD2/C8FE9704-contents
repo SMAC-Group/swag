@@ -1,0 +1,61 @@
+require(caret)
+require(doParallel)
+
+
+## Meta parameters
+q0 <- .05 # quantile for screening
+dmax <- 6 # max model size (Sam stops at models with 10 predictors)
+mod_max <- 4e4 # model explored at each step
+
+## simu data
+
+y_train = rnorm(100)
+x_train = matrix(rnorm(100*2),100,2)
+
+#### for each computing time
+
+
+# Initial step: (dimension 1)
+# EXAMPLE FOR D=1
+cv_errors <- vector("numeric",ncol(x_train))
+nc = detectCores()
+cl <- makeCluster(cl)
+registerDoParallel(cl)
+
+start_time <- Sys.time()
+start_time_1 <- Sys.time()
+trctrl <- trainControl(method = "repeatedcv", number = 10, repeats = 10) #10 fold CV repeated 10 times as PANNING
+cv_errors <- foreach(i = seq_along(cv_errors), .combine = c, .packages=c("caret")) %dopar% {
+  X <- as.matrix(x_train[,i])
+  y <- as.factor(y_train)
+  breast_1 = data.frame(y,X)
+  obj = train(y ~., data = breast_1, method = "svmLinear", trControl=trctrl, preProcess = c("center", "scale"),tuneLength = 10)
+  cv_errors = 1 - max(obj$results$Accuracy)
+}
+stopCluster(cl)
+end_time_1 <- Sys.time()
+
+
+end_time_1 - start_time_1
+#### paralell caret computing time
+
+cv_errors <- vector("numeric",ncol(x_train))
+nc = detectCores()
+cl <- makePSOCKcluster(nc)
+registerDoParallel(cl)
+
+start_time2 <- Sys.time()
+trctrl <- trainControl(method = "repeatedcv", number = 10, repeats = 10) #10 fold CV repeated 10 times as PANNING
+
+for(i in seq_along(cv_errors)){
+  X <- as.matrix(x_train[,i])
+  y <- as.factor(y_train)
+  breast_1 = data.frame(y,X)
+  obj = train(y ~., data = breast_1, method = "svmLinear", trControl=trctrl, preProcess = c("center", "scale"),tuneLength = 10)
+  cv_errors[i] = 1 - max(obj$results$Accuracy)
+}
+stopCluster(cl)
+end_time2 <- Sys.time()
+
+end_time2 - start_time2
+

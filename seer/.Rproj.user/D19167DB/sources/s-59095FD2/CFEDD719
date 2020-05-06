@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1588771881786.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "CFEDD719",
+    "lastKnownWriteTime" : 1587649873,
+    "last_content_update" : 1587649873,
+    "path" : "~/GitHub/meta-learning/Datasets/Meter A/Gaetan_SVM/SVM_linear/svm_linear.r",
+    "project_path" : null,
+    "properties" : {
+        "cursorPosition" : "55,0",
+        "scrollLine" : "42"
+    },
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
