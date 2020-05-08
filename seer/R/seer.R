@@ -105,7 +105,7 @@ seer <- function(y, X, learner = NULL, q0 = NULL, dmax = NULL, m = NULL,seed = 6
 
   # Maximum number of attributes per learner
   if(is.null(dmax)){
-    dmax <- ceiling(min(sum(y),n-sum(y))/p)
+    dmax <- which.max(seq_len(p)[(min(sum(y),n-sum(y)) / seq_len(p)) > 5])
   }
 
   # Maximum number of learner per dimension
@@ -115,7 +115,7 @@ seer <- function(y, X, learner = NULL, q0 = NULL, dmax = NULL, m = NULL,seed = 6
 
   if(is.null(q0)){
     # q0 is such that (approx) all models of dimension 2 are explored
-    q0 <- (1 + sqrt(1 + 8 * m)) / 0.2e1 / ncol(X)
+    q0 <- min((1 + sqrt(1 + 8 * m)) / 0.2e1 / p, 100 / p)
   }
 
 
