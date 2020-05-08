@@ -54,27 +54,9 @@ seer <- function(y, X, learner = NULL, q0 = NULL, dmax = NULL, m = NULL,seed = 6
 
   ## object dimension
   # Number of attributes
-  p = ncol(X)
+  p <- ncol(X)
   # Number of observatio
-  n = length(y)
-
-  ## Meta-parameter decision rule.
-  # Quantile for attributes selection
-
-  # Maximum number of attributes per learner
-  if(is.null(dmax)){
-    dmax <- ceiling(min(sum(y),n-sum(y))/p)
-  }
-
-  # Maximum number of learner per dimension
-  if(is.null(m)){
-    m <- tot_time / mean(times,na.rm=T) / dmax
-  }
-
-  if(is.null(q0)){
-    # q0 is such that (approx) all models of dimension 2 are explored
-    q0 <- (1 + sqrt(1 + 8 * m)) / 0.2e1 / ncol(X)
-  }
+  n <- length(y)
 
 
   # Define parallelisation parameter
@@ -87,17 +69,6 @@ seer <- function(y, X, learner = NULL, q0 = NULL, dmax = NULL, m = NULL,seed = 6
     cl <- makePSOCKcluster(nc)
     registerDoParallel(cl)
   }
-
-
-  ## Seed
-  set.seed(seed)
-  graine <- sample.int(1e6,dmax)
-
-  ## Object storage
-  CVs <- vector("list",dmax)
-  IDs <- vector("list",dmax)
-  VarMat <- vector("list",dmax)
-
 
   ## Screening step
 
@@ -129,6 +100,37 @@ seer <- function(y, X, learner = NULL, q0 = NULL, dmax = NULL, m = NULL,seed = 6
   IDs[[1]] <- which(cv_errors <= quantile(cv_errors,q0))
 
   ## Dimension from 2 to dmax
+  ## Meta-parameter decision rule.
+  # Quantile for attributes selection
+
+  # Maximum number of attributes per learner
+  if(is.null(dmax)){
+    dmax <- ceiling(min(sum(y),n-sum(y))/p)
+  }
+
+  # Maximum number of learner per dimension
+  if(is.null(m)){
+    m <- tot_time / mean(times,na.rm=T) / dmax
+  }
+
+  if(is.null(q0)){
+    # q0 is such that (approx) all models of dimension 2 are explored
+    q0 <- (1 + sqrt(1 + 8 * m)) / 0.2e1 / ncol(X)
+  }
+
+
+  ## Seed
+  set.seed(seed)
+  graine <- sample.int(1e6,dmax)
+
+  ## Object storage
+  CVs <- vector("list",dmax)
+  IDs <- vector("list",dmax)
+  VarMat <- vector("list",dmax)
+
+
+
+
 
   for(d in 2:dmax){
 
