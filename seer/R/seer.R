@@ -43,10 +43,13 @@ seer = function(y, X,learner = NULL, q0 = NULL, dmax = NULL, m = NULL,seed = 666
     stop("Please provide a response vector `y`")
   }
 
-  if(is.null(y)){
+  if(is.null(X)){
     stop("Please provide an attributes matrix `X`")
+  }else{
+    if(!is.matrix(X)){
+      stop("X must be a matrix")
+    }
   }
-
 
   ## Meta-parameter decision rule.
   # Quantile for attributes selection
@@ -68,15 +71,23 @@ seer = function(y, X,learner = NULL, q0 = NULL, dmax = NULL, m = NULL,seed = 666
   if(isTRUE(parallel_comput)){
     if(is.null(nc)){
       nc = detectCores()
-      cl <- makePSOCKcluster(nc)
-      registerDoParallel(cl)
     }else{
       nc = nc
-      cl <- makePSOCKcluster(nc)
-      registerDoParallel(cl)
     }
+    cl <- makePSOCKcluster(nc)
+    registerDoParallel(cl)
   }
 
+  # is y a factor
+  if(!is.factor(y)){
+    y = is.factor(y)
+  }
+
+  ## object dimension
+  # Number of attributes
+  p = ncol(X)
+  # Number of observatio
+  n = length(y)
 
   ## Seed
   set.seed(seed)
@@ -89,18 +100,17 @@ seer = function(y, X,learner = NULL, q0 = NULL, dmax = NULL, m = NULL,seed = 666
 
   ## Screening step
 
-  cv_errors <- vector("numeric",ncol(x_train))
+  cv_errors <- vector("numeric",p)
   #10 fold CV repeated 10 times as PANNING
   trctrl <- trainControl(method = "repeatedcv", number = 10, repeats = 10)
 
-  for(i in seq_along(cv_errors)){
-    X <- as.matrix(x_train[,i])
-    y <- as.factor(y_train)
-    df = data.frame(y,X)
-    obj = train(y ~., data = df, method = learner, trControl=trctrl, preProcess = c("center", "scale"),tuneLength = 10)
-    cv_errors[i] = 1 - max(obj$results$Accuracy)
+  for(i in seq_len(p)){
+    seed <- graine[1] + i
+    x_sub <- as.matrix(X[,i])
+    df = data.frame(y,x_sub)
+    learn = train(y ~., data = df, method = learner, trControl=trctrl, preProcess = c("center", "scale"),tuneLength = 10)
+    cv_errors[i] = 1 - max(learn$results$Accuracy)
   }
-  stopCluster(cl)
 
 
   CVs[[1]] <- cv_errors
@@ -109,6 +119,61 @@ seer = function(y, X,learner = NULL, q0 = NULL, dmax = NULL, m = NULL,seed = 666
   cv_errors <- cv_errors[!is.na(cv_errors)]
 
   IDs[[1]] <- which(cv_errors <= quantile(cv_errors,q0))
+
+  ## Dimension from 2 to dmax
+
+  for(d in 2:dmax){
+
+    # cv0 <- cv1
+    idRow <- IDs[[d-1]]
+    if(d==2){
+      idVar <- VarMat[[d-1]][idRow]
+      nrv <- length(idVar)
+    }else{
+      idVar <- VarMat[[d-1]][idRow,]
+      nrv <- nrow(idVar)
+    }
+    # build all possible
+    A <- matrix(nr=nrv*length(id_screening),nc=d)
+    A[,1:(d-1)] <- kronecker(cbind(rep(1,length(id_screening))),idVar)
+    A[,d] <- rep(id_screening,each=nrv)
+    B <- unique(t(apply(A,1,sort)))
+    id_ndup <- which(apply(B,1,anyDuplicated) == 0)
+    var_mat <- B[id_ndup,]
+    rm(list=c("A","B"))
+
+    if(nrow(var_mat)>mod_max){
+      set.seed(graine[d]+1)
+      VarMat[[d]] <- var_mat[sample.int(nrow(var_mat),mod_max),]
+    }else{
+      VarMat[[d]] <- var_mat
+    }
+
+    var_mat <- VarMat[[d]]
+
+    cv_errors <- rep(NA,nrow(var_mat))
+
+    for(i in seq_len(p)){
+      rc <- var_mat[i,]
+      seed <- graine[d] + i
+      X <- as.matrix(x_train[,rc])
+      breast_1 = data.frame(y,X)
+      learn = train(y ~., data = df, method = learner, trControl=trctrl, preProcess = c("center", "scale"),tuneLength = 10)
+      cv_errors[i] = 1 - max(learn$results$Accuracy)
+    }
+    stopCluster(cl)
+
+
+    attr(cv_errors,"rng") <- NULL
+
+    CVs[[d]] <- cv_errors
+    cv1 <- quantile(cv_errors,probs=q0,na.rm=T)
+    IDs[[d]] <- which(cv_errors<=cv1)
+  }
+
+  obj = list(pred_cv = CVs,
+             model_evaluated = VarMat,
+             model_selected = IDs)
 
   class(obj) = "seer"
   obj
