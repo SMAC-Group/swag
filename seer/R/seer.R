@@ -55,9 +55,13 @@ seer <- function(y, X, learner = NULL, q0 = NULL, dmax = NULL, m = NULL,seed = 6
   ## object dimension
   # Number of attributes
   p <- ncol(X)
-  # Number of observatio
+  # Number of observations
   n <- length(y)
 
+  # is y a factor
+  if(!is.factor(y)){
+    y <- as.factor(y)
+  }
 
   # Define parallelisation parameter
   if(isTRUE(parallel_comput)){
@@ -82,22 +86,9 @@ seer <- function(y, X, learner = NULL, q0 = NULL, dmax = NULL, m = NULL,seed = 6
     t1 <- Sys.time()
     learn <- train(y ~., data = df, method = learner, trControl=trctrl, preProcess = c("center", "scale"),tuneLength = 10)
     t2 <- Sys.time()
-    cv_errors[i] = 1 - max(learn$results$Accuracy)
-    times <- diff(t1,t2,units="secs")
-
-  # is y a factor
-  if(!is.factor(y)){
-    y = is.factor(y)
+    cv_errors[i] <- 1 - max(learn$results$Accuracy)
+    times[i] <- diff(t1,t2,units="secs")
   }
-
-
-
-  CVs[[1]] <- cv_errors
-  VarMat[[1]] <- seq_along(cv_errors)
-
-  cv_errors <- cv_errors[!is.na(cv_errors)]
-
-  IDs[[1]] <- which(cv_errors <= quantile(cv_errors,q0))
 
   ## Dimension from 2 to dmax
   ## Meta-parameter decision rule.
@@ -115,7 +106,7 @@ seer <- function(y, X, learner = NULL, q0 = NULL, dmax = NULL, m = NULL,seed = 6
 
   if(is.null(q0)){
     # q0 is such that (approx) all models of dimension 2 are explored
-    q0 <- min((1 + sqrt(1 + 8 * m)) / 0.2e1 / p, 100 / p)
+    q0 <- min((1 + sqrt(1 + 8 * m)) / 0.2e1 / p, 300 / p)
   }
 
 
@@ -128,10 +119,13 @@ seer <- function(y, X, learner = NULL, q0 = NULL, dmax = NULL, m = NULL,seed = 6
   IDs <- vector("list",dmax)
   VarMat <- vector("list",dmax)
 
+  # Store d=1
+  CVs[[1]] <- cv_errors
+  VarMat[[1]] <- seq_along(cv_errors)
+  IDs[[1]] <- which(cv_errors <= quantile(cv_errors,q0,na.rm=T))
 
 
-
-
+  # Compute for d>1 to dmax
   for(d in 2:dmax){
 
     # cv0 <- cv1
@@ -162,6 +156,17 @@ seer <- function(y, X, learner = NULL, q0 = NULL, dmax = NULL, m = NULL,seed = 6
     var_mat <- VarMat[[d]]
 
     cv_errors <- rep(NA,nrow(var_mat))
+
+    # Define parallelisation parameter
+    if(isTRUE(parallel_comput)){
+      if(is.null(nc)){
+        nc = detectCores()
+      }else{
+        nc = nc
+      }
+      cl <- makePSOCKcluster(nc)
+      registerDoParallel(cl)
+    }
 
     for(i in seq_len(p)){
       rc <- var_mat[i,]
@@ -202,5 +207,4 @@ seer <- function(y, X, learner = NULL, q0 = NULL, dmax = NULL, m = NULL,seed = 6
 
   class(obj) = "seer"
   obj
-  }
 }
