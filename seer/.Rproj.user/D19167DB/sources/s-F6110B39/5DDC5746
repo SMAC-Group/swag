@@ -7,13 +7,13 @@
     "folds" : "",
     "hash" : "0",
     "id" : "5DDC5746",
-    "lastKnownWriteTime" : 1588791632,
-    "last_content_update" : 1588791632084,
+    "lastKnownWriteTime" : 1588940360,
+    "last_content_update" : 1588940360023,
     "path" : "~/GitHub/SEER-R-Package/seer/R/seer.R",
     "project_path" : "R/seer.R",
     "properties" : {
-        "cursorPosition" : "105,14",
-        "scrollLine" : "78"
+        "cursorPosition" : "175,33",
+        "scrollLine" : "142"
     },
     "relative_order" : 1,
     "source_on_save" : false,

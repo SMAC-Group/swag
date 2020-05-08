@@ -46,21 +46,43 @@ seer <- function(y, X, learner = NULL, q0 = NULL, dmax = NULL, m = NULL,seed = 6
 
   if(is.null(X)){
     stop("Please provide an attributes matrix `X`")
+  }else{
+    if(!is.matrix(X)){
+      stop("X must be a matrix")
+    }
   }
 
+<<<<<<< HEAD
+=======
+  ## Meta-parameter decision rule.
+  # Quantile for attributes selection
+  if(is.null(q0)){
+    # define the rule of thumb for quantile in screening
+  }
+
+  # Maximum number of attributes per learner
+  if(is.null(dmax)){
+    # define the rule of thumb max model dimension (EPV)
+  }
+
+  # Maximum number of learner per dimension
+  if(is.null(m)){
+    # define the rule of thumb max number of learner computed at each dimension
+  }
+
+>>>>>>> f95b480c0ffce9c682552f73642249b565b50c34
   # Define parallelisation parameter
   if(isTRUE(parallel_comput)){
     if(is.null(nc)){
       nc = detectCores()
-      cl <- makePSOCKcluster(nc)
-      registerDoParallel(cl)
     }else{
       nc = nc
-      cl <- makePSOCKcluster(nc)
-      registerDoParallel(cl)
     }
+    cl <- makePSOCKcluster(nc)
+    registerDoParallel(cl)
   }
 
+<<<<<<< HEAD
   ## Screening step
 
   cv_errors <- times <- vector("numeric",ncol(x_train))
@@ -76,8 +98,41 @@ seer <- function(y, X, learner = NULL, q0 = NULL, dmax = NULL, m = NULL,seed = 6
     t2 <- Sys.time()
     cv_errors[i] = 1 - max(obj$results$Accuracy)
     times <- diff(t1,t2,units="secs")
+=======
+  # is y a factor
+  if(!is.factor(y)){
+    y = is.factor(y)
   }
-  stopCluster(cl)
+
+  ## object dimension
+  # Number of attributes
+  p = ncol(X)
+  # Number of observatio
+  n = length(y)
+
+  ## Seed
+  set.seed(seed)
+  graine <- sample.int(1e6,dmax)
+
+  ## Object storage
+  CVs <- vector("list",dmax)
+  IDs <- vector("list",dmax)
+  VarMat <- vector("list",dmax)
+
+  ## Screening step
+
+  cv_errors <- vector("numeric",p)
+  #10 fold CV repeated 10 times as PANNING
+  trctrl <- trainControl(method = "repeatedcv", number = 10, repeats = 10)
+
+  for(i in seq_len(p)){
+    seed <- graine[1] + i
+    x_sub <- as.matrix(X[,i])
+    df = data.frame(y,x_sub)
+    learn = train(y ~., data = df, method = learner, trControl=trctrl, preProcess = c("center", "scale"),tuneLength = 10)
+    cv_errors[i] = 1 - max(learn$results$Accuracy)
+>>>>>>> f95b480c0ffce9c682552f73642249b565b50c34
+  }
 
   ## Meta-parameter decision rule.
   # Quantile for attributes selection
@@ -116,6 +171,61 @@ seer <- function(y, X, learner = NULL, q0 = NULL, dmax = NULL, m = NULL,seed = 6
   cv_errors <- cv_errors[!is.na(cv_errors)]
 
   IDs[[1]] <- which(cv_errors <= quantile(cv_errors,q0))
+
+  ## Dimension from 2 to dmax
+
+  for(d in 2:dmax){
+
+    # cv0 <- cv1
+    idRow <- IDs[[d-1]]
+    if(d==2){
+      idVar <- VarMat[[d-1]][idRow]
+      nrv <- length(idVar)
+    }else{
+      idVar <- VarMat[[d-1]][idRow,]
+      nrv <- nrow(idVar)
+    }
+    # build all possible
+    A <- matrix(nr=nrv*length(id_screening),nc=d)
+    A[,1:(d-1)] <- kronecker(cbind(rep(1,length(id_screening))),idVar)
+    A[,d] <- rep(id_screening,each=nrv)
+    B <- unique(t(apply(A,1,sort)))
+    id_ndup <- which(apply(B,1,anyDuplicated) == 0)
+    var_mat <- B[id_ndup,]
+    rm(list=c("A","B"))
+
+    if(nrow(var_mat)>mod_max){
+      set.seed(graine[d]+1)
+      VarMat[[d]] <- var_mat[sample.int(nrow(var_mat),mod_max),]
+    }else{
+      VarMat[[d]] <- var_mat
+    }
+
+    var_mat <- VarMat[[d]]
+
+    cv_errors <- rep(NA,nrow(var_mat))
+
+    for(i in seq_len(p)){
+      rc <- var_mat[i,]
+      seed <- graine[d] + i
+      X <- as.matrix(x_train[,rc])
+      breast_1 = data.frame(y,X)
+      learn = train(y ~., data = df, method = learner, trControl=trctrl, preProcess = c("center", "scale"),tuneLength = 10)
+      cv_errors[i] = 1 - max(learn$results$Accuracy)
+    }
+    stopCluster(cl)
+
+
+    attr(cv_errors,"rng") <- NULL
+
+    CVs[[d]] <- cv_errors
+    cv1 <- quantile(cv_errors,probs=q0,na.rm=T)
+    IDs[[d]] <- which(cv_errors<=cv1)
+  }
+
+  obj = list(pred_cv = CVs,
+             model_evaluated = VarMat,
+             model_selected = IDs)
 
   class(obj) = "seer"
   obj
