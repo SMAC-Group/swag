@@ -23,6 +23,7 @@
 #' @param dmax A \code{double} representing the maximum number of attributes per learner.
 #' @param m A \code{double} representing the maximum number learner per dimension explored
 #' @param seed  An \code{integer} that controls the reproducibility.
+#' @param tot_time An \code{integer} that gives the approximate total time allowed for computation (in seconds)
 #' @return A \code{seer} object with the structure:
 #' \describe{
 #' \item{}{}
@@ -32,8 +33,8 @@
 #' @export
 #' @examples
 #'
-seer = function(y, X,learner = NULL, q0 = NULL, dmax = NULL, m = NULL,seed = 666,parallel_comput = T,
-                nc = NULL){
+seer <- function(y, X, learner = NULL, q0 = NULL, dmax = NULL, m = NULL,seed = 666,
+                 parallel_comput = T, nc = NULL, tot_time = ){
 
   if(is.null(learner)){
     stop("No learning method specified. Please specify a `learner`")
@@ -43,25 +44,8 @@ seer = function(y, X,learner = NULL, q0 = NULL, dmax = NULL, m = NULL,seed = 666
     stop("Please provide a response vector `y`")
   }
 
-  if(is.null(y)){
+  if(is.null(X)){
     stop("Please provide an attributes matrix `X`")
-  }
-
-
-  ## Meta-parameter decision rule.
-  # Quantile for attributes selection
-  if(is.null(q0)){
-    # define the rule of thumb for quantile in screening
-  }
-
-  # Maximum number of attributes per learner
-  if(is.null(dmax)){
-    # define the rule of thumb max model dimension (EPV)
-  }
-
-  # Maximum number of learner per dimension
-  if(is.null(m)){
-    # define the rule of thumb max number of learner computed at each dimension
   }
 
   # Define parallelisation parameter
@@ -77,6 +61,44 @@ seer = function(y, X,learner = NULL, q0 = NULL, dmax = NULL, m = NULL,seed = 666
     }
   }
 
+  ## Screening step
+
+  cv_errors <- times <- vector("numeric",ncol(x_train))
+  #10 fold CV repeated 10 times as PANNING
+  trctrl <- trainControl(method = "repeatedcv", number = 10, repeats = 10)
+
+  for(i in seq_along(cv_errors)){
+    X <- as.matrix(x_train[,i])
+    y <- as.factor(y_train)
+    df <- data.frame(y,X)
+    t1 <- Sys.time()
+    obj <- train(y ~., data = df, method = learner, trControl=trctrl, preProcess = c("center", "scale"),tuneLength = 10)
+    t2 <- Sys.time()
+    cv_errors[i] = 1 - max(obj$results$Accuracy)
+    times <- diff(t1,t2,units="secs")
+  }
+  stopCluster(cl)
+
+  ## Meta-parameter decision rule.
+  # Quantile for attributes selection
+
+  # Maximum number of attributes per learner
+  if(is.null(dmax)){
+    # define the rule of thumb max model dimension (EPV)
+    dmax <- ceiling(min(sum(y),length(y)-sum(y))/ncol(X))
+  }
+
+  # Maximum number of learner per dimension
+  if(is.null(m)){
+    # define the rule of thumb max number of learner computed at each dimension
+    m <- tot_time / mean(times,na.rm=T) / dmax
+  }
+
+  if(is.null(q0)){
+    # define the rule of thumb for quantile in screening
+    # q0 is such that (approx) all models of dimension 2 are explored
+    q0 <- (1 + sqrt(1 + 8 * m)) / 0.2e1 / ncol(X)
+  }
 
   ## Seed
   set.seed(seed)
@@ -86,21 +108,6 @@ seer = function(y, X,learner = NULL, q0 = NULL, dmax = NULL, m = NULL,seed = 666
   CVs <- vector("list",dmax)
   IDs <- vector("list",dmax)
   VarMat <- vector("list",dmax)
-
-  ## Screening step
-
-  cv_errors <- vector("numeric",ncol(x_train))
-  #10 fold CV repeated 10 times as PANNING
-  trctrl <- trainControl(method = "repeatedcv", number = 10, repeats = 10)
-
-  for(i in seq_along(cv_errors)){
-    X <- as.matrix(x_train[,i])
-    y <- as.factor(y_train)
-    df = data.frame(y,X)
-    obj = train(y ~., data = df, method = learner, trControl=trctrl, preProcess = c("center", "scale"),tuneLength = 10)
-    cv_errors[i] = 1 - max(obj$results$Accuracy)
-  }
-  stopCluster(cl)
 
 
   CVs[[1]] <- cv_errors
