@@ -52,21 +52,28 @@ seer <- function(y, X, learner = NULL, q0 = NULL, dmax = NULL, m = NULL,seed = 6
     }
   }
 
+  ## object dimension
+  # Number of attributes
+  p = ncol(X)
+  # Number of observatio
+  n = length(y)
 
   ## Meta-parameter decision rule.
   # Quantile for attributes selection
-  if(is.null(q0)){
-    # define the rule of thumb for quantile in screening
-  }
 
   # Maximum number of attributes per learner
   if(is.null(dmax)){
-    # define the rule of thumb max model dimension (EPV)
+    dmax <- ceiling(min(sum(y),n-sum(y))/p)
   }
 
   # Maximum number of learner per dimension
   if(is.null(m)){
-    # define the rule of thumb max number of learner computed at each dimension
+    m <- tot_time / mean(times,na.rm=T) / dmax
+  }
+
+  if(is.null(q0)){
+    # q0 is such that (approx) all models of dimension 2 are explored
+    q0 <- (1 + sqrt(1 + 8 * m)) / 0.2e1 / ncol(X)
   }
 
 
@@ -103,11 +110,6 @@ seer <- function(y, X, learner = NULL, q0 = NULL, dmax = NULL, m = NULL,seed = 6
     y = is.factor(y)
   }
 
-  ## object dimension
-  # Number of attributes
-  p = ncol(X)
-  # Number of observatio
-  n = length(y)
 
   ## Seed
   set.seed(seed)
@@ -131,27 +133,6 @@ seer <- function(y, X, learner = NULL, q0 = NULL, dmax = NULL, m = NULL,seed = 6
     learn = train(y ~., data = df, method = learner, trControl=trctrl, preProcess = c("center", "scale"),tuneLength = 10)
     cv_errors[i] = 1 - max(learn$results$Accuracy)
 
-  }
-
-  ## Meta-parameter decision rule.
-  # Quantile for attributes selection
-
-  # Maximum number of attributes per learner
-  if(is.null(dmax)){
-    # define the rule of thumb max model dimension (EPV)
-    dmax <- ceiling(min(sum(y),length(y)-sum(y))/ncol(X))
-  }
-
-  # Maximum number of learner per dimension
-  if(is.null(m)){
-    # define the rule of thumb max number of learner computed at each dimension
-    m <- tot_time / mean(times,na.rm=T) / dmax
-  }
-
-  if(is.null(q0)){
-    # define the rule of thumb for quantile in screening
-    # q0 is such that (approx) all models of dimension 2 are explored
-    q0 <- (1 + sqrt(1 + 8 * m)) / 0.2e1 / ncol(X)
   }
 
   ## Seed
@@ -220,6 +201,21 @@ seer <- function(y, X, learner = NULL, q0 = NULL, dmax = NULL, m = NULL,seed = 6
     CVs[[d]] <- cv_errors
     cv1 <- quantile(cv_errors,probs=q0,na.rm=T)
     IDs[[d]] <- which(cv_errors<=cv1)
+  }
+
+  ## Define the seer sets of models
+  # Dimension which minimize the median cv error at each dimesion
+  mod_size_min = which.min(unlist(lapply(CVs[1:dmax], median)))
+  #quantile of the 1% most predictive models
+  treshold_seer_set = quantile(CVs[[mod_size_min]],seq(0, 1, 0.01))[2]
+
+  # Vector of dimention of the model selected
+  dim_model = 2:6
+
+  # Find the index of model selected
+  index_model_select = list()
+  for(i in seq_along(dim_model)){
+    index_model_select[[i]] = which(((CVs[[dim_model[i]]] <=ab)))
   }
 
   obj = list(pred_cv = CVs,
