@@ -89,20 +89,29 @@ seer <- function(y, X, learner = NULL, q0 = NULL, dmax = NULL, m = NULL,seed = 6
   }
 
 
+  ## Seed
+  set.seed(seed)
+  graine <- sample.int(1e6,dmax)
+
+  ## Object storage
+  CVs <- vector("list",dmax)
+  IDs <- vector("list",dmax)
+  VarMat <- vector("list",dmax)
+
+
   ## Screening step
 
-  cv_errors <- times <- vector("numeric",ncol(x_train))
+  cv_errors <- times <- vector("numeric",p)
   #10 fold CV repeated 10 times as PANNING
   trctrl <- trainControl(method = "repeatedcv", number = 10, repeats = 10)
 
-  for(i in seq_along(cv_errors)){
+  for(i in seq_len(p)){
     X <- as.matrix(x_train[,i])
-    y <- as.factor(y_train)
     df <- data.frame(y,X)
     t1 <- Sys.time()
-    obj <- train(y ~., data = df, method = learner, trControl=trctrl, preProcess = c("center", "scale"),tuneLength = 10)
+    learn <- train(y ~., data = df, method = learner, trControl=trctrl, preProcess = c("center", "scale"),tuneLength = 10)
     t2 <- Sys.time()
-    cv_errors[i] = 1 - max(obj$results$Accuracy)
+    cv_errors[i] = 1 - max(learn$results$Accuracy)
     times <- diff(t1,t2,units="secs")
 
   # is y a factor
@@ -110,39 +119,6 @@ seer <- function(y, X, learner = NULL, q0 = NULL, dmax = NULL, m = NULL,seed = 6
     y = is.factor(y)
   }
 
-
-  ## Seed
-  set.seed(seed)
-  graine <- sample.int(1e6,dmax)
-
-  ## Object storage
-  CVs <- vector("list",dmax)
-  IDs <- vector("list",dmax)
-  VarMat <- vector("list",dmax)
-
-  ## Screening step
-
-  cv_errors <- vector("numeric",p)
-  #10 fold CV repeated 10 times as PANNING
-  trctrl <- trainControl(method = "repeatedcv", number = 10, repeats = 10)
-
-  for(i in seq_len(p)){
-    seed <- graine[1] + i
-    x_sub <- as.matrix(X[,i])
-    df = data.frame(y,x_sub)
-    learn = train(y ~., data = df, method = learner, trControl=trctrl, preProcess = c("center", "scale"),tuneLength = 10)
-    cv_errors[i] = 1 - max(learn$results$Accuracy)
-
-  }
-
-  ## Seed
-  set.seed(seed)
-  graine <- sample.int(1e6,dmax)
-
-  ## Object storage
-  CVs <- vector("list",dmax)
-  IDs <- vector("list",dmax)
-  VarMat <- vector("list",dmax)
 
 
   CVs[[1]] <- cv_errors
@@ -210,12 +186,12 @@ seer <- function(y, X, learner = NULL, q0 = NULL, dmax = NULL, m = NULL,seed = 6
   treshold_seer_set = quantile(CVs[[mod_size_min]],seq(0, 1, 0.01))[2]
 
   # Vector of dimention of the model selected
-  dim_model = 2:6
+  dim_model = 1:dmax
 
   # Find the index of model selected
   index_model_select = list()
   for(i in seq_along(dim_model)){
-    index_model_select[[i]] = which(((CVs[[dim_model[i]]] <=ab)))
+    index_model_select[[i]] = which(((CVs[[dim_model[i]]] <=treshold_seer_set)))
   }
 
   obj = list(pred_cv = CVs,
