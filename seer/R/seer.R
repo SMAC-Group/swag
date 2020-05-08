@@ -52,8 +52,7 @@ seer <- function(y, X, learner = NULL, q0 = NULL, dmax = NULL, m = NULL,seed = 6
     }
   }
 
-<<<<<<< HEAD
-=======
+
   ## Meta-parameter decision rule.
   # Quantile for attributes selection
   if(is.null(q0)){
@@ -70,7 +69,7 @@ seer <- function(y, X, learner = NULL, q0 = NULL, dmax = NULL, m = NULL,seed = 6
     # define the rule of thumb max number of learner computed at each dimension
   }
 
->>>>>>> f95b480c0ffce9c682552f73642249b565b50c34
+
   # Define parallelisation parameter
   if(isTRUE(parallel_comput)){
     if(is.null(nc)){
@@ -82,7 +81,7 @@ seer <- function(y, X, learner = NULL, q0 = NULL, dmax = NULL, m = NULL,seed = 6
     registerDoParallel(cl)
   }
 
-<<<<<<< HEAD
+
   ## Screening step
 
   cv_errors <- times <- vector("numeric",ncol(x_train))
@@ -98,7 +97,7 @@ seer <- function(y, X, learner = NULL, q0 = NULL, dmax = NULL, m = NULL,seed = 6
     t2 <- Sys.time()
     cv_errors[i] = 1 - max(obj$results$Accuracy)
     times <- diff(t1,t2,units="secs")
-=======
+
   # is y a factor
   if(!is.factor(y)){
     y = is.factor(y)
@@ -131,7 +130,7 @@ seer <- function(y, X, learner = NULL, q0 = NULL, dmax = NULL, m = NULL,seed = 6
     df = data.frame(y,x_sub)
     learn = train(y ~., data = df, method = learner, trControl=trctrl, preProcess = c("center", "scale"),tuneLength = 10)
     cv_errors[i] = 1 - max(learn$results$Accuracy)
->>>>>>> f95b480c0ffce9c682552f73642249b565b50c34
+
   }
 
   ## Meta-parameter decision rule.
@@ -229,4 +228,5 @@ seer <- function(y, X, learner = NULL, q0 = NULL, dmax = NULL, m = NULL,seed = 6
 
   class(obj) = "seer"
   obj
+  }
 }
