@@ -83,9 +83,13 @@ seer <- function(y, X, learner = NULL, q0 = NULL, dmax = NULL, m = NULL,seed = 6
   ## object dimension
   # Number of attributes
   p <- ncol(X)
-  # Number of observatio
+  # Number of observations
   n <- length(y)
 
+  # is y a factor
+  if(!is.factor(y)){
+    y <- as.factor(y)
+  }
 
   # Define parallelisation parameter
   if(isTRUE(parallel_comput)){
@@ -125,6 +129,7 @@ seer <- function(y, X, learner = NULL, q0 = NULL, dmax = NULL, m = NULL,seed = 6
   trctrl <- trainControl(method = "repeatedcv", number = 10, repeats = 10)
 
   for(i in seq_len(p)){
+
     x <- as.matrix(X[,i])
     df <- data.frame(y,x)
     learn <- train(y ~., data = df, method = learner, metric = metric, family = family,
@@ -143,10 +148,11 @@ seer <- function(y, X, learner = NULL, q0 = NULL, dmax = NULL, m = NULL,seed = 6
   ## Meta-parameter decision rule.
   # Quantile for attributes selection
 
-  # Maximum number of learner per dimension
-  if(is.null(m)){
-    m <- tot_time / mean(times,na.rm=T) / dmax
+  # Maximum number of attributes per learner
+  if(is.null(dmax)){
+    dmax <- which.max(seq_len(p)[(min(sum(y),n-sum(y)) / seq_len(p)) > 5])
   }
+
 
   if(is.null(q0)){
     # q0 is such that (approx) all models of dimension 2 are explored
@@ -155,6 +161,25 @@ seer <- function(y, X, learner = NULL, q0 = NULL, dmax = NULL, m = NULL,seed = 6
 
   IDs[[1]] <- which(cv_errors <= quantile(cv_errors,q0))
   id_screening <- IDs[[1]]
+
+
+
+  ## Seed
+  set.seed(seed)
+  graine <- sample.int(1e6,dmax)
+
+  ## Object storage
+  CVs <- vector("list",dmax)
+  IDs <- vector("list",dmax)
+  VarMat <- vector("list",dmax)
+
+  # Store d=1
+  CVs[[1]] <- cv_errors
+  VarMat[[1]] <- seq_along(cv_errors)
+  IDs[[1]] <- which(cv_errors <= quantile(cv_errors,q0,na.rm=T))
+
+
+  # Compute for d>1 to dmax
 
   for(d in 2:dmax){
 
