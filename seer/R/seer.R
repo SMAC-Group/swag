@@ -19,10 +19,9 @@
 #' @description SEER algo
 #' @param y A \code{vector} of binary response variable.
 #' @param X A \code{matrix} or \code{data.frame} of attributes
-#' @param X A \code{string} defining the learner type (method available: \code{"logistic", "svmLinear","svmRadial"} and \code{"rf"})
-#' @param q0 A \code{numeric} value for the quantile of variable screening.
+#' @param learner A \code{string} defining the learner type (method available: \code{"logistic", "svmLinear","svmRadial"} and \code{"rf"})
 #' @param dmax A \code{double} representing the maximum number of attributes per learner.
-#' @param m A \code{double} representing the maximum number learner per dimension explored
+#' @param m A \code{integer} representing the maximum number learner per dimension explored.
 #' @param parallel_comput  An \code{boolean} to allow for parallel computing.
 #' @param seed  An \code{integer} that controls the reproducibility.
 #' @param nc An \code{double} that specify the number of core for parallel computation.
@@ -35,8 +34,8 @@
 #' @import doParallel
 #' @export
 #' @examples
-#'
-seer <- function(y, X, learner = NULL, q0 = NULL, dmax = NULL, m = NULL,seed = 666,
+#' seer()
+seer <- function(y, X, learner = NULL, dmax = NULL, m = NULL,seed = 163,
                  parallel_comput = T, nc = NULL,...){
 
 
@@ -46,20 +45,19 @@ seer <- function(y, X, learner = NULL, q0 = NULL, dmax = NULL, m = NULL,seed = 6
     if(learner == "logistic"){
       learner = "glm"
       family = "binomial"
-      metric = NULL
-      tuneGrid = NULL
+      metric = "Accuracy"
+      tunegrid = NULL
       preprocess = NULL
       tuneLength = NULL
     }else if(learner == "rf"){
       family = NULL
       metric = "Accuracy"
-      tunegrid = expand.grid(.mtry=mtry)
       family = NULL
       preprocess = NULL
       tuneLength = NULL
     }else{
       family = NULL
-      metric = NULL
+      metric = "Accuracy"
       tunegrid = NULL
       preprocess = c("center", "scale")
       tuneLength = 10
@@ -103,6 +101,11 @@ seer <- function(y, X, learner = NULL, q0 = NULL, dmax = NULL, m = NULL,seed = 6
   }
 
   # Maximum number of attributes per learner
+  if(is.null(m)){
+    m = 40000
+  }
+
+  # Maximum number of attributes per learner
   if(is.null(dmax)){
     event = as.numeric(as.character(y))
     dmax <- ceiling(min(sum(event),n-sum(event))/p)
@@ -110,6 +113,9 @@ seer <- function(y, X, learner = NULL, q0 = NULL, dmax = NULL, m = NULL,seed = 6
       dmax = 3
     }
   }
+
+
+
 
   ## Seed
   set.seed(seed)
@@ -129,10 +135,14 @@ seer <- function(y, X, learner = NULL, q0 = NULL, dmax = NULL, m = NULL,seed = 6
   trctrl <- trainControl(method = "repeatedcv", number = 10, repeats = 10)
 
   for(i in seq_len(p)){
+    if(learner == "rf"){
+      mtry <- 1
+      tunegrid = expand.grid(.mtry=mtry)
+    }
 
     x <- as.matrix(X[,i])
     df <- data.frame(y,x)
-    learn <- train(y ~., data = df, method = learner, metric = metric, family = family,
+    learn <- train(y ~., data = df, method = learner,metric = metric, family = family,
                    trControl=trctrl, preProcess = preprocess, tuneLength = tuneLength,
                    tuneGrid=tunegrid)
     cv_errors[i] = 1 - max(learn$results$Accuracy)
@@ -144,40 +154,21 @@ seer <- function(y, X, learner = NULL, q0 = NULL, dmax = NULL, m = NULL,seed = 6
 
   cv_errors <- cv_errors[!is.na(cv_errors)]
 
+
   ## Dimension from 2 to dmax
   ## Meta-parameter decision rule.
   # Quantile for attributes selection
 
-  # Maximum number of attributes per learner
-  if(is.null(dmax)){
-    dmax <- which.max(seq_len(p)[(min(sum(y),n-sum(y)) / seq_len(p)) > 5])
-  }
+  q0_test =  which(cv_errors <= quantile(cv_errors,0.01))
 
-
-  if(is.null(q0)){
-    # q0 is such that (approx) all models of dimension 2 are explored
-    q0 <- 0.50
+  if(length(q0_test) < 50){
+    q0 = 0.05
+  }else{
+    q0 = 0.01
   }
 
   IDs[[1]] <- which(cv_errors <= quantile(cv_errors,q0))
   id_screening <- IDs[[1]]
-
-
-
-  ## Seed
-  set.seed(seed)
-  graine <- sample.int(1e6,dmax)
-
-  ## Object storage
-  CVs <- vector("list",dmax)
-  IDs <- vector("list",dmax)
-  VarMat <- vector("list",dmax)
-
-  # Store d=1
-  CVs[[1]] <- cv_errors
-  VarMat[[1]] <- seq_along(cv_errors)
-  IDs[[1]] <- which(cv_errors <= quantile(cv_errors,q0,na.rm=T))
-
 
   # Compute for d>1 to dmax
 
@@ -211,11 +202,16 @@ seer <- function(y, X, learner = NULL, q0 = NULL, dmax = NULL, m = NULL,seed = 6
     var_mat <- VarMat[[d]]
 
     cv_errors <- rep(NA,nrow(var_mat))
+    if(learner == "rf"){
+      mtry <- d
+      tunegrid = expand.grid(.mtry=mtry)
+    }
 
     for(i in seq_len(nrow(var_mat))){
       rc <- var_mat[i,]
       seed <- graine[d] + i
       x <- as.matrix(X[,rc])
+      mtry <- sqrt(ncol(x))
       breast_1 = data.frame(y,x)
       learn = train(y ~., data = df, method = learner, metric = metric, family = family,
                     trControl=trctrl, preProcess = preprocess, tuneLength = tuneLength,
@@ -262,9 +258,11 @@ seer <- function(y, X, learner = NULL, q0 = NULL, dmax = NULL, m = NULL,seed = 6
 
   for(d in seq_along(model_dim_selected)){
     index_mod = model_dim_selected[[d]]
-    # model seer set
-    seer_model[[d]] <- VarMat[[index_mod]][index_model_select[[index_mod]],]
-    # cv error
+    if(d == 1){
+      seer_model[[d]] <- VarMat[[index_mod]][index_model_select[[index_mod]]]
+    }else{
+      seer_model[[d]] <- VarMat[[index_mod]][index_model_select[[index_mod]],]
+    }
     seer_cv_error[[d]] <- CVs[[index_mod]][index_model_select[[index_mod]]]
   }
 
@@ -279,7 +277,9 @@ seer <- function(y, X, learner = NULL, q0 = NULL, dmax = NULL, m = NULL,seed = 6
              model_selected = IDs,
              model_seer_set = index_model_select,
              table_variable = table_variable,
-             variable_index = variable_index)
+             variable_index = variable_index,
+             seer_model = seer_model,
+             seer_cv_error = seer_cv_error)
 
   class(obj) = "seer"
   obj

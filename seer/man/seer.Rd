@@ -4,27 +4,25 @@
 \alias{seer}
 \title{SEER wrapper algorithm for ML method.}
 \usage{
-seer(y, X, learner = NULL, q0 = NULL, dmax = NULL, m = NULL,
-  seed = 666, parallel_comput = T, nc = NULL, ...)
+seer(y, X, learner = NULL, dmax = NULL, m = NULL, seed = 666,
+  parallel_comput = T, nc = NULL, ...)
 }
 \arguments{
 \item{y}{A \code{vector} of binary response variable.}
 
 \item{X}{A \code{matrix} or \code{data.frame} of attributes}
 
-\item{q0}{A \code{numeric} value for the quantile of variable screening.}
+\item{learner}{A \code{string} defining the learner type (method available: \code{"logistic", "svmLinear","svmRadial"} and \code{"rf"})}
 
 \item{dmax}{A \code{double} representing the maximum number of attributes per learner.}
 
-\item{m}{A \code{double} representing the maximum number learner per dimension explored}
+\item{m}{A \code{integer} representing the maximum number learner per dimension explored.}
 
 \item{seed}{An \code{integer} that controls the reproducibility.}
 
 \item{parallel_comput}{An \code{boolean} to allow for parallel computing.}
 
 \item{nc}{An \code{double} that specify the number of core for parallel computation.}
-
-\item{X}{A \code{string} defining the learner type (method available: \code{"logistic", "svmLinear","svmRadial"} and \code{"rf"})}
 }
 \value{
 A \code{seer} object with the structure:
@@ -36,7 +34,7 @@ A \code{seer} object with the structure:
 SEER algo
 }
 \examples{
-
+seer()
 }
 \author{
 Gaetan Bakalli and Samuel Orso
