@@ -21,7 +21,8 @@
 #' @param X A \code{matrix} or \code{data.frame} of attributes
 #' @param learner A \code{string} defining the learner type (method available: \code{"logistic", "svmLinear","svmRadial"} and \code{"rf"})
 #' @param dmax A \code{double} representing the maximum number of attributes per learner.
-#' @param m A \code{integer} representing the maximum number learner per dimension explored.
+#' @param m A \code{integer} representing the maximum number of learners per dimension explored.
+#' @param q0 A \code{double} representing the proportion of screening.
 #' @param parallel_comput  An \code{boolean} to allow for parallel computing.
 #' @param seed  An \code{integer} that controls the reproducibility.
 #' @param nc An \code{double} that specify the number of core for parallel computation.
@@ -35,8 +36,8 @@
 #' @export
 #' @examples
 #' seer()
-seer <- function(y, X, learner = NULL, dmax = NULL, m = NULL, seed = 163,
-                 parallel_comput = T, nc = NULL,...){
+seer <- function(y, X, learner = NULL, dmax = NULL, m = NULL, q0=0.01, seed = 163,
+                 parallel_comput = T, nc = NULL, ...){
 
 
   if(is.null(learner)){
@@ -79,11 +80,9 @@ seer <- function(y, X, learner = NULL, dmax = NULL, m = NULL, seed = 163,
     stop("This `learner` is not implemented.")
   }
 
-
   if(is.null(y)){
     stop("Please provide a response vector `y`")
   }
-
 
   if(is.null(X)){
     stop("Please provide an attributes matrix `X`")
@@ -122,15 +121,12 @@ seer <- function(y, X, learner = NULL, dmax = NULL, m = NULL, seed = 163,
 
   # Maximum number of attributes per learner
   if(is.null(dmax)){
-    event = as.numeric(as.character(y))
+    event <- as.numeric(as.character(y))
     dmax <- ceiling(min(sum(event),n-sum(event))/p)
     if(dmax == 1){
-      dmax = 3
+      dmax <- 3
     }
   }
-
-
-
 
   ## Seed
   set.seed(seed)
@@ -141,10 +137,7 @@ seer <- function(y, X, learner = NULL, dmax = NULL, m = NULL, seed = 163,
   IDs <- vector("list",dmax)
   VarMat <- vector("list",dmax)
 
-
-
   ## Screening step
-
   cv_errors <- times <- vector("numeric",p)
   #10 fold CV repeated 10 times as
   trctrl <- trainControl(method = "repeatedcv", number = 10, repeats = 10)
@@ -173,15 +166,6 @@ seer <- function(y, X, learner = NULL, dmax = NULL, m = NULL, seed = 163,
   ## Dimension from 2 to dmax
   ## Meta-parameter decision rule.
   # Quantile for attributes selection
-
-  q0_test =  which(cv_errors <= quantile(cv_errors,0.01))
-
-  if(length(q0_test) < 50){
-    q0 = 0.05
-  }else{
-    q0 = 0.01
-  }
-
   IDs[[1]] <- which(cv_errors <= quantile(cv_errors,q0))
   id_screening <- IDs[[1]]
 
@@ -222,7 +206,7 @@ seer <- function(y, X, learner = NULL, dmax = NULL, m = NULL, seed = 163,
       tunegrid = expand.grid(.mtry=mtry)
     }
 
-    for(i in seq_len(nrow(var_mat))){
+    cv_errors <- foreach(i = seq_len(nrow(var_mat)), .combine=c) %dopar% {
       rc <- var_mat[i,]
       seed <- graine[d] + i
       x <- as.matrix(X[,rc])
@@ -231,10 +215,10 @@ seer <- function(y, X, learner = NULL, dmax = NULL, m = NULL, seed = 163,
       learn = train(y ~., data = df, method = learner, metric = metric, family = family,
                     trControl=trctrl, preProcess = preprocess, tuneLength = tuneLength,
                     tuneGrid=tunegrid)
-      cv_errors[i] = 1 - max(learn$results$Accuracy)
+      max(learn$results$Accuracy)
     }
 
-    attr(cv_errors,"rng") <- NULL
+    # attr(cv_errors,"rng") <- NULL
 
     CVs[[d]] <- cv_errors
     cv1 <- quantile(cv_errors,probs=q0,na.rm=T)
