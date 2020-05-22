@@ -19,7 +19,8 @@
 #' @description SEER algo
 #' @param y A \code{vector} of binary response variable.
 #' @param X A \code{matrix} or \code{data.frame} of attributes
-#' @param learner A \code{string} defining the learner type (method available: \code{"logistic", "svmLinear","svmRadial"} and \code{"rf"})
+#' @param learner A \code{string} defining the learner type (method available: \code{"logistic"}, \code{"svmLinear"},
+#'  \code{"svmRadial"}, \code{"lasso"} and \code{"rf"})
 #' @param dmax A \code{double} representing the maximum number of attributes per learner.
 #' @param m A \code{integer} representing the maximum number of learners per dimension explored.
 #' @param q0 A \code{double} representing the proportion of screening.
@@ -36,14 +37,14 @@
 #' @export
 #' @examples
 #' seer()
-seer <- function(y, X, learner = NULL, dmax = NULL, m = NULL, q0=0.01, seed = 163,
+seer <- function(y, X, learner = "logistic", dmax = NULL, m = NULL, q0=0.01, seed = 163,
                  parallel_comput = T, nc = NULL, ...){
 
 
   if(is.null(learner)){
     stop("No learning method specified. Please specify a `learner`")
   }
-  if(match(learner,c("logistic","rf","lasso","svmLinear","svmRadial"),unmatch=FALSE)){
+  if(match(learner,c("logistic","rf","lasso","svmLinear","svmRadial"),nomatch=FALSE)){
       if(learner == "logistic"){
         learner = "glm"
         family = "binomial"

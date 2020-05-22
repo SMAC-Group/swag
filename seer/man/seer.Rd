@@ -4,19 +4,32 @@
 \alias{seer}
 \title{SEER wrapper algorithm for ML method.}
 \usage{
-seer(y, X, learner = NULL, dmax = NULL, m = NULL, seed = 666,
-  parallel_comput = T, nc = NULL, ...)
+seer(
+  y,
+  X,
+  learner = "logistic",
+  dmax = NULL,
+  m = NULL,
+  q0 = 0.01,
+  seed = 163,
+  parallel_comput = T,
+  nc = NULL,
+  ...
+)
 }
 \arguments{
 \item{y}{A \code{vector} of binary response variable.}
 
 \item{X}{A \code{matrix} or \code{data.frame} of attributes}
 
-\item{learner}{A \code{string} defining the learner type (method available: \code{"logistic", "svmLinear","svmRadial"} and \code{"rf"})}
+\item{learner}{A \code{string} defining the learner type (method available: \code{"logistic"}, \code{"svmLinear"},
+\code{"svmRadial"}, \code{"lasso"} and \code{"rf"})}
 
 \item{dmax}{A \code{double} representing the maximum number of attributes per learner.}
 
-\item{m}{A \code{integer} representing the maximum number learner per dimension explored.}
+\item{m}{A \code{integer} representing the maximum number of learners per dimension explored.}
+
+\item{q0}{A \code{double} representing the proportion of screening.}
 
 \item{seed}{An \code{integer} that controls the reproducibility.}
 
