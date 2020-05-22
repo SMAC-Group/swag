@@ -35,33 +35,48 @@
 #' @export
 #' @examples
 #' seer()
-seer <- function(y, X, learner = NULL, dmax = NULL, m = NULL,seed = 163,
+seer <- function(y, X, learner = NULL, dmax = NULL, m = NULL, seed = 163,
                  parallel_comput = T, nc = NULL,...){
 
 
   if(is.null(learner)){
     stop("No learning method specified. Please specify a `learner`")
-  }else{
-    if(learner == "logistic"){
-      learner = "glm"
-      family = "binomial"
-      metric = "Accuracy"
-      tunegrid = NULL
-      preprocess = NULL
-      tuneLength = NULL
-    }else if(learner == "rf"){
-      family = NULL
-      metric = "Accuracy"
-      family = NULL
-      preprocess = NULL
-      tuneLength = NULL
+  }
+  if(match(learner,c("logistic","rf","lasso","svmLinear","svmRadial"),unmatch=FALSE)){
+      if(learner == "logistic"){
+        learner = "glm"
+        family = "binomial"
+        metric = "Accuracy"
+        tunegrid = NULL
+        preprocess = NULL
+        tuneLength = NULL
+      }else if(learner == "rf"){
+        family = NULL
+        metric = "Accuracy"
+        family = NULL
+        preprocess = NULL
+        tuneLength = NULL
+      }else if(learner == "lasso"){
+        family = NULL
+        metric = "Accuracy"
+        family = NULL
+        preprocess = NULL
+        tuneLength = NULL
+      }else if(learner == "svmLinear"){
+        family = NULL
+        metric = "Accuracy"
+        family = NULL
+        preprocess = NULL
+        tuneLength = NULL
+      }else if(learner == "svmRadial"){
+        family = NULL
+        metric = "Accuracy"
+        family = NULL
+        preprocess = NULL
+        tuneLength = NULL
+      }
     }else{
-      family = NULL
-      metric = "Accuracy"
-      tunegrid = NULL
-      preprocess = c("center", "scale")
-      tuneLength = 10
-    }
+    stop("This `learner` is not implemented.")
   }
 
 
