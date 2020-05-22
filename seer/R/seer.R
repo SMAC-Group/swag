@@ -206,7 +206,7 @@ seer <- function(y, X, learner = NULL, dmax = NULL, m = NULL, q0=0.01, seed = 16
       tunegrid = expand.grid(.mtry=mtry)
     }
 
-    cv_errors <- foreach(i = seq_len(nrow(var_mat)), .combine=c) %dopar% {
+    for(i in seq_len(nrow(var_mat))){
       rc <- var_mat[i,]
       seed <- graine[d] + i
       x <- as.matrix(X[,rc])
@@ -215,10 +215,8 @@ seer <- function(y, X, learner = NULL, dmax = NULL, m = NULL, q0=0.01, seed = 16
       learn = train(y ~., data = df, method = learner, metric = metric, family = family,
                     trControl=trctrl, preProcess = preprocess, tuneLength = tuneLength,
                     tuneGrid=tunegrid)
-      max(learn$results$Accuracy)
+      cv_errors[i] <- 1 - max(learn$results$Accuracy)
     }
-
-    # attr(cv_errors,"rng") <- NULL
 
     CVs[[d]] <- cv_errors
     cv1 <- quantile(cv_errors,probs=q0,na.rm=T)
