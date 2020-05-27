@@ -78,7 +78,14 @@ seer <- function(y, X, learner = "logistic", dmax = NULL, m = NULL, q0=0.01, see
       }
     }else{
     stop("This `learner` is not implemented.")
-  }
+    }
+  # Tunegrid for random forest
+    if(learner == "rf"){
+      mtry <- 1
+      tunegrid = expand.grid(.mtry=mtry)
+    }else{
+      tunegrid = NULL
+    }
 
   if(is.null(y)){
     stop("Please provide a response vector `y`")
@@ -138,21 +145,16 @@ seer <- function(y, X, learner = "logistic", dmax = NULL, m = NULL, q0=0.01, see
   VarMat <- vector("list",dmax)
 
   ## Screening step
-  cv_errors <- times <- vector("numeric",p)
+  cv_errors <- times <- rep(NA,p)
   #10 fold CV repeated 10 times as
   trctrl <- trainControl(method = "repeatedcv", number = 10, repeats = 10)
 
   for(i in seq_len(p)){
-    # Tunegrid for random forest
-    if(learner == "rf"){
-      mtry <- 1
-      tunegrid = expand.grid(.mtry=mtry)
-    }else{
-      tunegrid = NULL
-    }
+
 
     x <- as.matrix(X[,i])
     df <- data.frame(y,x)
+    set.seed(graine[1]+i)
     learn <- train(y ~., data = df, method = leaner_screen,metric = metric, family = family_screen,
                    trControl=trctrl, preProcess = preprocess, tuneLength = tuneLength,
                    tuneGrid=tunegrid)
@@ -162,6 +164,7 @@ seer <- function(y, X, learner = "logistic", dmax = NULL, m = NULL, q0=0.01, see
   print(1)
   CVs[[1]] <- cv_errors
   VarMat[[1]] <- seq_along(cv_errors)
+  dim(VarMat[[1]]) <- c(p,1)
 
   cv_errors <- cv_errors[!is.na(cv_errors)]
 
@@ -175,16 +178,17 @@ seer <- function(y, X, learner = "logistic", dmax = NULL, m = NULL, q0=0.01, see
   # Compute for d>1 to dmax
 
   for(d in 2:dmax){
+    # Tunegrid for random forest
+    if(learner == "rf"){
+      mtry <- d
+      tunegrid = expand.grid(.mtry=mtry)
+    }
 
     # cv0 <- cv1
     idRow <- IDs[[d-1]]
-    if(d==2){
-      idVar <- VarMat[[d-1]][idRow]
-      nrv <- length(idVar)
-    }else{
-      idVar <- VarMat[[d-1]][idRow,]
-      nrv <- nrow(idVar)
-    }
+    idVar <- VarMat[[d-1]][idRow,]
+    nrv <- nrow(idVar)
+
     # build all possible
     A <- matrix(nr=nrv*length(id_screening),nc=d)
     A[,1:(d-1)] <- kronecker(cbind(rep(1,length(id_screening))),idVar)
@@ -195,7 +199,7 @@ seer <- function(y, X, learner = "logistic", dmax = NULL, m = NULL, q0=0.01, see
     rm(list=c("A","B"))
 
     if(nrow(var_mat)>m){
-      set.seed(graine[d]+1)
+      set.seed(graine[d]-1)
       VarMat[[d]] <- var_mat[sample.int(nrow(var_mat),m),]
     }else{
       VarMat[[d]] <- var_mat
@@ -204,19 +208,13 @@ seer <- function(y, X, learner = "logistic", dmax = NULL, m = NULL, q0=0.01, see
     var_mat <- VarMat[[d]]
 
     cv_errors <- rep(NA,nrow(var_mat))
-    if(learner == "rf"){
-      mtry <- d
-      tunegrid = expand.grid(.mtry=mtry)
-    }else{
-      tunegrid = NULL
-    }
 
     for(i in seq_len(nrow(var_mat))){
       rc <- var_mat[i,]
-      seed <- graine[d] + i
       x <- as.matrix(X[,rc])
       mtry <- sqrt(ncol(x))
       df = data.frame(y,x)
+      set.seed(graine[d] + i)
       learn = train(y ~., data = df, method = learner, metric = metric, family = family,
                     trControl=trctrl, preProcess = preprocess, tuneLength = tuneLength,
                     tuneGrid=tunegrid)
@@ -232,24 +230,24 @@ seer <- function(y, X, learner = "logistic", dmax = NULL, m = NULL, q0=0.01, see
   stopCluster(cl)
   ## Define the seer sets of models
   # Dimension which minimize the median cv error at each dimesion
-  mod_size_min_med = which.min(unlist(lapply(CVs[1:dmax], median)))
+  mod_size_min_med = which.min(sapply(CVs, median))
   #quantile of the 1% most predictive models
-  treshold_seer_set = quantile(CVs[[mod_size_min_med]],seq(0, 1, 0.01))[2]
+  treshold_seer_set = quantile(CVs[[mod_size_min_med]],probs=0.01)
 
   # Vector of models dimension
   dim_model = 1:dmax
 
   # Find the index of model selected
-  index_model_select = list()
+  index_model_select = vector("list",dmax)
   for(d in seq_len(dmax)){
-    if(sum(CVs[[dim_model[d]]] <=treshold_seer_set) == 0){
+    if(sum(CVs[[d]] <= treshold_seer_set) == 0){
       index_model_select[[d]] = "empty"
     }else{
-      index_model_select[[d]] = which(CVs[[dim_model[d]]] <=treshold_seer_set)
+      index_model_select[[d]] = which(CVs[[d]] <= treshold_seer_set)
     }
   }
 
-  # vector od model dimension selected
+  # vector of model dimension selected
   model_dim_selected = which(index_model_select != "empty")
 
   ###### SEER subset of model ######
@@ -261,11 +259,7 @@ seer <- function(y, X, learner = "logistic", dmax = NULL, m = NULL, q0=0.01, see
 
   for(d in seq_along(model_dim_selected)){
     index_mod = model_dim_selected[[d]]
-    if(d == 1){
-      seer_model[[d]] <- VarMat[[index_mod]][index_model_select[[index_mod]]]
-    }else{
-      seer_model[[d]] <- VarMat[[index_mod]][index_model_select[[index_mod]],]
-    }
+    seer_model[[d]] <- VarMat[[index_mod]][index_model_select[[index_mod]],]
     seer_cv_error[[d]] <- CVs[[index_mod]][index_model_select[[index_mod]]]
   }
 
@@ -288,7 +282,7 @@ seer <- function(y, X, learner = "logistic", dmax = NULL, m = NULL, q0=0.01, see
              x_train = X)
 
   class(obj) = "seer"
-  obj
+  invisible(obj)
 }
 
 
