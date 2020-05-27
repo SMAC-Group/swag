@@ -55,7 +55,7 @@ seer <- function(y, X, learner = "logistic", dmax = NULL, m = NULL, q0=0.01, see
       }else if(learner == "lasso"){
         leaner_screen =  "glm"
         family_screen =  binomial()
-        learner = glmnet
+        learner = "glmnet"
         family = "binomial"
         metric = "Accuracy"
         family = NULL
@@ -132,9 +132,11 @@ seer <- function(y, X, learner = "logistic", dmax = NULL, m = NULL, q0=0.01, see
   }
 
   # Maximum number of attributes per learner
-  if(dmax>p){
-    warning(paste0("Your dmax value:",dmax," exceeds the number attributes"))
-    dmax <- p
+  if(!is.null(dmax)){
+    if(dmax>p){
+      warning(paste0("Your dmax value:",dmax," exceeds the number attributes"))
+      dmax <- p
+    }
   }
 
   # If not user-defined, dmax is such that EPV is approx 5
@@ -158,13 +160,11 @@ seer <- function(y, X, learner = "logistic", dmax = NULL, m = NULL, q0=0.01, see
   VarMat <- vector("list",dmax)
 
   ## Screening step
-  cv_errors <- times <- rep(NA,p)
+  cv_errors <- rep(NA,p)
   #10 fold CV repeated 10 times as
   trctrl <- trainControl(method = "repeatedcv", number = 10, repeats = 10)
 
   for(i in seq_len(p)){
-
-
     x <- as.matrix(X[,i])
     df <- data.frame(y,x)
     set.seed(graine[1]+i)
@@ -430,6 +430,4 @@ seer_valid <- function(obj, y_valid, X_valid, seed = 163){
                        mat_test_pred = mat_test_pred,
                        ce_all = count_error))
   invisible(out)
-
-
 }
