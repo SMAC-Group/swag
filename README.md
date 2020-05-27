@@ -1,1 +1,1 @@
-# SEER-R-Package
+# SWAG-R-Package
