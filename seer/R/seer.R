@@ -44,34 +44,33 @@ seer <- function(y, X, learner = "logistic", dmax = NULL, m = NULL, q0=0.01, see
   if(is.null(learner)){
     stop("No learning method specified. Please specify a `learner`")
   }
-  if(match(learner,c("logistic","rf","lasso","svmLinear","svmRadial"),nomatch=FALSE)){
-      if(learner == "logistic"){
-        learner = "glm"
-        family = "binomial"
-        metric = "Accuracy"
-        tunegrid = NULL
-        preprocess = NULL
-        tuneLength = NULL
-      }else if(learner == "rf"){
-        family = NULL
+  if(match(learner,c("rf","lasso","svmLinear","svmRadial"),nomatch=FALSE)){
+      if(learner == "rf"){
+        leaner_screen = learner
+        family_screen = family = NULL
         metric = "Accuracy"
         family = NULL
         preprocess = NULL
         tuneLength = NULL
       }else if(learner == "lasso"){
-        family = NULL
+        leaner_screen =  "glm"
+        family_screen =  binomial()
+        learner = glmnet
+        family = "binomial"
         metric = "Accuracy"
         family = NULL
         preprocess = NULL
         tuneLength = NULL
       }else if(learner == "svmLinear"){
-        family = NULL
+        leaner_screen = learner
+        family_screen = family = NULL
         metric = "Accuracy"
         family = NULL
         preprocess = NULL
         tuneLength = NULL
       }else if(learner == "svmRadial"){
-        family = NULL
+        leaner_screen = learner
+        family_screen = family = NULL
         metric = "Accuracy"
         family = NULL
         preprocess = NULL
@@ -144,20 +143,23 @@ seer <- function(y, X, learner = "logistic", dmax = NULL, m = NULL, q0=0.01, see
   trctrl <- trainControl(method = "repeatedcv", number = 10, repeats = 10)
 
   for(i in seq_len(p)){
+    # Tunegrid for random forest
     if(learner == "rf"){
       mtry <- 1
       tunegrid = expand.grid(.mtry=mtry)
+    }else{
+      tunegrid = NULL
     }
 
     x <- as.matrix(X[,i])
     df <- data.frame(y,x)
-    learn <- train(y ~., data = df, method = learner,metric = metric, family = family,
+    learn <- train(y ~., data = df, method = leaner_screen,metric = metric, family = family_screen,
                    trControl=trctrl, preProcess = preprocess, tuneLength = tuneLength,
                    tuneGrid=tunegrid)
     cv_errors[i] = 1 - max(learn$results$Accuracy)
   }
 
-
+  print(1)
   CVs[[1]] <- cv_errors
   VarMat[[1]] <- seq_along(cv_errors)
 
@@ -205,6 +207,8 @@ seer <- function(y, X, learner = "logistic", dmax = NULL, m = NULL, q0=0.01, see
     if(learner == "rf"){
       mtry <- d
       tunegrid = expand.grid(.mtry=mtry)
+    }else{
+      tunegrid = NULL
     }
 
     for(i in seq_len(nrow(var_mat))){
@@ -212,7 +216,7 @@ seer <- function(y, X, learner = "logistic", dmax = NULL, m = NULL, q0=0.01, see
       seed <- graine[d] + i
       x <- as.matrix(X[,rc])
       mtry <- sqrt(ncol(x))
-      breast_1 = data.frame(y,x)
+      df = data.frame(y,x)
       learn = train(y ~., data = df, method = learner, metric = metric, family = family,
                     trControl=trctrl, preProcess = preprocess, tuneLength = tuneLength,
                     tuneGrid=tunegrid)
@@ -222,6 +226,7 @@ seer <- function(y, X, learner = "logistic", dmax = NULL, m = NULL, q0=0.01, see
     CVs[[d]] <- cv_errors
     cv1 <- quantile(cv_errors,probs=q0,na.rm=T)
     IDs[[d]] <- which(cv_errors<=cv1)
+    print(d)
   }
 
   stopCluster(cl)
@@ -277,8 +282,147 @@ seer <- function(y, X, learner = "logistic", dmax = NULL, m = NULL, q0=0.01, see
              table_variable = table_variable,
              variable_index = variable_index,
              seer_model = seer_model,
-             seer_cv_error = seer_cv_error)
+             seer_cv_error = seer_cv_error,
+             learner = learner,
+             y_train = y,
+             x_train = X)
 
   class(obj) = "seer"
   obj
+}
+
+
+#' @title SEER validation for ML method.
+#'
+#' @description SEER algo
+#' @param obj A \code{object} of of class \code{'seer'}.
+#' @param X A \code{matrix} or \code{data.frame} of attributes
+#' @param parallel_comput  An \code{boolean} to allow for parallel computing.
+#' @param seed  An \code{integer} that controls the reproducibility.
+#' @param nc An \code{double} that specify the number of core for parallel computation.
+#' @return A \code{seer} object with the structure:
+#' \describe{
+#' \item{}{}
+#' }
+#' @author Gaetan Bakalli and Samuel Orso
+#' @import caret
+#' @import doParallel
+#' @export
+#' @examples
+#' seer()
+
+seer_valid <- function(obj, y_valid, X_valid, seed = 163){
+
+  if(learner == "rf"){
+    leaner_screen = learner
+    family_screen = family = NULL
+    metric = "Accuracy"
+    family = NULL
+    preprocess = NULL
+    tuneLength = NULL
+  }else if(learner == "glmnet"){
+    leaner_screen =  "glm"
+    family_screen =  binomial()
+    learner = glmnet
+    family = "binomial"
+    metric = "Accuracy"
+    family = NULL
+    preprocess = NULL
+    tuneLength = NULL
+  }else if(learner == "svmLinear"){
+    leaner_screen = learner
+    family_screen = family = NULL
+    metric = "Accuracy"
+    family = NULL
+    preprocess = NULL
+    tuneLength = NULL
+  }else if(learner == "svmRadial"){
+    leaner_screen = learner
+    family_screen = family = NULL
+    metric = "Accuracy"
+    family = NULL
+    preprocess = NULL
+    tuneLength = NULL
+  }
+
+  # Counting error list
+  ce = list()
+  # y for training and valid sample sample
+  y_train <- as.factor(obj$y_train)
+  y_valid <- as.factor(y_valid)
+
+  # Options for learner
+  trctrl <- trainControl(method = "repeatedcv", number = 10, repeats = 10)
+
+  pred_error_list = list()
+  for(d in seq_along(obj$model_dim_selected)){
+    # Matrix of selected variables at dimention d
+    var_mat_select <- obj$seer_model[[d]]
+    # Initialize vector of counting errors
+    if(is.null(dim(obj$seer_model[[d]])) ){
+      counting_error_svm = rep(NA,1)
+      test_pred = matrix(NA,length(y_test),1)
+      pb1 = 1
+      n_mod_dim = 1
+    }else{
+      counting_error_svm = rep(NA,dim(var_mat_select)[1])
+      test_pred = matrix(NA,length(y_test),dim(var_mat_select)[1])
+      pb1 = dim(var_mat_select)[1]
+      n_mod_dim = dim(var_mat_select)[1]
+    }
+    # Store the vector of prediction
+    nc = detectCores()
+    cl <- makeCluster(nc)
+    registerDoParallel(cl)
+
+    pb <- txtProgressBar(min = 0, max = pb1, style = 3)
+    for(j in 1:n_mod_dim){
+      # Index of selected covariate of model j
+
+      rc <- var_mat_select[j,]
+      # New X train matrix and create data frame for svm computation
+      X1 <- as.matrix(obj$x_train[,rc])
+      df = data.frame(y_train,X1)
+      # Svm object
+      learn = train(y ~., data = df, method = learner, metric = metric, family = family,
+                         trControl=trctrl, preProcess = preprocess, tuneLength = tuneLength,
+                         tuneGrid=tunegrid)
+
+      ## Counting errors and confusion matrix
+      # X test matrix and create data frame for svm computation
+      X = X_valid[,rc]
+      df1 <- data.frame(yte, X2)
+      # create the data matrix for prediction storage
+      df2 <- data.frame(X2)
+      # make precition out-of-sample
+      test_pred[,j] <- predict(svm_radial, newdata = df2)
+      # Store confusion matrix
+      obj2 = confusionMatrix(table(predict(svm_radial, newdata = df2), df1$yte))
+      # Compute the counting error
+      counting_error_svm[j] = sum(as.vector(obj2$table)[c(2,3)])
+      setTxtProgressBar(pb, j)
+    }
+    stopCluster(cl)
+    ## Sort the signs and extract the quantile when it changes
+    # List of counting error for various model dimention
+    ce[[d]] = counting_error_svm
+    # List of matrices of prediction
+    pred_error_list[[d]] =  test_pred
+    print(d)
+  }
+
+  count_error = unlist(ce)
+  # Majority rule svm
+  mat_test_pred = do.call(cbind,test_pred_list)
+  #mat_test_pred[mat_test_pred == 1] = 0
+  #mat_test_pred[mat_test_pred == 2] = 1
+  pred_mod_av = (round(apply(mat_test_pred,1,mean)))
+  # counting error model averaging
+  mode_av_ce = abs(sum(pred_mod_av-as.numeric(y_test)))
+  out = structure(list(ma_ce = mode_av_ce,
+                       mat_test_pred = mat_test_pred,
+                       ce_all = count_error))
+  invisible(out)
+
+
 }
