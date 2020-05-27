@@ -132,13 +132,6 @@ seer <- function(y, X, learner = "logistic", dmax = NULL, m = NULL, q0=0.01, see
   }
 
   # Maximum number of attributes per learner
-  if(!is.null(dmax)){
-    if(dmax>p){
-      warning(paste0("Your dmax value:",dmax," exceeds the number attributes"))
-      dmax <- p
-    }
-  }
-
   # If not user-defined, dmax is such that EPV is approx 5
   if(is.null(dmax)){
     event <- table(y)
@@ -149,6 +142,10 @@ seer <- function(y, X, learner = "logistic", dmax = NULL, m = NULL, q0=0.01, see
       dmax <- 3
     }
   }
+
+  # dmax should not exceed p
+  if(dmax > p) dmax <- p
+
 
   ## Seed
   set.seed(seed)
