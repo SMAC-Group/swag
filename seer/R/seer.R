@@ -110,6 +110,11 @@ seer <- function(y, X, learner = "logistic", dmax = NULL, m = NULL, q0=0.01, see
     y <- as.factor(y)
   }
 
+  # verify y is binary
+  if(nlevels(y)>2){
+    stop("Please provide a binary response `y`")
+  }
+
   # Define parallelisation parameter
   if(isTRUE(parallel_comput)){
     if(is.null(nc)){
@@ -127,9 +132,17 @@ seer <- function(y, X, learner = "logistic", dmax = NULL, m = NULL, q0=0.01, see
   }
 
   # Maximum number of attributes per learner
+  if(dmax>p){
+    warning(paste0("Your dmax value:",dmax," exceeds the number attributes"))
+    dmax <- p
+  }
+
+  # If not user-defined, dmax is such that EPV is approx 5
   if(is.null(dmax)){
-    event <- as.numeric(as.character(y))
-    dmax <- ceiling(min(sum(event),n-sum(event))/p)
+    event <- table(y)
+    dmax <- ceiling(min(event[1],n-event[2])/5)
+
+    # Explore at minima dmax=3 (if not specified by the user)
     if(dmax == 1){
       dmax <- 3
     }
