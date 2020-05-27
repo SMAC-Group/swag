@@ -1,4 +1,4 @@
-# Copyright (C) 2018 Gaetan Bakalli, Samuel Orso
+# Copyright (C) 2020 Gaetan Bakalli, Samuel Orso
 #
 # This file is part of seer R Methods Package
 #
@@ -27,6 +27,7 @@
 #' @param parallel_comput  An \code{boolean} to allow for parallel computing.
 #' @param seed  An \code{integer} that controls the reproducibility.
 #' @param nc An \code{double} that specify the number of core for parallel computation.
+#' @param verbose A \code{boolean} for printing current progress of the algorithm.
 #' @return A \code{seer} object with the structure:
 #' \describe{
 #' \item{}{}
@@ -34,11 +35,12 @@
 #' @author Gaetan Bakalli and Samuel Orso
 #' @import caret
 #' @import doParallel
+#' @import parallel
 #' @export
 #' @examples
 #' seer()
 seer <- function(y, X, learner = "logistic", dmax = NULL, m = NULL, q0=0.01, seed = 163,
-                 parallel_comput = T, nc = NULL, ...){
+                 parallel_comput = T, nc = NULL, verbose=FALSE, ...){
 
 
   if(is.null(learner)){
@@ -99,6 +101,11 @@ seer <- function(y, X, learner = "logistic", dmax = NULL, m = NULL, q0=0.01, see
     }
   }
 
+  # Check missing observations (not supported currently)
+  if(sum(is.na(y)) > 0 || sum(is.na(X)) > 0){
+    stop("Please provide data without missing values")
+  }
+
   ## object dimension
   # Number of attributes
   p <- ncol(X)
@@ -118,12 +125,10 @@ seer <- function(y, X, learner = "logistic", dmax = NULL, m = NULL, q0=0.01, see
   # Define parallelisation parameter
   if(isTRUE(parallel_comput)){
     if(is.null(nc)){
-      nc = detectCores()
-    }else{
-      nc = nc
+      nc = parallel::detectCores()
     }
-    cl <- makePSOCKcluster(nc)
-    registerDoParallel(cl)
+    cl <- parallel::makePSOCKcluster(nc)
+    doParallel::registerDoParallel(cl)
   }
 
   # Maximum number of attributes per learner
@@ -159,32 +164,37 @@ seer <- function(y, X, learner = "logistic", dmax = NULL, m = NULL, q0=0.01, see
   ## Screening step
   cv_errors <- rep(NA,p)
   #10 fold CV repeated 10 times as
-  trctrl <- trainControl(method = "repeatedcv", number = 10, repeats = 10)
+  trctrl <- caret::trainControl(method = "repeatedcv", number = 10, repeats = 10)
 
+  # compute CV errors
   for(i in seq_len(p)){
     x <- as.matrix(X[,i])
     df <- data.frame(y,x)
     set.seed(graine[1]+i)
-    learn <- train(y ~., data = df, method = leaner_screen,metric = metric, family = family_screen,
-                   trControl=trctrl, preProcess = preprocess, tuneLength = tuneLength,
-                   tuneGrid=tunegrid)
+    learn <- caret::train(y ~., data = df, method = learner, metric = metric,
+                          family = family, trControl=trctrl, preProcess = preprocess,
+                          tuneLength = tuneLength, tuneGrid=tunegrid)
     cv_errors[i] = 1 - max(learn$results$Accuracy)
   }
 
-  print(1)
+  # Store results
   CVs[[1]] <- cv_errors
   VarMat[[1]] <- seq_along(cv_errors)
   dim(VarMat[[1]]) <- c(p,1)
 
+  # Remove NA's
   cv_errors <- cv_errors[!is.na(cv_errors)]
 
 
   ## Dimension from 2 to dmax
   ## Meta-parameter decision rule.
   # Quantile for attributes selection
-  IDs[[1]] <- which(cv_errors <= quantile(cv_errors,q0))
+  cv1 <- quantile(cv_errors,q0)
+  IDs[[1]] <- which(cv_errors <= cv1)
   id_screening <- IDs[[1]]
-
+  if(verbose){
+    print(paste0("Dimension explored: ",1," - CV errors at q0: ",round(cv1,4)))
+  }
   # Compute for d>1 to dmax
 
   for(d in 2:dmax){
@@ -198,8 +208,9 @@ seer <- function(y, X, learner = "logistic", dmax = NULL, m = NULL, q0=0.01, see
     idRow <- IDs[[d-1]]
     idVar <- VarMat[[d-1]][idRow,]
     nrv <- nrow(idVar)
+    if(is.null(nrv)) nrv <- length(idVar)
 
-    # build all possible
+    # build all possible combinations
     A <- matrix(nr=nrv*length(id_screening),nc=d)
     A[,1:(d-1)] <- kronecker(cbind(rep(1,length(id_screening))),idVar)
     A[,d] <- rep(id_screening,each=nrv)
@@ -208,13 +219,15 @@ seer <- function(y, X, learner = "logistic", dmax = NULL, m = NULL, q0=0.01, see
     var_mat <- B[id_ndup,]
     rm(list=c("A","B"))
 
+    if(is.null(dim(var_mat))) dim(var_mat) <- c(1,length(var_mat))
+
+    # Reduce number of model if exceeding `m`
     if(nrow(var_mat)>m){
       set.seed(graine[d]-1)
       VarMat[[d]] <- var_mat[sample.int(nrow(var_mat),m),]
     }else{
       VarMat[[d]] <- var_mat
     }
-
     var_mat <- VarMat[[d]]
 
     cv_errors <- rep(NA,nrow(var_mat))
@@ -225,19 +238,22 @@ seer <- function(y, X, learner = "logistic", dmax = NULL, m = NULL, q0=0.01, see
       mtry <- sqrt(ncol(x))
       df = data.frame(y,x)
       set.seed(graine[d] + i)
-      learn = train(y ~., data = df, method = learner, metric = metric, family = family,
-                    trControl=trctrl, preProcess = preprocess, tuneLength = tuneLength,
-                    tuneGrid=tunegrid)
+      learn <- caret::train(y ~., data = df, method = learner, metric = metric,
+                            family = family, trControl=trctrl, preProcess = preprocess,
+                            tuneLength = tuneLength, tuneGrid=tunegrid)
       cv_errors[i] <- 1 - max(learn$results$Accuracy)
     }
 
     CVs[[d]] <- cv_errors
     cv1 <- quantile(cv_errors,probs=q0,na.rm=T)
     IDs[[d]] <- which(cv_errors<=cv1)
-    print(d)
+
+    if(verbose){
+      print(paste0("Dimension explored: ",d," - CV errors at q0: ",round(cv1,4))
+    }
   }
 
-  stopCluster(cl)
+  parallel::stopCluster(cl)
   ## Define the seer sets of models
   # Dimension which minimize the median cv error at each dimesion
   mod_size_min_med = which.min(sapply(CVs, median))
@@ -277,7 +293,6 @@ seer <- function(y, X, learner = "logistic", dmax = NULL, m = NULL, q0=0.01, see
   table_variable = table(unlist(seer_model))
   variable_index = as.numeric(names(table_variable))
   names(table_variable) = colnames(X[,variable_index])
-
 
   obj = list(pred_cv = CVs,
              model_evaluated = VarMat,

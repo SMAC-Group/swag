@@ -12,5 +12,6 @@ LazyData: false
 Depends: R (>= 3.6.0)
 Imports: 
   doParallel,
-  caret
+  caret,
+  parallel
 RoxygenNote: 7.1.0
