@@ -1,22 +1,22 @@
 # Copyright (C) 2020 Gaetan Bakalli, Samuel Orso
 #
-# This file is part of seer R Methods Package
+# This file is part of swag R Methods Package
 #
-# The `seer` R package is free software: you can redistribute it and/or modify
+# The `swag` R package is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
 # published by the Free Software Foundation, either version 3 of the
 # License, or (at your option) any later version.
 #
-# The `seer` R package is distributed in the hope that it will be useful, but
+# The `swag` R package is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#' @title SEER wrapper algorithm for ML method.
+#' @title swag wrapper algorithm for ML method.
 #'
-#' @description SEER algo
+#' @description swag algo
 #' @param y A \code{vector} of binary response variable.
 #' @param X A \code{matrix} or \code{data.frame} of attributes
 #' @param learner A \code{string} defining the learner type (method available: \code{"logistic"}, \code{"svmLinear"},
@@ -28,7 +28,7 @@
 #' @param seed  An \code{integer} that controls the reproducibility.
 #' @param nc An \code{double} that specify the number of core for parallel computation.
 #' @param verbose A \code{boolean} for printing current progress of the algorithm.
-#' @return A \code{seer} object with the structure:
+#' @return A \code{swag} object with the structure:
 #' \describe{
 #' \item{}{}
 #' }
@@ -38,8 +38,8 @@
 #' @import parallel
 #' @export
 #' @examples
-#' seer()
-seer <- function(y, X, learner = "logistic", dmax = NULL, m = NULL, q0=0.01, seed = 163,
+#' swag()
+swag <- function(y, X, learner = "logistic", dmax = NULL, m = NULL, q0=0.01, seed = 163,
                  parallel_comput = T, nc = NULL, verbose=FALSE, ...){
 
 
@@ -249,16 +249,16 @@ seer <- function(y, X, learner = "logistic", dmax = NULL, m = NULL, q0=0.01, see
     IDs[[d]] <- which(cv_errors<=cv1)
 
     if(verbose){
-      print(paste0("Dimension explored: ",d," - CV errors at q0: ",round(cv1,4))
+      print(paste0("Dimension explored: ",d," - CV errors at q0: ",round(cv1,4)))
     }
   }
 
   parallel::stopCluster(cl)
-  ## Define the seer sets of models
+  ## Define the swag sets of models
   # Dimension which minimize the median cv error at each dimesion
   mod_size_min_med = which.min(sapply(CVs, median))
   #quantile of the 1% most predictive models
-  treshold_seer_set = quantile(CVs[[mod_size_min_med]],probs=0.01)
+  treshold_swag_set = quantile(CVs[[mod_size_min_med]],probs=0.01)
 
   # Vector of models dimension
   dim_model = 1:dmax
@@ -266,60 +266,60 @@ seer <- function(y, X, learner = "logistic", dmax = NULL, m = NULL, q0=0.01, see
   # Find the index of model selected
   index_model_select = vector("list",dmax)
   for(d in seq_len(dmax)){
-    if(sum(CVs[[d]] <= treshold_seer_set) == 0){
+    if(sum(CVs[[d]] <= treshold_swag_set) == 0){
       index_model_select[[d]] = "empty"
     }else{
-      index_model_select[[d]] = which(CVs[[d]] <= treshold_seer_set)
+      index_model_select[[d]] = which(CVs[[d]] <= treshold_swag_set)
     }
   }
 
   # vector of model dimension selected
   model_dim_selected = which(index_model_select != "empty")
 
-  ###### SEER subset of model ######
+  ###### swag subset of model ######
 
-  ## create output for SEER subset
+  ## create output for swag subset
   ## index of variable selected and respective cv error
-  seer_model = list()
-  seer_cv_error = list()
+  swag_model = list()
+  swag_cv_error = list()
 
   for(d in seq_along(model_dim_selected)){
     index_mod = model_dim_selected[[d]]
-    seer_model[[d]] <- VarMat[[index_mod]][index_model_select[[index_mod]],]
-    seer_cv_error[[d]] <- CVs[[index_mod]][index_model_select[[index_mod]]]
+    swag_model[[d]] <- VarMat[[index_mod]][index_model_select[[index_mod]],]
+    swag_cv_error[[d]] <- CVs[[index_mod]][index_model_select[[index_mod]]]
   }
 
   #
-  table_variable = table(unlist(seer_model))
+  table_variable = table(unlist(swag_model))
   variable_index = as.numeric(names(table_variable))
   names(table_variable) = colnames(X[,variable_index])
 
   obj = list(pred_cv = CVs,
              model_evaluated = VarMat,
              model_selected = IDs,
-             model_seer_set = index_model_select,
+             model_swag_set = index_model_select,
              table_variable = table_variable,
              variable_index = variable_index,
-             seer_model = seer_model,
-             seer_cv_error = seer_cv_error,
+             swag_model = swag_model,
+             swag_cv_error = swag_cv_error,
              learner = learner,
              y_train = y,
              x_train = X)
 
-  class(obj) = "seer"
+  class(obj) = "swag"
   invisible(obj)
 }
 
 
-#' @title SEER validation for ML method.
+#' @title swag validation for ML method.
 #'
-#' @description SEER algo
-#' @param obj A \code{object} of of class \code{'seer'}.
+#' @description swag algo
+#' @param obj A \code{object} of of class \code{'swag'}.
 #' @param X A \code{matrix} or \code{data.frame} of attributes
 #' @param parallel_comput  An \code{boolean} to allow for parallel computing.
 #' @param seed  An \code{integer} that controls the reproducibility.
 #' @param nc An \code{double} that specify the number of core for parallel computation.
-#' @return A \code{seer} object with the structure:
+#' @return A \code{swag} object with the structure:
 #' \describe{
 #' \item{}{}
 #' }
@@ -328,9 +328,9 @@ seer <- function(y, X, learner = "logistic", dmax = NULL, m = NULL, q0=0.01, see
 #' @import doParallel
 #' @export
 #' @examples
-#' seer()
+#' swag()
 
-seer_valid <- function(obj, y_valid, X_valid, seed = 163){
+swag_valid <- function(obj, y_valid, X_valid, seed = 163){
 
   if(learner == "rf"){
     leaner_screen = learner
@@ -376,9 +376,9 @@ seer_valid <- function(obj, y_valid, X_valid, seed = 163){
   pred_error_list = list()
   for(d in seq_along(obj$model_dim_selected)){
     # Matrix of selected variables at dimention d
-    var_mat_select <- obj$seer_model[[d]]
+    var_mat_select <- obj$swag_model[[d]]
     # Initialize vector of counting errors
-    if(is.null(dim(obj$seer_model[[d]])) ){
+    if(is.null(dim(obj$swag_model[[d]])) ){
       counting_error_svm = rep(NA,1)
       test_pred = matrix(NA,length(y_test),1)
       pb1 = 1

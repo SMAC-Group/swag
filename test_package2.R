@@ -7,9 +7,9 @@ y <- y[-id]
 X <- X[-id,]
 
 
-test_logistic <- seer(y, X, q0 = .5, nc = 4, verbose = TRUE) # default for logistic regression
-test_svmLinear <- seer(y, X, learner = "svmLinear", dmax = 3, q0 = .5, nc = 4, verbose = TRUE)
-test_svmRadial <- seer(y, X, learner = "svmRadial", dmax = 3, q0 = .5, nc = 4, verbose = TRUE)
-test_lasso <- seer(y, X, learner = "lasso", dmax = 3, q0 = .5, nc = 4, verbose = TRUE)
-test_rf <- seer(y, X, learner = "rf", dmax = 3, q0 = .5, nc = 4, verbose = TRUE)
+test_logistic <- swag(y, X, q0 = .5, nc = 4, verbose = TRUE) # default for logistic regression
+test_svmLinear <- swag(y, X, learner = "svmLinear", dmax = 3, q0 = .5, nc = 4, verbose = TRUE)
+test_svmRadial <- swag(y, X, learner = "svmRadial", dmax = 3, q0 = .5, nc = 4, verbose = TRUE)
+test_lasso <- swag(y, X, learner = "lasso", dmax = 3, q0 = .5, nc = 4, verbose = TRUE)
+test_rf <- swag(y, X, learner = "rf", dmax = 3, q0 = .5, nc = 4, verbose = TRUE)
 
