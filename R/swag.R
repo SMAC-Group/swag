@@ -1,4 +1,4 @@
-# Copyright (C) 2020 Gaetan Bakalli, Samuel Orso
+# Copyright (C) 2020 Gaetan Bakalli, Samuel Orso and Cesare Miglioli
 #
 # This file is part of SWAG-R Package
 #
@@ -26,7 +26,7 @@
 #' \describe{
 #' \item{}{}
 #' }
-#' @author Gaetan Bakalli and Samuel Orso
+#' @author Gaetan Bakalli, Samuel Orso and Cesare Miglioli
 #' @import caret
 #' @export
 #' @examples
@@ -110,6 +110,8 @@ swag <- function(x,
   #---------------------
   cv_errors <- rep(NA,p)
 
+
+
   # compute CV errors
   for(i in seq_len(p)){
     # select the variable
@@ -137,7 +139,6 @@ swag <- function(x,
   #---------------------
   for(d in 2:control$pmax){
 
-
     # Reduce number of model if exceeding `m`
     if(nrow(var_mat)>m){
       set.seed(graine[d]-1)
@@ -148,6 +149,7 @@ swag <- function(x,
     var_mat <- VarMat[[d]]
 
     cv_errors <- rep(NA,nrow(var_mat))
+
 
     for(i in seq_len(nrow(var_mat))){
       rc <- var_mat[i,]

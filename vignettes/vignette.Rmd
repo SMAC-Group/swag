@@ -1,5 +1,5 @@
 ---
-title: "SWAG-R Vignette"
+title: "SWAG-R-Package Vignette"
 author: "Gaetan Bakalli, Samuel Orso and Cesare Miglioli"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
@@ -37,13 +37,23 @@ Now you are able to get the SWAG-R directly from Github with the following code:
 
 ```{r, eval=FALSE}
 
-install_github("DeveloperName/PackageName")
+install_github("SMAC-Group/SWAG-R-Package")
 
 ```
 
 ## Quick Start
 
+The purpose of this section is to give users a general sense of the package, including the components, whatthey do and some basic usage. We will briefly go over the main functions, see the basic operations and have alook at the outputs. Users may have a better idea after this section what functions are available, which oneto choose, or at least where to seek help. More details are given in later sections.
 
+First, we load the **SWAG-R** package:
+
+```{r, eval=FALSE}
+
+library(SWAG-R-Package)
+
+```
+
+We  a set of data created beforehand for illustration. Users can either load their own data or use those saved in the workspace.
 
 ## Styles
 
