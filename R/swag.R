@@ -43,7 +43,7 @@ swag <- function(y, X, learner = "logistic", dmax = NULL, m = NULL, q0=0.01, see
                  parallel_comput = T, nc = NULL, verbose=FALSE, ...){
 
   
-  
+  # ask to the user tunelenght for SVM case (now fixed at 10)
   
 
   if(is.null(learner)){
@@ -68,15 +68,15 @@ swag <- function(y, X, learner = "logistic", dmax = NULL, m = NULL, q0=0.01, see
         family_screen = family = NULL
         metric = "Accuracy"
         family = NULL
-        preprocess = NULL
-        tuneLength = NULL
+        preprocess = c("center", "scale")
+        tuneLength = 10
       }else if(learner == "svmRadial"){
         leaner_screen = learner
         family_screen = family = NULL
         metric = "Accuracy"
         family = NULL
-        preprocess = NULL
-        tuneLength = NULL
+        preprocess = c("center", "scale")
+        tuneLength = 10
       }
     }else{
     stop("This `learner` is not implemented.")
@@ -170,6 +170,8 @@ swag <- function(y, X, learner = "logistic", dmax = NULL, m = NULL, q0=0.01, see
   #10 fold CV repeated 10 times as
   trctrl <- caret::trainControl(method = "repeatedcv", number = 10, repeats = 10)
 
+ 
+  
   # compute CV errors
   for(i in seq_len(p)){
     x <- as.matrix(X[,i])
@@ -245,6 +247,7 @@ swag <- function(y, X, learner = "logistic", dmax = NULL, m = NULL, q0=0.01, see
 
     cv_errors <- rep(NA,nrow(var_mat))
 
+    
     for(i in seq_len(nrow(var_mat))){
       rc <- var_mat[i,]
       x <- as.matrix(X[,rc])
