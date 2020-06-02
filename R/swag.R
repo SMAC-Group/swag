@@ -1,4 +1,4 @@
-# Copyright (C) 2020 Gaetan Bakalli, Samuel Orso
+# Copyright (C) 2020 Gaetan Bakalli, Samuel Orso and Cesare Miglioli
 #
 # This file is part of swag R Methods Package
 #
@@ -32,7 +32,7 @@
 #' \describe{
 #' \item{}{}
 #' }
-#' @author Gaetan Bakalli and Samuel Orso
+#' @author Gaetan Bakalli, Samuel Orso and Cesare Miglioli
 #' @import caret
 #' @import doParallel
 #' @import parallel
@@ -42,6 +42,9 @@
 swag <- function(y, X, learner = "logistic", dmax = NULL, m = NULL, q0=0.01, seed = 163,
                  parallel_comput = T, nc = NULL, verbose=FALSE, ...){
 
+  
+  
+  
 
   if(is.null(learner)){
     stop("No learning method specified. Please specify a `learner`")
@@ -55,12 +58,9 @@ swag <- function(y, X, learner = "logistic", dmax = NULL, m = NULL, q0=0.01, see
         preprocess = NULL
         tuneLength = NULL
       }else if(learner == "lasso"){
-        leaner_screen =  "glm"
-        family_screen =  binomial()
-        learner = "glmnet"
-        family = "binomial"
+        family =  binomial()
+        learner = "glm"
         metric = "Accuracy"
-        family = NULL
         preprocess = NULL
         tuneLength = NULL
       }else if(learner == "svmLinear"){
@@ -85,8 +85,12 @@ swag <- function(y, X, learner = "logistic", dmax = NULL, m = NULL, q0=0.01, see
     if(learner == "rf"){
       mtry <- 1
       tunegrid = expand.grid(.mtry=mtry)
-    }else{
+    }
+  
+    else{
+      
       tunegrid = NULL
+      
     }
 
   if(is.null(y)){
@@ -196,12 +200,21 @@ swag <- function(y, X, learner = "logistic", dmax = NULL, m = NULL, q0=0.01, see
     print(paste0("Dimension explored: ",1," - CV errors at q0: ",round(cv1,4)))
   }
   # Compute for d>1 to dmax
-
+  
   for(d in 2:dmax){
     # Tunegrid for random forest
     if(learner == "rf"){
       mtry <- d
       tunegrid = expand.grid(.mtry=mtry)
+    } else if(learner == "lasso") {
+      
+      lambda <- seq(0,0.30,length.out = 100)
+      
+      tunegrid <- expand.grid(alpha = 1, lambda = lambda)
+      
+      learner = "glmnet"
+      family = "binomial"
+      
     }
 
     # cv0 <- cv1
