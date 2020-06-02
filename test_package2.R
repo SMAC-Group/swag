@@ -12,4 +12,3 @@ test_svmLinear <- swag(y, X, learner = "svmLinear", dmax = 3, q0 = .5, nc = 4, v
 test_svmRadial <- swag(y, X, learner = "svmRadial", dmax = 3, q0 = .5, nc = 4, verbose = TRUE)
 test_lasso <- swag(y, X, learner = "lasso", dmax = 3, q0 = .5, nc = 4, verbose = TRUE)
 test_rf <- swag(y, X, learner = "rf", dmax = 3, q0 = .5, nc = 4, verbose = TRUE)
-
