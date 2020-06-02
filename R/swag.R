@@ -1,6 +1,6 @@
 # Copyright (C) 2020 Gaetan Bakalli, Samuel Orso
 #
-# This file is part of swag R Methods Package
+# This file is part of SWAG-R Package
 #
 # The `swag` R package is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -17,209 +17,126 @@
 #' @title swag wrapper algorithm for ML method.
 #'
 #' @description swag algo
+#' @param x A \code{matrix} or \code{data.frame} of attributes
 #' @param y A \code{vector} of binary response variable.
-#' @param X A \code{matrix} or \code{data.frame} of attributes
-#' @param learner A \code{string} defining the learner type (method available: \code{"logistic"}, \code{"svmLinear"},
-#'  \code{"svmRadial"}, \code{"lasso"} and \code{"rf"})
-#' @param dmax A \code{double} representing the maximum number of attributes per learner.
-#' @param m A \code{integer} representing the maximum number of learners per dimension explored.
-#' @param q0 A \code{double} representing the proportion of screening.
-#' @param parallel_comput  An \code{boolean} to allow for parallel computing.
-#' @param seed  An \code{integer} that controls the reproducibility.
-#' @param nc An \code{double} that specify the number of core for parallel computation.
-#' @param verbose A \code{boolean} for printing current progress of the algorithm.
+#' @param control see \code{swagControl()}
+#' @param auto_control A \code{boolean}, whether some control parameters
+#' are adjusted depending on `x` and `y` (see \code{swagControl()}).
 #' @return A \code{swag} object with the structure:
 #' \describe{
 #' \item{}{}
 #' }
 #' @author Gaetan Bakalli and Samuel Orso
 #' @import caret
-#' @import doParallel
-#' @import parallel
 #' @export
 #' @examples
 #' swag()
-swag <- function(y, X, learner = "logistic", dmax = NULL, m = NULL, q0=0.01, seed = 163,
-                 parallel_comput = T, nc = NULL, verbose=FALSE, ...){
+swag <- function(x,
+                 y,
+                 control = swagControl(),
+                 auto_control = FALSE,
+                 # arguments for `caret::train()`
+                 ...){
 
-
-  if(is.null(learner)){
-    stop("No learning method specified. Please specify a `learner`")
-  }
-  if(match(learner,c("rf","lasso","svmLinear","svmRadial"),nomatch=FALSE)){
-      if(learner == "rf"){
-        leaner_screen = learner
-        family_screen = family = NULL
-        metric = "Accuracy"
-        family = NULL
-        preprocess = NULL
-        tuneLength = NULL
-      }else if(learner == "lasso"){
-        leaner_screen =  "glm"
-        family_screen =  binomial()
-        learner = "glmnet"
-        family = "binomial"
-        metric = "Accuracy"
-        family = NULL
-        preprocess = NULL
-        tuneLength = NULL
-      }else if(learner == "svmLinear"){
-        leaner_screen = learner
-        family_screen = family = NULL
-        metric = "Accuracy"
-        family = NULL
-        preprocess = NULL
-        tuneLength = NULL
-      }else if(learner == "svmRadial"){
-        leaner_screen = learner
-        family_screen = family = NULL
-        metric = "Accuracy"
-        family = NULL
-        preprocess = NULL
-        tuneLength = NULL
-      }
-    }else{
-    stop("This `learner` is not implemented.")
-    }
-  # Tunegrid for random forest
-    if(learner == "rf"){
-      mtry <- 1
-      tunegrid = expand.grid(.mtry=mtry)
-    }else{
-      tunegrid = NULL
-    }
-
-  if(is.null(y)){
-    stop("Please provide a response vector `y`")
-  }
-
-  if(is.null(X)){
-    stop("Please provide an attributes matrix `X`")
+  #---------------------
+  ## Verify the arguments
+  #---------------------
+  if(is.null(x)){
+    stop("Please provide an attributes matrix `x`")
   }else{
-    if(!is.matrix(X)){
-      stop("X must be a matrix")
+    if(!is.matrix(x)){
+      stop("`x` must be a matrix")
     }
   }
+
+  if(is.null(y)) stop("Please provide a response vector `y`")
 
   # Check missing observations (not supported currently)
-  if(sum(is.na(y)) > 0 || sum(is.na(X)) > 0){
+  if(sum(is.na(y)) > 0 || sum(is.na(x)) > 0)
     stop("Please provide data without missing values")
-  }
 
   ## object dimension
   # Number of attributes
-  p <- ncol(X)
+  p <- ncol(x)
   # Number of observations
   n <- length(y)
 
   # is y a factor
-  if(!is.factor(y)){
-    y <- as.factor(y)
-  }
+  if(!is.factor(y)) y <- as.factor(y)
 
   # verify y is binary
-  if(nlevels(y)>2){
-    stop("Please provide a binary response `y`")
-  }
+  if(nlevels(y)>2) stop("Please provide a binary response `y`")
+
+  if(class(control) != "swagControl")
+    stop("`control` must be of class `swagControl`")
+
+  if(isTRUE(auto_control)) control <- auto_swagControl(x,y,control)
 
   # Define parallelisation parameter
-  if(isTRUE(parallel_comput)){
-    if(is.null(nc)){
-      nc = parallel::detectCores()
-    }
-    cl <- parallel::makePSOCKcluster(nc)
-    doParallel::registerDoParallel(cl)
-  }
+  # if(isTRUE(parallel_comput)){
+  #   if(is.null(nc)){
+  #     nc = parallel::detectCores()
+  #   }
+  #   cl <- parallel::makePSOCKcluster(nc)
+  #   doParallel::registerDoParallel(cl)
+  # }
 
-  # Maximum number of attributes per learner
-  if(is.null(m)){
-    m = 40000
-  }
+  # Existence of arguments for `caret::train()`
+  # with default values
+  if(!exists("method")) method = "rf"
+  if(!exists("preProcess")) preProcess = NULL
+  if(!exists("weights")) weights = NULL
+  if(!exists("metric")) metric = ifelse(is.factor(y), "Accuracy", "RMSE")
+  if(!exists("maximize")) maximize = ifelse(metric %in% c("RMSE", "logLoss", "MAE"), FALSE, TRUE)
+  if(!exists("trControl")) trControl = trainControl()
+  if(!exists("tuneGrid")) tuneGrid = NULL
+  if(!exists("tuneLength")) tuneLength = ifelse(trControl$method == "none", 1, 3)
 
-  # Maximum number of attributes per learner
-  # If not user-defined, dmax is such that EPV is approx 5
-  if(is.null(dmax)){
-    event <- table(y)
-    dmax <- ceiling(min(event[1],n-event[2])/5)
-
-    # Explore at minima dmax=3 (if not specified by the user)
-    if(dmax == 1){
-      dmax <- 3
-    }
-  }
-
-  # dmax should not exceed p
-  if(dmax > p) dmax <- p
-
-
+  #---------------------
+  ## General parameters
+  #---------------------
   ## Seed
-  set.seed(seed)
-  graine <- sample.int(1e6,dmax)
+  set.seed(control$seed)
+  graine <- sample.int(1e6,control$pmax)
 
   ## Object storage
-  CVs <- vector("list",dmax)
-  IDs <- vector("list",dmax)
-  VarMat <- vector("list",dmax)
+  CVs <- vector("list",control$pmax)
+  IDs <- vector("list",control$pmax)
+  VarMat <- vector("list",control$pmax)
+  cv_alpha <- rep(NA,control$pmax)
 
+  #---------------------
   ## Screening step
+  #---------------------
   cv_errors <- rep(NA,p)
-  #10 fold CV repeated 10 times as
-  trctrl <- caret::trainControl(method = "repeatedcv", number = 10, repeats = 10)
 
   # compute CV errors
   for(i in seq_len(p)){
-    x <- as.matrix(X[,i])
-    df <- data.frame(y,x)
+    # select the variable
+    x0 <- as.matrix(x[,i])
     set.seed(graine[1]+i)
-    learn <- caret::train(y ~., data = df, method = learner, metric = metric,
-                          family = family, trControl=trctrl, preProcess = preprocess,
-                          tuneLength = tuneLength, tuneGrid=tunegrid)
-    cv_errors[i] = 1 - max(learn$results$Accuracy)
+    # learner
+    learn <- train(x=x0,y=y,method=method,preProcess=preProcess,
+                   ...,weights=weights,metric=metric,maximize=maximize,
+                   trControl=trControl,tuneGrid=tuneGrid,tuneLength=tuneLength)
+    # save performance
+    cv_errors[i] <- 0.1e1 - max(learn$results$Accuracy)
   }
 
   # Store results
   CVs[[1]] <- cv_errors
   VarMat[[1]] <- seq_along(cv_errors)
   dim(VarMat[[1]]) <- c(p,1)
+  cv_alpha[1] <- quantile(cv_errors,control$alpha,na.rm=T)
+  id_screening <- IDs[[1]] <- which(cv_errors <= cv_alpha[1])
 
-  # Remove NA's
-  cv_errors <- cv_errors[!is.na(cv_errors)]
+  if(control$verbose) print(paste0("Dimension explored: ",1," - CV errors at alpha: ",round(cv_alpha[1],4)))
 
+  #---------------------
+  ## SWAG: dimensions 2 to pmax
+  #---------------------
+  for(d in 2:control$pmax){
 
-  ## Dimension from 2 to dmax
-  ## Meta-parameter decision rule.
-  # Quantile for attributes selection
-  cv1 <- quantile(cv_errors,q0)
-  IDs[[1]] <- which(cv_errors <= cv1)
-  id_screening <- IDs[[1]]
-  if(verbose){
-    print(paste0("Dimension explored: ",1," - CV errors at q0: ",round(cv1,4)))
-  }
-  # Compute for d>1 to dmax
-
-  for(d in 2:dmax){
-    # Tunegrid for random forest
-    if(learner == "rf"){
-      mtry <- d
-      tunegrid = expand.grid(.mtry=mtry)
-    }
-
-    # cv0 <- cv1
-    idRow <- IDs[[d-1]]
-    idVar <- VarMat[[d-1]][idRow,]
-    nrv <- nrow(idVar)
-    if(is.null(nrv)) nrv <- length(idVar)
-
-    # build all possible combinations
-    A <- matrix(nr=nrv*length(id_screening),nc=d)
-    A[,1:(d-1)] <- kronecker(cbind(rep(1,length(id_screening))),idVar)
-    A[,d] <- rep(id_screening,each=nrv)
-    B <- unique(t(apply(A,1,sort)))
-    id_ndup <- which(apply(B,1,anyDuplicated) == 0)
-    var_mat <- B[id_ndup,]
-    rm(list=c("A","B"))
-
-    if(is.null(dim(var_mat))) dim(var_mat) <- c(1,length(var_mat))
 
     # Reduce number of model if exceeding `m`
     if(nrow(var_mat)>m){
@@ -245,15 +162,20 @@ swag <- function(y, X, learner = "logistic", dmax = NULL, m = NULL, q0=0.01, see
     }
 
     CVs[[d]] <- cv_errors
-    cv1 <- quantile(cv_errors,probs=q0,na.rm=T)
-    IDs[[d]] <- which(cv_errors<=cv1)
+    cv_alpha[d] <- quantile(cv_errors,probs=alpha,na.rm=T)
+    IDs[[d]] <- which(cv_errors<=cv_alpha[d])
 
     if(verbose){
-      print(paste0("Dimension explored: ",d," - CV errors at q0: ",round(cv1,4)))
+      print(paste0("Dimension explored: ",d," - CV errors at alpha: ",round(cv_alpha[d],4)))
     }
   }
 
-  parallel::stopCluster(cl)
+  # parallel::stopCluster(cl)
+
+  #---------------------
+  ## Final model selection
+  #---------------------
+
   ## Define the swag sets of models
   # Dimension which minimize the median cv error at each dimesion
   mod_size_min_med = which.min(sapply(CVs, median))
@@ -261,11 +183,11 @@ swag <- function(y, X, learner = "logistic", dmax = NULL, m = NULL, q0=0.01, see
   treshold_swag_set = quantile(CVs[[mod_size_min_med]],probs=0.01)
 
   # Vector of models dimension
-  dim_model = 1:dmax
+  dim_model = 1:pmax
 
   # Find the index of model selected
-  index_model_select = vector("list",dmax)
-  for(d in seq_len(dmax)){
+  index_model_select = vector("list",pmax)
+  for(d in seq_len(pmax)){
     if(sum(CVs[[d]] <= treshold_swag_set) == 0){
       index_model_select[[d]] = "empty"
     }else{
@@ -310,6 +232,27 @@ swag <- function(y, X, learner = "logistic", dmax = NULL, m = NULL, q0=0.01, see
   invisible(obj)
 }
 
+
+model_combination <- function(
+  id_screening,
+  var_mat
+){
+  # idRow <- IDs[[d-1]]
+  # idVar <- VarMat[[d-1]][idRow,]
+  # nrv <- nrow(idVar)
+  # if(is.null(nrv)) nrv <- length(idVar)
+  #
+  # build all possible combinations
+  A <- matrix(nr=nrow(var_mat) * length(id_screening), nc=ncol(var_mat) + 1L)
+  A[,1:(d-1)] <- kronecker(cbind(rep(1,length(id_screening))),idVar)
+  A[,d] <- rep(id_screening,each=nrv)
+  B <- unique(t(apply(A,1,sort)))
+  id_ndup <- which(apply(B,1,anyDuplicated) == 0)
+  var_mat <- B[id_ndup,]
+  rm(list=c("A","B"))
+
+  if(is.null(dim(var_mat))) dim(var_mat) <- c(1,length(var_mat))
+}
 
 #' @title swag validation for ML method.
 #'
