@@ -34,7 +34,7 @@
 swag <- function(x,
                  y,
                  control = swagControl(),
-                 auto_control = FALSE,
+                 auto_control = TRUE,
                  # arguments for `caret::train()`
                  ...){
 
@@ -235,6 +235,7 @@ swag <- function(x,
 }
 
 
+# build all possible combinations
 model_combination <- function(
   id_screening,
   var_mat
@@ -244,7 +245,6 @@ model_combination <- function(
   # nrv <- nrow(idVar)
   # if(is.null(nrv)) nrv <- length(idVar)
   #
-  # build all possible combinations
   A <- matrix(nr=nrow(var_mat) * length(id_screening), nc=ncol(var_mat) + 1L)
   A[,1:(d-1)] <- kronecker(cbind(rep(1,length(id_screening))),idVar)
   A[,d] <- rep(id_screening,each=nrv)

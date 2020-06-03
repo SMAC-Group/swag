@@ -1,12 +1,27 @@
-Package: seer
+Package: swag
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Sparse Wrapper AlGorithm
 Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+Author@R: c(
+    person("Samuel", "Orso", email="Samuel.Orso@unige.ch", role=c("aut","cre","")),
+    person("Gaetan", "Bakalli", email="Gaetan.Bakalli@unige.ch", role=c("aut","cre")),
+    person("Cesare", "Miglioli", role="ctb"),
+    person("Stephane", "Guerrier", role="ctb"),
+    person("Roberto", "Molinari", role="ctb"),
+    person("Olivier", "Scaillet", role="cph"))
+Maintainer: Samuel Orso <Samuel.Orso@unige.ch>
+Description: `swag` is a package that trains a meta-learning procedure that combines 
+    screening and wrapper methods to find a set of extremely low-dimensional attribute 
+    combinations. `swag` works on top of the `caret` package and proceeds in a 
+    forward-step manner. More specifically, it builds and tests learners starting 
+    from very few attributes until it includes a maximal number of attributes by 
+    increasing the number of attributes at each step. Hence, for each fixed number
+    of attributes, the algorithm tests various (randomly selected) learners and 
+    picks those with the best performance in terms of training error. Throughout,
+    the algorithm uses the information coming from the best learners at the previous
+    step to build and test learners in the following step. In the end, it outputs
+    a set of strong low-dimensional learners.
+License: AGPL-3 | file LICENSE
 Encoding: UTF-8
 LazyData: false
 Depends: R (>= 3.6.0)
@@ -17,3 +32,5 @@ Imports:
 RoxygenNote: 7.1.0
 Suggests: knitr, rmarkdown
 VignetteBuilder: knitr
+URL: https://github.com/SMAC-Group/SWAG-R-Package
+BugReports: https://github.com/SMAC-Group/SWAG-R-Package/issues

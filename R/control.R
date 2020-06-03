@@ -24,8 +24,8 @@
 #' @param verbose A \code{boolean} for printing current progress of the algorithm.
 swagControl <- function(
   pmax = 3,
-  m = 10,
-  alpha = 0.01,
+  m = 100,
+  alpha = 0.05,
   seed = 163L,
   verbose = FALSE
 ){
@@ -48,12 +48,15 @@ auto_swagControl <- function(
   event <- table(y)
   pmax <- ceiling(min(event[1],n[1]-event[2])/5)
 
-  # At minima explore 3 dimensions
+  # At minima explore 3 attributes
   if(pmax == 1) pmax <- 3
 
   # But do not exceed p
   if(pmax > n[2]) pmax <- n[2]
 
-  # Data-dependent `alpha`:
+  # Define `m` such that all learners of two attributes
+  # are explored.
+  m <- choose(control$alpha * n[2], 2)
 
+  swagControl(pmax,m,control$alpha,control$seed,control$verbose)
 }

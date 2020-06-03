@@ -1,12 +1,12 @@
 ---
-title: "SWAG-R-Package Vignette"
+title: "swag vignette"
 author: "Gaetan Bakalli, Samuel Orso and Cesare Miglioli"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{SWAG-R Vignette}
+  %\VignetteIndexEntry{Introduction to swag}
   %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
+  \usepackage[utf8]{inputenc}
 ---
 
 ```{r setup, include = FALSE}
