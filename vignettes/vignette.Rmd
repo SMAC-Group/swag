@@ -43,7 +43,7 @@ install_github("SMAC-Group/SWAG-R-Package")
 
 ## Quick Start
 
-The purpose of this section is to give users a general sense of the package, including the components, whatthey do and some basic usage. We will briefly go over the main functions, see the basic operations and have alook at the outputs. Users may have a better idea after this section what functions are available, which oneto choose, or at least where to seek help. More details are given in later sections.
+The purpose of this section is to give users a general sense of the package, including the components, what they do and some basic usage. We will briefly go over the main functions, see the basic operations and have a look at the outputs. Users may have a better idea after this section what functions are available, which one to choose, or at least where to seek help. More details are given in later sections.
 
 First, we load the **SWAG-R** package:
 
@@ -53,42 +53,26 @@ library(SWAG-R-Package)
 
 ```
 
-We  a set of data created beforehand for illustration. Users can either load their own data or use those saved in the workspace.
+We propose to use a dataset readily available on the package mlbench. The dataset consists of a sample of patients and the objective is to predict whether a new patient has a malignant tumour from a set of predicting variables, we can start by defining the matrix of predictors $X$ and the response labels $y$. Alternatively users can either load their own data or use those saved in the workspace following the same steps outlined below. 
 
-## Styles
+```{r, eval=FALSE}
 
-The `html_vignette` template includes a basic CSS theme. To override this theme you can specify your own CSS in the document metadata as follows:
+install.packages("mlbench")
 
-    output: 
-      rmarkdown::html_vignette:
-        css: mystyles.css
+library(mlbench)
 
-## Figures
+data(BreastCancer, package = "mlbench")
 
-The figure sizes have been customised so that you can easily put two images side-by-side. 
+y <- BreastCancer$Class # response variable
 
-```{r, fig.show='hold'}
-plot(1:10)
-plot(10:1)
+X <- as.matrix(BreastCancer[setdiff(names(BreastCancer),c("Id","Class"))]) # matrix of predictors
+
+# remove missing values
+
+id <- which(apply(X,1,function(x) sum(is.na(x)))>0)
+y <- y[-id]
+X <- X[-id,]
+
+
 ```
 
-You can enable figure captions by `fig_caption: yes` in YAML:
-
-    output:
-      rmarkdown::html_vignette:
-        fig_caption: yes
-
-Then you can use the chunk option `fig.cap = "Your figure caption."` in **knitr**.
-
-## More Examples
-
-You can write math expressions, e.g. $Y = X\beta + \epsilon$, footnotes^[A footnote here.], and tables, e.g. using `knitr::kable()`.
-
-```{r, echo=FALSE, results='asis'}
-knitr::kable(head(mtcars, 10))
-```
-
-Also a quote using `>`:
-
-> "He who gives up [code] safety for [code] speed deserves neither."
-([via](https://twitter.com/hadleywickham/status/504368538874703872))
