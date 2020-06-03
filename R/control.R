@@ -14,14 +14,17 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#' @title swag wrapper algorithm for ML method.
+#' @title Control for swag function
 #'
-#' @description swag algo
+#' @description The Spare Wrapper AlGorithm depends on some meta-parameters that are
+#' described below.
 #' @param pmax A \code{integer} representing the maximum number of attributes per learner.
 #' @param m A \code{integer} representing the maximum number of learners per dimension explored.
 #' @param alpha A \code{double} representing the proportion of screening.
 #' @param seed  An \code{integer} that controls the reproducibility.
 #' @param verbose A \code{boolean} for printing current progress of the algorithm.
+#' @seealso \code{\link{swag}}
+#' @export swagControl
 swagControl <- function(
   pmax = 3,
   m = 100,

@@ -2,7 +2,7 @@
 % Please edit documentation in R/control.R
 \name{swagControl}
 \alias{swagControl}
-\title{swag wrapper algorithm for ML method.}
+\title{Control for swag function}
 \usage{
 swagControl(pmax = 3, m = 100, alpha = 0.05, seed = 163L, verbose = FALSE)
 }
@@ -18,5 +18,9 @@ swagControl(pmax = 3, m = 100, alpha = 0.05, seed = 163L, verbose = FALSE)
 \item{verbose}{A \code{boolean} for printing current progress of the algorithm.}
 }
 \description{
-swag algo
+The Spare Wrapper AlGorithm depends on some meta-parameters that are
+described below.
+}
+\seealso{
+\code{\link{swag}}
 }

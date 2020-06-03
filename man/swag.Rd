@@ -2,7 +2,7 @@
 % Please edit documentation in R/swag.R
 \name{swag}
 \alias{swag}
-\title{swag wrapper algorithm for ML method.}
+\title{Spare Wrapper AlGorithm (swag)}
 \usage{
 swag(x, y, control = swagControl(), auto_control = TRUE, ...)
 }
@@ -11,22 +11,26 @@ swag(x, y, control = swagControl(), auto_control = TRUE, ...)
 
 \item{y}{A \code{vector} of binary response variable.}
 
-\item{control}{see \code{swagControl()}}
+\item{control}{see \code{\link{swagControl}}}
 
 \item{auto_control}{A \code{boolean}, whether some control parameters
-are adjusted depending on `x` and `y` (see \code{swagControl()}).}
+are adjusted depending on `x` and `y` (see \code{\link{swagControl}}).}
 }
 \value{
-A \code{swag} object with the structure:
-\describe{
-\item{}{}
-}
+A \code{swag} object.
 }
 \description{
-swag algo
-}
-\examples{
-swag()
+\code{swag} trains a meta-learning procedure that combines
+screening and wrapper methods to find a set of extremely low-dimensional attribute
+combinations. \code{swag} works on top of the \code{\link{caret}} package and proceeds in a
+forward-step manner. More specifically, it builds and tests learners starting
+from very few attributes until it includes a maximal number of attributes by
+increasing the number of attributes at each step. Hence, for each fixed number
+of attributes, the algorithm tests various (randomly selected) learners and
+picks those with the best performance in terms of training error. Throughout,
+the algorithm uses the information coming from the best learners at the previous
+step to build and test learners in the following step. In the end, it outputs
+a set of strong low-dimensional learners.
 }
 \author{
 Gaetan Bakalli, Samuel Orso and Cesare Miglioli
