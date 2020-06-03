@@ -79,7 +79,7 @@ swag <- function(x,
   #   }
   #   cl <- parallel::makePSOCKcluster(nc)
   #   doParallel::registerDoParallel(cl)
-  # }
+  #}
 
   # Existence of arguments for `caret::train()`
   # with default values
