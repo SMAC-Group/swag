@@ -80,16 +80,7 @@ swag <- function(x,
 
   if(isTRUE(auto_control)) control <- auto_swagControl(x,y,control)
 
-  # Define parallelisation parameter
-  # if(isTRUE(parallel_comput)){
-  #   if(is.null(nc)){
-  #     nc = parallel::detectCores()
-  #   }
-  #   cl <- parallel::makePSOCKcluster(nc)
-  #   doParallel::registerDoParallel(cl)
-  #}
-
-  # Existence of arguments for `caret::train()`
+ # Existence of arguments for `caret::train()`
   # with default values
   args_caret <- list(...)
   if(is.null(args_caret$method)) args_caret$method = "rf"
@@ -124,13 +115,11 @@ swag <- function(x,
   for(i in seq_len(p)){
     # select the variable
     args_caret$x <- as.data.frame(x[,i])
-    set.seed(graine[1]+i)
+
     # learner
+    set.seed(graine[1]+i)
     learn <- do.call(train,args_caret)
-    # learn <- train(x=x0,y=y,method=args_caret$method,preProcess=args_caret$preProcess,
-    #                ...,weights=args_caret$weights,metric=args_caret$metric,
-    #                maximize=args_caret$maximize,trControl=args_caret$trControl,
-    #                tuneGrid=args_caret$tuneGrid,tuneLength=args_caret$tuneLength)
+
     # save performance
     cv_errors[i] <- 0.1e1 - max(learn$results$Accuracy)
   }
@@ -162,12 +151,11 @@ swag <- function(x,
     for(i in seq_len(nrow(var_mat))){
       # select the variable
       args_caret$x <- as.data.frame(x[,var_mat[i,]])
-      set.seed(graine[1]+i)
+
       # learner
+      set.seed(graine[1]+i)
       learn <- do.call(train,args_caret)
-      # learn <- train(x=x0,y=y,method=method,preProcess=preProcess,
-      #                ...,weights=weights,metric=metric,maximize=maximize,
-      #                trControl=trControl,tuneGrid=tuneGrid,tuneLength=tuneLength)
+
       # save performance
       cv_errors[i] <- 0.1e1 - max(learn$results$Accuracy)
     }
@@ -181,74 +169,13 @@ swag <- function(x,
     if(verbose) print(paste0("Dimension explored: ",d," - CV errors at alpha: ",round(cv_alpha[d],4)))
   }
 
-  # parallel::stopCluster(cl)
-
-  # Update: next section will be removed to `predict()`
-  #---------------------
-  ## Final model selection
-  #---------------------
-#
-#   ## Define the swag sets of models
-#   # Dimension which minimize the median cv error at each dimesion
-#   mod_size_min_med = which.min(sapply(CVs, median))
-#   #quantile of the 1% most predictive models
-#   treshold_swag_set = quantile(CVs[[mod_size_min_med]],probs=0.01)
-#
-#   # Vector of models dimension
-#   dim_model = 1:pmax
-#
-#   # Find the index of model selected
-#   index_model_select = vector("list",pmax)
-#   for(d in seq_len(pmax)){
-#     if(sum(CVs[[d]] <= treshold_swag_set) == 0){
-#       index_model_select[[d]] = "empty"
-#     }else{
-#       index_model_select[[d]] = which(CVs[[d]] <= treshold_swag_set)
-#     }
-#   }
-#
-#   # vector of model dimension selected
-#   model_dim_selected = which(index_model_select != "empty")
-#
-#   ###### swag subset of model ######
-#
-#   ## create output for swag subset
-#   ## index of variable selected and respective cv error
-#   swag_model = list()
-#   swag_cv_error = list()
-#
-#   for(d in seq_along(model_dim_selected)){
-#     index_mod = model_dim_selected[[d]]
-#     swag_model[[d]] <- VarMat[[index_mod]][index_model_select[[index_mod]],]
-#     swag_cv_error[[d]] <- CVs[[index_mod]][index_model_select[[index_mod]]]
-#   }
-#
-#   #
-#   table_variable = table(unlist(swag_model))
-#   variable_index = as.numeric(names(table_variable))
-#   names(table_variable) = colnames(X[,variable_index])
-#
-#   obj = list(pred_cv = CVs,
-#              model_evaluated = VarMat,
-#              model_selected = IDs,
-#              model_swag_set = index_model_select,
-#              table_variable = table_variable,
-#              variable_index = variable_index,
-#              swag_model = swag_model,
-#              swag_cv_error = swag_cv_error,
-#              learner = learner,
-#              y_train = y,
-#              x_train = X)
-#
-#   class(obj) = "swag"
-#   invisible(obj)
-#
-  # Remove `x` and `y` from `args_caret` before returning it
-  args_caret$y <- NULL
-  args_caret$x <- NULL
   #---------------------
   ## Return
   #---------------------
+  # Remove `x` and `y` from `args_caret` before returning it
+  args_caret$y <- NULL
+  args_caret$x <- NULL
+
   structure(
     list(
       x=x,
@@ -284,6 +211,10 @@ model_combination <- function(
   A[which(apply(A,1,anyDuplicated) == 0),]
 }
 
+
+###########################
+# Old code
+###########################
 # @title swag validation for ML method.
 #
 # @description swag algo
@@ -416,3 +347,64 @@ model_combination <- function(
 #                        ce_all = count_error))
 #   invisible(out)
 # }
+
+# Update: next section will be removed to `predict()`
+#---------------------
+## Final model selection
+#---------------------
+#
+#   ## Define the swag sets of models
+#   # Dimension which minimize the median cv error at each dimesion
+#   mod_size_min_med = which.min(sapply(CVs, median))
+#   #quantile of the 1% most predictive models
+#   treshold_swag_set = quantile(CVs[[mod_size_min_med]],probs=0.01)
+#
+#   # Vector of models dimension
+#   dim_model = 1:pmax
+#
+#   # Find the index of model selected
+#   index_model_select = vector("list",pmax)
+#   for(d in seq_len(pmax)){
+#     if(sum(CVs[[d]] <= treshold_swag_set) == 0){
+#       index_model_select[[d]] = "empty"
+#     }else{
+#       index_model_select[[d]] = which(CVs[[d]] <= treshold_swag_set)
+#     }
+#   }
+#
+#   # vector of model dimension selected
+#   model_dim_selected = which(index_model_select != "empty")
+#
+#   ###### swag subset of model ######
+#
+#   ## create output for swag subset
+#   ## index of variable selected and respective cv error
+#   swag_model = list()
+#   swag_cv_error = list()
+#
+#   for(d in seq_along(model_dim_selected)){
+#     index_mod = model_dim_selected[[d]]
+#     swag_model[[d]] <- VarMat[[index_mod]][index_model_select[[index_mod]],]
+#     swag_cv_error[[d]] <- CVs[[index_mod]][index_model_select[[index_mod]]]
+#   }
+#
+#   #
+#   table_variable = table(unlist(swag_model))
+#   variable_index = as.numeric(names(table_variable))
+#   names(table_variable) = colnames(X[,variable_index])
+#
+#   obj = list(pred_cv = CVs,
+#              model_evaluated = VarMat,
+#              model_selected = IDs,
+#              model_swag_set = index_model_select,
+#              table_variable = table_variable,
+#              variable_index = variable_index,
+#              swag_model = swag_model,
+#              swag_cv_error = swag_cv_error,
+#              learner = learner,
+#              y_train = y,
+#              x_train = X)
+#
+#   class(obj) = "swag"
+#   invisible(obj)
+#
