@@ -19,33 +19,23 @@ knitr::opts_chunk$set(
 
 ## Introduction 
 
-SWAG-R is a package that train a meta-learning procedure that combines screening and wrapper methods to find a set of extremely low-dimensional attribute combinations. SWAG-R works on top of the caret package and proceeds in a forward-step manner. More specifically, it builds and tests learners starting from very few attributes until it includes a maximal number of attributes by increasing the number of attributes at each step. Hence, for each fixed number of attributes, the algorithm tests various (randomly selected) learners and picks those with the best performance in terms of training error. Throughout, the algorithm uses the information coming from the best learners at the previous step to build and test learners in the following step. In the end, it outputs a set of strong low-dimensional learners.
+**swag** is a package that train a meta-learning procedure that combines screening and wrapper methods to find a set of extremely low-dimensional attribute combinations. SWAG-R works on top of the caret package and proceeds in a forward-step manner. More specifically, it builds and tests learners starting from very few attributes until it includes a maximal number of attributes by increasing the number of attributes at each step. Hence, for each fixed number of attributes, the algorithm tests various (randomly selected) learners and picks those with the best performance in terms of training error. Throughout, the algorithm uses the information coming from the best learners at the previous step to build and test learners in the following step. In the end, it outputs a set of strong low-dimensional learners.
 
 ## Installation
 
-First you need the devtools package installed and loaded:
-
-```{r, eval=F}
-
-install.packages("devtools", repos = "http://cran.us.r-project.org")
-
-library(devtools)
-
-```
-
-Now you are able to get the SWAG-R directly from Github with the following code:
+First you need to install the *devtools* package. Now you are able to get the **swag** directly from Github with the following code:
 
 ```{r, eval=FALSE}
 
-install_github("SMAC-Group/SWAG-R-Package")
+devtools::install_github("SMAC-Group/SWAG-R-Package")
 
 ```
 
 ## Quick Start
 
-The purpose of this section is to give users a general sense of the package, including the components, what they do and some basic usage. We will briefly go over the main functions, see the basic operations and have a look at the outputs. Users may have a better idea after this section what functions are available, which one to choose, or at least where to seek help. More details are given in later sections.
+The purpose of this section is to give a general sense of the package, including the components, what they do and some basic usage. We will briefly go over the main functions, see the basic operations and have a look at the outputs. You may have a better idea after this section regarding what functions are available, which one to choose, or at least where to seek help. More details are given in later sections.
 
-First, we load the **SWAG-R** package:
+First, we load the **swag** package previously installed:
 
 ```{r, eval=FALSE}
 
@@ -53,26 +43,28 @@ library(SWAG-R-Package)
 
 ```
 
-We propose to use a dataset readily available on the package mlbench. The dataset consists of a sample of patients and the objective is to predict whether a new patient has a malignant tumour from a set of predicting variables, we can start by defining the matrix of predictors $X$ and the response labels $y$. Alternatively users can either load their own data or use those saved in the workspace following the same steps outlined below. 
+We propose to use a dataset readily available on the package mlbench. The dataset consists of a sample of patients and the objective is to predict whether a new patient has a malignant tumour from a set of predicting variables. We can start by defining the matrix of predictors $X$ and the response labels $y$. Alternatively you can either load directly your own data or use those saved in the workspace following the same steps outlined below. 
 
 ```{r, eval=FALSE}
 
-install.packages("mlbench")
-
-library(mlbench)
+# After having installed and loaded the mlbench package
 
 data(BreastCancer, package = "mlbench")
 
+# Pre-processing of the datase
+
 y <- BreastCancer$Class # response variable
 
-X <- as.matrix(BreastCancer[setdiff(names(BreastCancer),c("Id","Class"))]) # matrix of predictors
+x <- as.matrix(BreastCancer[setdiff(names(BreastCancer),c("Id","Class"))]) # matrix of predictors
 
 # remove missing values
 
 id <- which(apply(X,1,function(x) sum(is.na(x)))>0)
 y <- y[-id]
-X <- X[-id,]
+x <- x[-id,]
 
 
 ```
+
+The swag \code{swagcontrol()}
 

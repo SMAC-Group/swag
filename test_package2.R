@@ -34,6 +34,8 @@ metric <- "Accuracy"
 
 trctrl <- trainControl(method = "repeatedcv", number = 10, repeats = 1)
 
-swag(x = X, y = y, control = trial,auto_control = F,method = "svmLinear", metric = metric, trControl=trctrl, preProcess = c("center", "scale"),tuneLength = 10)
 
+try_obj <- swag(x = as.matrix(x), y = y,control = trial,auto_control = F,method = "svmLinear", metric = metric, trControl=trctrl, preProcess = c("center", "scale"),tuneLength = 10)
+
+try_obj <- swag(x = as.matrix(x), y = y,auto_control = T,method = "svmLinear", metric = metric, trControl=trctrl, preProcess = c("center", "scale"),tuneLength = 10)
 
