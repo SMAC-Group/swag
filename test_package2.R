@@ -16,3 +16,24 @@ learner <- caret::train(x,y,method="knn",preProcess=c("center","scale"),tuneLeng
 # test_svmRadial <- swag(y, X, learner = "svmRadial", dmax = 3, q0 = .5, nc = 4, verbose = TRUE)
 # test_lasso <- swag(y, X, learner = "lasso", dmax = 3, q0 = .5, nc = 4, verbose = TRUE)
 # test_rf <- swag(y, X, learner = "rf", dmax = 3, q0 = .5, nc = 4, verbose = TRUE)
+
+setwd("C:/Users/Cesare/Desktop/NIPS/SWAG-R-Package/R")
+
+source("swag.R")
+
+source("control.R")
+
+
+trial <- swagControl(pmax = 3,alpha = 0.05,m = 100,seed = 163L, verbose = FALSE) 
+
+# error: Error in structure(pmax = pmax, m = m, alpha = alpha, seed = seed, class = "swagControl") : argument ".Data" is missing, with no default
+
+trial_2 <- auto_swagControl(x = x,y = y,control = swagControl()) #not clear control argument in this function
+
+metric <- "Accuracy"
+
+trctrl <- trainControl(method = "repeatedcv", number = 10, repeats = 1)
+
+swag(x = X, y = y, control = trial,auto_control = F,method = "svmLinear", metric = metric, trControl=trctrl, preProcess = c("center", "scale"),tuneLength = 10)
+
+
