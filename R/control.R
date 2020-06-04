@@ -32,11 +32,12 @@ swagControl <- function(
   seed = 163L,
   verbose = FALSE
 ){
-  if (!is.numeric(pmax) || pmax <= 0) stop("value of `pmax` > 0")
-  if (!is.numeric(m) || m <= 0) stop("value of `m` > 0")
-  if (!is.numeric(alpha) || abs(alpha) > 1) stop("value of 0<`alpha`<=1")
-  if (!is.numeric(seed) || seed <= 0) stop("value of `seed` > 0")
-  structure(list(pmax=pmax,m=m,alpha=alpha,seed=seed),class="swagControl")
+  if(!is.numeric(pmax) || pmax <= 0) stop("value of `pmax` > 0")
+  if(!is.numeric(m) || m <= 0) stop("value of `m` > 0")
+  if(!is.numeric(alpha) || abs(alpha) > 1) stop("value of 0<`alpha`<=1")
+  if(!is.numeric(seed) || seed <= 0) stop("value of `seed` > 0")
+  if(!is.logical(verbose)) stop("verbose must be a logical")
+  structure(list(pmax=pmax,m=m,alpha=alpha,seed=seed,verbose=verbose),class="swagControl")
 }
 
 auto_swagControl <- function(

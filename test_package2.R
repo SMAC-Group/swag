@@ -5,7 +5,7 @@ x <- BreastCancer[setdiff(names(BreastCancer),c("Id","Class"))]
 id <- which(apply(x,1,function(z) sum(is.na(z)))>0)
 y <- y[-id]
 x <- x[-id,]
-x <- matrix(as.numeric(as.matrix(x)),nc=9)
+# x <- matrix(as.numeric(as.matrix(x)),nc=9)
 
 learner <- caret::train(as.data.frame(x$Cl.thickness),y,method="knn",preProcess=c("center","scale"),tuneLength=10,trControl=trainControl(method="cv"))
 
