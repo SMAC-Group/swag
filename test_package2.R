@@ -46,7 +46,7 @@ mtry <- 1
 tunegrid <- expand.grid(.mtry=mtry)
 
 try_obj <- swag(x = as.matrix(x), y = y,control = trial, auto_control = F,method = "rf", metric = metric, trControl=trctrl, tuneGrid=tunegrid )
-try_obj <- swag(x = as.matrix(x), y = y,control = swagControl(alpha=.3), method = "rf", metric = metric, trControl=trctrl, tuneGrid=tunegrid )
+try_obj <- swag(x = x, y = y,control = swagControl(alpha=.3,verbose=T), method = "rf", metric = metric, trControl=trctrl, tuneGrid=tunegrid )
 
 
 

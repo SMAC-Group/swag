@@ -52,7 +52,7 @@ swag <- function(x,
   ## Verify the arguments
   #---------------------
   if(is.null(x)){
-    stop("Please provide an attributes matrix `x`")
+    stop("Please provide a `x`")
   }
 
   if(is.null(y)) stop("Please provide a response vector `y`")
@@ -127,7 +127,7 @@ swag <- function(x,
   # Store results
   CVs[[1]] <- cv_errors
   VarMat[[1]] <- seq_along(cv_errors)
-  dim(VarMat[[1]]) <- c(p,1)
+  dim(VarMat[[1]]) <- c(1,p)
   cv_alpha[1] <- quantile(cv_errors,control$alpha,na.rm=T)
   id_screening <- IDs[[1]] <- which(cv_errors <= cv_alpha[1])
 
@@ -138,19 +138,19 @@ swag <- function(x,
   #---------------------
   for(d in 2L:control$pmax){
     # Build all combinations
-    var_mat <- model_combination(id_screening,VarMat[[d-1L]][IDs[[d-1]],])
+    var_mat <- model_combination(id_screening,subset(VarMat[[d-1L]],select=IDs[[d-1]]))
 
     # Reduce number of model if exceeding `m`
-    if(nrow(var_mat)>control$m){
+    if(ncol(var_mat)>control$m){
       set.seed(graine[d]-1)
-      var_mat <- var_mat[sample.int(nrow(var_mat),m),]
+      var_mat <- var_mat[,sample.int(ncol(var_mat),control$m)]
     }
 
     # Compute CV errors
-    cv_errors <- rep(NA,nrow(var_mat))
-    for(i in seq_len(nrow(var_mat))){
+    cv_errors <- rep(NA,ncol(var_mat))
+    for(i in seq_len(ncol(var_mat))){
       # select the variable
-      args_caret$x <- as.data.frame(x[,var_mat[i,]])
+      args_caret$x <- as.data.frame(x[,var_mat[,i]])
 
       # learner
       set.seed(graine[1]+i)
@@ -166,7 +166,8 @@ swag <- function(x,
     cv_alpha[d] <- quantile(cv_errors,control$alpha,na.rm=T)
     IDs[[d]] <- which(cv_errors <= cv_alpha[d])
 
-    if(verbose) print(paste0("Dimension explored: ",d," - CV errors at alpha: ",round(cv_alpha[d],4)))
+    if(control$verbose) print(paste0("Dimension explored: ",d," - CV errors at alpha: ",round(cv_alpha[d],4)))
+    if(ncol(var_mat)==1) break
   }
 
   #---------------------
@@ -199,16 +200,16 @@ model_combination <- function(
   var_mat
 ){
   # Generate all combinations of var_mat and id_screening
-  A <- cbind(
-    matrix(rep(var_mat,length(id_screening)),nc=ncol(var_mat),byrow=T),
-    rep(id_screening,each=nrow(var_mat))
+  A <- rbind(
+    matrix(rep(var_mat,length(id_screening)),nr=nrow(var_mat),byrow=T),
+    rep(id_screening,each=ncol(var_mat))
   )
 
   # Sort each row
-  A <- unique(t(apply(A,1,sort)))
+  A <- unique(apply(A,2,sort), MARGIN = 2)
 
   # Remove duplicates
-  A[which(apply(A,1,anyDuplicated) == 0),]
+  subset(A,select=apply(A,2,anyDuplicated) == 0)
 }
 
 
