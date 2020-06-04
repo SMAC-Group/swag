@@ -53,10 +53,6 @@ swag <- function(x,
   #---------------------
   if(is.null(x)){
     stop("Please provide an attributes matrix `x`")
-  }else{
-    if(!is.matrix(x)){
-      stop("`x` must be a matrix")
-    }
   }
 
   if(is.null(y)) stop("Please provide a response vector `y`")
@@ -65,17 +61,19 @@ swag <- function(x,
   if(sum(is.na(y)) > 0 || sum(is.na(x)) > 0)
     stop("Please provide data without missing values")
 
-  ## object dimension
-  # Number of attributes
-  p <- ncol(x)
-  # Number of observations
-  n <- length(y)
-
   # is y a factor
   if(!is.factor(y)) y <- as.factor(y)
 
   # verify y is binary
   if(nlevels(y)>2) stop("Please provide a binary response `y`")
+
+  ## object dimension
+  # Number of attributes
+  dim_x <- dim(x)
+  if(is.null(dim_x) || length(dim_x) != 2) stop("`x` must be a two-dimensional object")
+  if(dim_x[1] != length(y)) stop("dimensions of `x` and `y` does not match")
+  p <- dim_x[2]
+  n <- dim_x[1]
 
   if(class(control) != "swagControl")
     stop("`control` must be of class `swagControl`")
@@ -93,14 +91,15 @@ swag <- function(x,
 
   # Existence of arguments for `caret::train()`
   # with default values
-  if(!exists("method")) method = "rf"
-  if(!exists("preProcess")) preProcess = NULL
-  if(!exists("weights")) weights = NULL
-  if(!exists("metric")) metric = ifelse(is.factor(y), "Accuracy", "RMSE")
-  if(!exists("maximize")) maximize = ifelse(metric %in% c("RMSE", "logLoss", "MAE"), FALSE, TRUE)
-  if(!exists("trControl")) trControl = trainControl()
-  if(!exists("tuneGrid")) tuneGrid = NULL
-  if(!exists("tuneLength")) tuneLength = ifelse(trControl$method == "none", 1, 3)
+  args_caret <- list(...)
+  if(is.null(args_caret$method)) args_caret$method = "rf"
+  if(is.null(args_caret$preProcess)) args_caret$preProcess = NULL
+  if(is.null(args_caret$weights)) args_caret$weights = NULL
+  if(is.null(args_caret$metric)) args_caret$metric = ifelse(is.factor(y), "Accuracy", "RMSE")
+  if(is.null(args_caret$maximize)) args_caret$maximize = ifelse(args_caret$metric %in% c("RMSE", "logLoss", "MAE"), FALSE, TRUE)
+  if(is.null(args_caret$trControl)) args_caret$trControl = trainControl()
+  if(is.null(args_caret$tuneGrid)) args_caret$tuneGrid = NULL
+  if(is.null(args_caret$tuneLength)) args_caret$tuneLength = ifelse(args_caret$trControl$method == "none", 1, 3)
 
   #---------------------
   ## General parameters
@@ -125,9 +124,11 @@ swag <- function(x,
     x0 <- as.matrix(x[,i])
     set.seed(graine[1]+i)
     # learner
-    learn <- train(x=x0,y=y,method=method,preProcess=preProcess,
-                   ...,weights=weights,metric=metric,maximize=maximize,
-                   trControl=trControl,tuneGrid=tuneGrid,tuneLength=tuneLength)
+    learn <- do.call(train,args_caret)
+    # learn <- train(x=x0,y=y,method=args_caret$method,preProcess=args_caret$preProcess,
+    #                ...,weights=args_caret$weights,metric=args_caret$metric,
+    #                maximize=args_caret$maximize,trControl=args_caret$trControl,
+    #                tuneGrid=args_caret$tuneGrid,tuneLength=args_caret$tuneLength)
     # save performance
     cv_errors[i] <- 0.1e1 - max(learn$results$Accuracy)
   }
@@ -161,9 +162,10 @@ swag <- function(x,
       x0 <- as.matrix(x[,var_mat[i,]])
       set.seed(graine[1]+i)
       # learner
-      learn <- train(x=x0,y=y,method=method,preProcess=preProcess,
-                     ...,weights=weights,metric=metric,maximize=maximize,
-                     trControl=trControl,tuneGrid=tuneGrid,tuneLength=tuneLength)
+      learn <- do.call(train,args_caret)
+      # learn <- train(x=x0,y=y,method=method,preProcess=preProcess,
+      #                ...,weights=weights,metric=metric,maximize=maximize,
+      #                trControl=trControl,tuneGrid=tuneGrid,tuneLength=tuneLength)
       # save performance
       cv_errors[i] <- 0.1e1 - max(learn$results$Accuracy)
     }
@@ -251,15 +253,7 @@ swag <- function(x,
       VarMat=VarMat,
       cv_alpha=cv_alpha,
       IDs=IDs,
-      method=method,
-      preProcess=preProcess,
-      weights=weights,
-      metric=metric,
-      maximize=maximize,
-      trControl=trControl,
-      tuneGrid=tuneGrid,
-      tuneLength=tuneLength,
-      '...'=list(...)
+      args_caret=args_caret
     ),
     class="swag"
   )
