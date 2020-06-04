@@ -32,12 +32,18 @@
 #' @param control see \code{\link[swag]{swagControl}}
 #' @param auto_control A \code{boolean}, whether some control parameters
 #' are adjusted depending on \code{x} and \code{y} (see \code{\link[swag]{swagControl}}).
+#' @param caret_args_dyn If not null, a function that can modify arguments for
+#' \code{\link[caret]{train}} dynamically (see the details).
 #' @param ... Arguments to be passed to \code{\link[caret]{train}} functions (see the details).
 #' @return A \code{swag} object.
 #' @details Currently we expect the user to replace \code{...} with the arguments one would
 #' use for \code{\link[caret]{train}}. This requires to know how to use \code{\link[caret]{train}}
 #' function. If \code{...} is left unspecified, default values of \code{\link[caret]{train}}
 #' are used. But this might lead to unexpected results.
+#'
+#' The function \code{caret_args_dyn} is expected to take as a first
+#' argument a \code{list} with all arguments for \code{\link[caret]{train}}
+#' and as a second argument the number of attributes (see examples).
 #' @author Gaetan Bakalli, Samuel Orso and Cesare Miglioli
 #' @import caret
 #' @export swag
@@ -46,6 +52,7 @@ swag <- function(x,
                  control = swagControl(),
                  auto_control = TRUE,
                  # arguments for `caret::train()`
+                 caret_args_dyn = NULL,
                  ...){
 
   #---------------------
@@ -108,43 +115,25 @@ swag <- function(x,
   cv_alpha <- rep(NA,control$pmax)
 
   #---------------------
-  ## Screening step
+  ## SWAG
   #---------------------
-  # compute CV errors
-  cv_errors <- rep(NA,p)
-  for(i in seq_len(p)){
-    # select the variable
-    args_caret$x <- as.data.frame(x[,i])
-
-    # learner
-    set.seed(graine[1]+i)
-    learn <- do.call(train,args_caret)
-
-    # save performance
-    cv_errors[i] <- 0.1e1 - max(learn$results$Accuracy)
-  }
-
-  # Store results
-  CVs[[1]] <- cv_errors
-  VarMat[[1]] <- seq_along(cv_errors)
-  dim(VarMat[[1]]) <- c(1,p)
-  cv_alpha[1] <- quantile(cv_errors,control$alpha,na.rm=T)
-  id_screening <- IDs[[1]] <- which(cv_errors <= cv_alpha[1])
-
-  if(control$verbose) print(paste0("Dimension explored: ",1," - CV errors at alpha: ",round(cv_alpha[1],4)))
-
-  #---------------------
-  ## SWAG: dimensions 2 to pmax
-  #---------------------
-  for(d in 2L:control$pmax){
+  for(d in seq_len(control$pmax)){
     # Build all combinations
-    var_mat <- model_combination(id_screening,subset(VarMat[[d-1L]],select=IDs[[d-1]]))
+    if(d == 1){
+      var_mat <- seq_len(p)
+      dim(var_mat) <- c(1,p)
+    }else{
+      var_mat <- model_combination(id_screening,subset(VarMat[[d-1L]],select=IDs[[d-1]]))
+    }
 
     # Reduce number of model if exceeding `m`
-    if(ncol(var_mat)>control$m){
+    if(d>1 && ncol(var_mat)>control$m){
       set.seed(graine[d]-1)
       var_mat <- var_mat[,sample.int(ncol(var_mat),control$m)]
     }
+
+    # Modify dynamically arguments for `caret::train`
+    if(!is.null(caret_args_dyn)) args_caret <- caret_args_dyn(args_caret,d)
 
     # Compute CV errors
     cv_errors <- rep(NA,ncol(var_mat))
@@ -166,6 +155,8 @@ swag <- function(x,
     cv_alpha[d] <- quantile(cv_errors,control$alpha,na.rm=T)
     IDs[[d]] <- which(cv_errors <= cv_alpha[d])
 
+    if(d == 1) id_screening <- IDs[[d]]
+
     if(control$verbose) print(paste0("Dimension explored: ",d," - CV errors at alpha: ",round(cv_alpha[d],4)))
     if(ncol(var_mat)==1) break
   }
@@ -186,11 +177,11 @@ swag <- function(x,
       VarMat=VarMat,
       cv_alpha=cv_alpha,
       IDs=IDs,
-      args_caret=args_caret
+      args_caret=args_caret,
+      caret_args_dyn=caret_args_dyn
     ),
     class="swag"
   )
-
 }
 
 

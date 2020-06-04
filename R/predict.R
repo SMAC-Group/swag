@@ -1,4 +1,4 @@
-# Copyright (C) 2020 Gaetan Bakalli, Samuel Orso
+# Copyright (C) 2020 Gaetan Bakalli, Samuel Orso and Cesare Miglioli
 #
 # This file is part of SWAG-R Package
 #
@@ -13,3 +13,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+predict.swag <- function(object, newdata = NULL, type = "raw", na.action = na.omit, ...){
+
+}
