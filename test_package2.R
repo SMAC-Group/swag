@@ -18,18 +18,40 @@ learner <- caret::train(as.data.frame(x$Cl.thickness),y,method="knn",preProcess=
 # test_lasso <- swag(y, X, learner = "lasso", dmax = 3, q0 = .5, nc = 4, verbose = TRUE)
 # test_rf <- swag(y, X, learner = "rf", dmax = 3, q0 = .5, nc = 4, verbose = TRUE)
 
-
-trial <- swagControl(pmax = 3,alpha = 0.3,m = 100,seed = 163L, verbose = FALSE)
-
-# error: Error in structure(pmax = pmax, m = m, alpha = alpha, seed = seed, class = "swagControl") : argument ".Data" is missing, with no default
-
-trial_2 <- auto_swagControl(x = x,y = y,control = swagControl()) #not clear control argument in this function
-
-metric <- "Accuracy"
+require("swag")
 
 require(caret)
 
+# First step: control for swag
+
+trial <- swagControl(pmax = 3,alpha = 0.3,m = 100,seed = 163L, verbose = T)
+
+# error: Error in structure(pmax = pmax, m = m, alpha = alpha, seed = seed, class = "swagControl") : argument ".Data" is missing, with no default
+
+trial_2 <- auto_swagControl(x = x,y = y,control = swagControl())
+
 trctrl <- trainControl(method = "repeatedcv", number = 10, repeats = 1)
+
+
+# Second step: choose a learner
+
+# RF case
+
+metric <- "Accuracy"
+
+mtry <- sqrt(ncol(x)) #usual parameter
+
+mtry <- 1
+
+tunegrid <- expand.grid(.mtry=mtry)
+
+try_obj <- swag(x = as.matrix(x), y = y,control = trial, auto_control = F,method = "rf", metric = metric, trControl=trctrl, tuneGrid=tunegrid )
+try_obj <- swag(x = as.matrix(x), y = y,control = swagControl(alpha=.3), method = "rf", metric = metric, trControl=trctrl, tuneGrid=tunegrid )
+
+
+
+# SVM linear case
+
 
 try_obj <- swag(x = x, y = y,control = trial, auto_control = F,method = "svmLinear", metric = metric, trControl=trctrl, preProcess = c("center", "scale"),tuneLength = 10 )
 
