@@ -32,7 +32,12 @@
 #' @param control see \code{\link{swagControl}}
 #' @param auto_control A \code{boolean}, whether some control parameters
 #' are adjusted depending on `x` and `y` (see \code{\link{swagControl}}).
+#' @param ... Arguments to be passed to \code{\link[caret]{train}} functions (see the details).
 #' @return A \code{swag} object.
+#' @details Currently we expect the user to replace `...` with the arguments one would
+#' use for \code{\link[caret]{train}}. This requires to know how to use \code{\link[caret]{train}}
+#' function. If `...` is left unspecified, default values of \code{\link[caret]{train}}
+#' are used. But this might lead to unexpected results.
 #' @author Gaetan Bakalli, Samuel Orso and Cesare Miglioli
 #' @import caret
 #' @export swag
@@ -238,13 +243,24 @@ swag <- function(x,
   ## Return
   #---------------------
   structure(
-    x=x,
-    y=y,
-    control=control,
-    CVs=CVs,
-    VarMat=VarMat,
-    cv_alpha=cv_alpha,
-    IDs=IDs,
+    list(
+      x=x,
+      y=y,
+      control=control,
+      CVs=CVs,
+      VarMat=VarMat,
+      cv_alpha=cv_alpha,
+      IDs=IDs,
+      method=method,
+      preProcess=preProcess,
+      weights=weights,
+      metric=metric,
+      maximize=maximize,
+      trControl=trControl,
+      tuneGrid=tuneGrid,
+      tuneLength=tuneLength,
+      '...'=list(...)
+    ),
     class="swag"
   )
 

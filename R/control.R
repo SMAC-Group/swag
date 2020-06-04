@@ -36,7 +36,7 @@ swagControl <- function(
   if (!is.numeric(m) || m <= 0) stop("value of `m` > 0")
   if (!is.numeric(alpha) || abs(alpha) > 1) stop("value of 0<`alpha`<=1")
   if (!is.numeric(seed) || seed <= 0) stop("value of `seed` > 0")
-  structure(pmax=pmax,m=m,alpha=alpha,seed=seed,class="swagControl")
+  structure(list(pmax=pmax,m=m,alpha=alpha,seed=seed),class="swagControl")
 }
 
 auto_swagControl <- function(
@@ -59,7 +59,7 @@ auto_swagControl <- function(
 
   # Define `m` such that all learners of two attributes
   # are explored.
-  m <- choose(control$alpha * n[2], 2)
+  m <- choose(ceiling(control$alpha * n[2]), 2)
 
   swagControl(pmax,m,control$alpha,control$seed,control$verbose)
 }
