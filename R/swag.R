@@ -101,6 +101,8 @@ swag <- function(x,
   if(is.null(args_caret$tuneGrid)) args_caret$tuneGrid = NULL
   if(is.null(args_caret$tuneLength)) args_caret$tuneLength = ifelse(args_caret$trControl$method == "none", 1, 3)
 
+  # Add `y` to the list of arguments
+  args_caret$y <- y
   #---------------------
   ## General parameters
   #---------------------
@@ -121,7 +123,7 @@ swag <- function(x,
   cv_errors <- rep(NA,p)
   for(i in seq_len(p)){
     # select the variable
-    x0 <- as.matrix(x[,i])
+    args_caret$x <- as.data.frame(x[,i])
     set.seed(graine[1]+i)
     # learner
     learn <- do.call(train,args_caret)
@@ -159,7 +161,7 @@ swag <- function(x,
     cv_errors <- rep(NA,nrow(var_mat))
     for(i in seq_len(nrow(var_mat))){
       # select the variable
-      x0 <- as.matrix(x[,var_mat[i,]])
+      args_caret$x <- as.data.frame(x[,var_mat[i,]])
       set.seed(graine[1]+i)
       # learner
       learn <- do.call(train,args_caret)

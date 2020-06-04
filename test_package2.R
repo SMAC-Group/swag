@@ -7,7 +7,7 @@ y <- y[-id]
 x <- x[-id,]
 x <- matrix(as.numeric(as.matrix(x)),nc=9)
 
-learner <- caret::train(x,y,method="knn",preProcess=c("center","scale"),tuneLength=10,trControl=trainControl(method="cv"))
+learner <- caret::train(as.data.frame(x$Cl.thickness),y,method="knn",preProcess=c("center","scale"),tuneLength=10,trControl=trainControl(method="cv"))
 
 # test_logistic <- swag(y, X, q0 = .5, nc = 4, verbose = TRUE) # default for logistic regression
 
