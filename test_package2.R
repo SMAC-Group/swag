@@ -40,7 +40,7 @@ try_obj <- swag(x = x, y = y,control = trial, auto_control = F,method = "svmLine
 
 # Update sam:
 
-fit_swag <- swag(x = x, y = y, control=swagControl(alpha=.5), method = "svmLinear", metric = metric, trControl=trctrl, preProcess = c("center", "scale"),tuneLength = 10)
+fit_swag <- swag(x = x, y = y, control=swagControl(alpha=.5), method = "svmLinear", metric = metric, trControl=trctrl, tuneLength = 10)
 
 # Error in if (control$verbose) print(paste0("Dimension explored: ", 1,  :argument is of length zero
 
