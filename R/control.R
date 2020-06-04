@@ -23,7 +23,7 @@
 #' @param alpha A \code{double} representing the proportion of screening.
 #' @param seed  An \code{integer} that controls the reproducibility.
 #' @param verbose A \code{boolean} for printing current progress of the algorithm.
-#' @seealso \code{\link{swag}}
+#' @seealso \code{\link[swag]{swag}}
 #' @export swagControl
 swagControl <- function(
   pmax = 3,

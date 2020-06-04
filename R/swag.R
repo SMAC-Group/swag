@@ -18,7 +18,7 @@
 #'
 #' @description \code{swag} trains a meta-learning procedure that combines
 #' screening and wrapper methods to find a set of extremely low-dimensional attribute
-#' combinations. \code{swag} works on top of the \code{\link{caret}} package and proceeds in a
+#' combinations. \code{swag} works on top of the \pkg{caret} package and proceeds in a
 #' forward-step manner. More specifically, it builds and tests learners starting
 #' from very few attributes until it includes a maximal number of attributes by
 #' increasing the number of attributes at each step. Hence, for each fixed number
@@ -29,14 +29,14 @@
 #' a set of strong low-dimensional learners.
 #' @param x A \code{matrix} or \code{data.frame} of attributes
 #' @param y A \code{vector} of binary response variable.
-#' @param control see \code{\link{swagControl}}
+#' @param control see \code{\link[swag]{swagControl}}
 #' @param auto_control A \code{boolean}, whether some control parameters
-#' are adjusted depending on `x` and `y` (see \code{\link{swagControl}}).
+#' are adjusted depending on \code{x} and \code{y} (see \code{\link[swag]{swagControl}}).
 #' @param ... Arguments to be passed to \code{\link[caret]{train}} functions (see the details).
 #' @return A \code{swag} object.
-#' @details Currently we expect the user to replace `...` with the arguments one would
+#' @details Currently we expect the user to replace \code{...} with the arguments one would
 #' use for \code{\link[caret]{train}}. This requires to know how to use \code{\link[caret]{train}}
-#' function. If `...` is left unspecified, default values of \code{\link[caret]{train}}
+#' function. If \code{...} is left unspecified, default values of \code{\link[caret]{train}}
 #' are used. But this might lead to unexpected results.
 #' @author Gaetan Bakalli, Samuel Orso and Cesare Miglioli
 #' @import caret

@@ -11,10 +11,12 @@ swag(x, y, control = swagControl(), auto_control = TRUE, ...)
 
 \item{y}{A \code{vector} of binary response variable.}
 
-\item{control}{see \code{\link{swagControl}}}
+\item{control}{see \code{\link[swag]{swagControl}}}
 
 \item{auto_control}{A \code{boolean}, whether some control parameters
-are adjusted depending on `x` and `y` (see \code{\link{swagControl}}).}
+are adjusted depending on \code{x} and \code{y} (see \code{\link[swag]{swagControl}}).}
+
+\item{...}{Arguments to be passed to \code{\link[caret]{train}} functions (see the details).}
 }
 \value{
 A \code{swag} object.
@@ -22,7 +24,7 @@ A \code{swag} object.
 \description{
 \code{swag} trains a meta-learning procedure that combines
 screening and wrapper methods to find a set of extremely low-dimensional attribute
-combinations. \code{swag} works on top of the \code{\link{caret}} package and proceeds in a
+combinations. \code{swag} works on top of the \pkg{caret} package and proceeds in a
 forward-step manner. More specifically, it builds and tests learners starting
 from very few attributes until it includes a maximal number of attributes by
 increasing the number of attributes at each step. Hence, for each fixed number
@@ -31,6 +33,12 @@ picks those with the best performance in terms of training error. Throughout,
 the algorithm uses the information coming from the best learners at the previous
 step to build and test learners in the following step. In the end, it outputs
 a set of strong low-dimensional learners.
+}
+\details{
+Currently we expect the user to replace \code{...} with the arguments one would
+use for \code{\link[caret]{train}}. This requires to know how to use \code{\link[caret]{train}}
+function. If \code{...} is left unspecified, default values of \code{\link[caret]{train}}
+are used. But this might lead to unexpected results.
 }
 \author{
 Gaetan Bakalli, Samuel Orso and Cesare Miglioli

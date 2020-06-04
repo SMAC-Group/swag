@@ -22,5 +22,5 @@ The Spare Wrapper AlGorithm depends on some meta-parameters that are
 described below.
 }
 \seealso{
-\code{\link{swag}}
+\code{\link[swag]{swag}}
 }
