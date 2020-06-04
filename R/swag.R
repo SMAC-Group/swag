@@ -243,6 +243,9 @@ swag <- function(x,
 #   class(obj) = "swag"
 #   invisible(obj)
 #
+  # Remove `x` and `y` from `args_caret` before returning it
+  args_caret$y <- NULL
+  args_caret$x <- NULL
   #---------------------
   ## Return
   #---------------------
