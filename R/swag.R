@@ -195,15 +195,21 @@ model_combination <- function(
 ){
   # Generate all combinations of var_mat and id_screening
   A <- rbind(
-    matrix(rep(var_mat,length(id_screening)),nr=nrow(var_mat),byrow=T),
+    matrix(rep(var_mat,length(id_screening)),nr=nrow(var_mat)),
     rep(id_screening,each=ncol(var_mat))
   )
 
-  # Sort each row
+  # Remove duplicates:
+  # remove same model
   A <- unique(apply(A,2,sort), MARGIN = 2)
 
-  # Remove duplicates
-  subset(A,select=apply(A,2,anyDuplicated) == 0)
+  # remove same attributes
+  id <- apply(A,2,anyDuplicated)>0
+  if(sum(id)==0){
+    return(A)
+  }else{
+    return(subset(A,select=!id))
+  }
 }
 
 
