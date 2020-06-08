@@ -18,6 +18,8 @@ learner <- caret::train(as.data.frame(x$Cl.thickness),y,method="knn",preProcess=
 # test_lasso <- swag(y, X, learner = "lasso", dmax = 3, q0 = .5, nc = 4, verbose = TRUE)
 # test_rf <- swag(y, X, learner = "rf", dmax = 3, q0 = .5, nc = 4, verbose = TRUE)
 
+devtools::install_github("SMAC-Group/SWAG-R-Package")
+
 require("swag")
 
 require(caret)

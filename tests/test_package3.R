@@ -27,3 +27,32 @@ test_swag <- swag(
     list_arg
   }
 )
+
+### RF case ###
+
+trial <- swagControl(pmax = 3,alpha = 0.3,m = 100,seed = 163L, verbose = T)
+
+metric <- "Accuracy"
+
+trctrl <- trainControl(method = "repeatedcv", number = 10, repeats = 1)
+
+# Hyperparameters for RF
+
+mtry <- sqrt(ncol(x)) #usual parameter
+
+#mtry <- 1 for first dimension
+
+tunegrid <- expand.grid(.mtry=mtry)
+
+# Comment: mtry should increase at every iteration by calculating the sqrt(ncol(x)) --> also tunegrid 
+
+# must change accordingly. For example mtry <- 1 at dimension 1 and tunegrid expand the grid around.   
+
+try_obj <- swag(x = as.matrix(x), y = y,control = trial, auto_control = F,method = "rf", metric = metric, trControl=trctrl, tuneGrid=tunegrid )
+
+
+
+
+
+
+
