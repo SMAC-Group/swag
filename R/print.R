@@ -1,4 +1,4 @@
-# Copyright (C) 2020 Gaetan Bakalli, Samuel Orso
+# Copyright (C) 2020 Gaetan Bakalli, Samuel Orso and Cesare Miglioli
 #
 # This file is part of SWAG-R Package
 #

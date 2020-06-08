@@ -9,7 +9,8 @@ x <- apply(x,2,as.numeric)
 
 require(caret)
 
-test_swag <- swag(
+# Test with glmnet
+test_swag_glmnet <- swag(
   # arguments for swag
   x = x, y = y, control = swagControl(alpha=.5,verbose=TRUE),
   # arguments for caret
@@ -28,31 +29,46 @@ test_swag <- swag(
   }
 )
 
-### RF case ###
+# Test with random forest
+test_swag_rf <- swag(
+  # arguments for swag
+  x = x, y = y, control = swagControl(alpha=.5,verbose=TRUE),
+  # arguments for caret
+  trControl = trainControl(method = "repeatedcv", number = 10, repeats = 1, allowParallel = F),
+  metric = "Accuracy",
+  method = "rf",
+  # modify arguments for caret
+  caret_args_dyn = function(list_arg,iter){
+    list_arg$tuneGrid = expand.grid(.mtry=sqrt(iter))
+    list_arg
+  }
+)
 
-trial <- swagControl(pmax = 3,alpha = 0.3,m = 100,seed = 163L, verbose = T)
-
-metric <- "Accuracy"
-
-trctrl <- trainControl(method = "repeatedcv", number = 10, repeats = 1)
-
-# Hyperparameters for RF
-
-mtry <- sqrt(ncol(x)) #usual parameter
-
-#mtry <- 1 for first dimension
-
-tunegrid <- expand.grid(.mtry=mtry)
-
-# Comment: mtry should increase at every iteration by calculating the sqrt(ncol(x)) --> also tunegrid 
-
-# must change accordingly. For example mtry <- 1 at dimension 1 and tunegrid expand the grid around.   
-
-try_obj <- swag(x = as.matrix(x), y = y,control = trial, auto_control = F,method = "rf", metric = metric, trControl=trctrl, tuneGrid=tunegrid )
-
-
-
-
-
-
-
+# ### RF case ###
+#
+# trial <- swagControl(pmax = 3,alpha = 0.3,m = 100,seed = 163L, verbose = T)
+#
+# metric <- "Accuracy"
+#
+# trctrl <- trainControl(method = "repeatedcv", number = 10, repeats = 1)
+#
+# # Hyperparameters for RF
+#
+# mtry <- sqrt(ncol(x)) #usual parameter
+#
+# #mtry <- 1 for first dimension
+#
+# tunegrid <- expand.grid(.mtry=mtry)
+#
+# # Comment: mtry should increase at every iteration by calculating the sqrt(ncol(x)) --> also tunegrid
+#
+# # must change accordingly. For example mtry <- 1 at dimension 1 and tunegrid expand the grid around.
+#
+# try_obj <- swag(x = as.matrix(x), y = y,control = trial, auto_control = F,method = "rf", metric = metric, trControl=trctrl, tuneGrid=tunegrid )
+#
+#
+#
+#
+#
+#
+#
