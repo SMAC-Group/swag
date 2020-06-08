@@ -12,7 +12,7 @@
 
 <meta name="author" content="Gaetan Bakalli, Samuel Orso and Cesare Miglioli" />
 
-<meta name="date" content="2020-06-04" />
+<meta name="date" content="2020-06-08" />
 
 <title>swag vignette</title>
 
@@ -95,44 +95,82 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 <h1 class="title toc-ignore">swag vignette</h1>
 <h4 class="author">Gaetan Bakalli, Samuel Orso and Cesare Miglioli</h4>
-<h4 class="date">2020-06-04</h4>
+<h4 class="date">2020-06-08</h4>
 
 
 
 <div id="introduction" class="section level2">
 <h2>Introduction</h2>
-<p><strong>swag</strong> is a package that train a meta-learning procedure that combines screening and wrapper methods to find a set of extremely low-dimensional attribute combinations. SWAG-R works on top of the caret package and proceeds in a forward-step manner. More specifically, it builds and tests learners starting from very few attributes until it includes a maximal number of attributes by increasing the number of attributes at each step. Hence, for each fixed number of attributes, the algorithm tests various (randomly selected) learners and picks those with the best performance in terms of training error. Throughout, the algorithm uses the information coming from the best learners at the previous step to build and test learners in the following step. In the end, it outputs a set of strong low-dimensional learners.</p>
+<p><strong>swag</strong> is a package that train a meta-learning procedure that combines screening and wrapper methods to find a set of extremely low-dimensional attribute combinations. <strong>swag</strong> works on top of the <strong>caret</strong> package and proceeds in a forward-step manner. More specifically, it builds and tests learners starting from very few attributes until it includes a maximal number of attributes by increasing the number of attributes at each step. Hence, for each fixed number of attributes, the algorithm tests various (randomly selected) learners and picks those with the best performance in terms of training error. Throughout, the algorithm uses the information coming from the best learners at the previous step to build and test learners in the following step. In the end, it outputs a set of strong low-dimensional learners.</p>
 </div>
 <div id="installation" class="section level2">
 <h2>Installation</h2>
 <p>First you need to install the <em>devtools</em> package. Now you are able to get the <strong>swag</strong> directly from Github with the following code:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">
-devtools<span class="op">::</span><span class="kw">install_github</span>(<span class="st">&quot;SMAC-Group/SWAG-R-Package&quot;</span>)</code></pre></div>
+devtools<span class="op">::</span><span class="kw">install_github</span>(<span class="st">&quot;SMAC-Group/SWAG-R-Package&quot;</span>)
+
+<span class="kw">library</span>(swag) <span class="co">#load the new package</span></code></pre></div>
 </div>
 <div id="quick-start" class="section level2">
 <h2>Quick Start</h2>
 <p>The purpose of this section is to give a general sense of the package, including the components, what they do and some basic usage. We will briefly go over the main functions, see the basic operations and have a look at the outputs. You may have a better idea after this section regarding what functions are available, which one to choose, or at least where to seek help. More details are given in later sections.</p>
-<p>First, we load the <strong>swag</strong> package previously installed:</p>
+<p>We propose to use a dataset readily available on the package mlbench. The dataset consists of a sample of <span class="math inline">\(699\)</span> patients and the objective is to predict whether a new patient has a malignant tumour given a collection of <span class="math inline">\(9\)</span> features. We can start by splitting the data in training and test set. Alternatively you can either load directly your own data or use those saved in the workspace following exactly the same steps outlined in the next paragraphs.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">
-<span class="kw">library</span>(SWAG<span class="op">-</span>R<span class="op">-</span>Package)</code></pre></div>
-<p>We propose to use a dataset readily available on the package mlbench. The dataset consists of a sample of patients and the objective is to predict whether a new patient has a malignant tumour from a set of predicting variables. We can start by defining the matrix of predictors <span class="math inline">\(X\)</span> and the response labels <span class="math inline">\(y\)</span>. Alternatively you can either load directly your own data or use those saved in the workspace following the same steps outlined below.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">
-<span class="co"># After having installed and loaded the mlbench package</span>
+<span class="co"># After having installed the mlbench package</span>
 
 <span class="kw">data</span>(BreastCancer, <span class="dt">package =</span> <span class="st">&quot;mlbench&quot;</span>)
 
-<span class="co"># Pre-processing of the datase</span>
+<span class="co"># Pre-processing of the data</span>
 
 y &lt;-<span class="st"> </span>BreastCancer<span class="op">$</span>Class <span class="co"># response variable</span>
 
-x &lt;-<span class="st"> </span><span class="kw">as.matrix</span>(BreastCancer[<span class="kw">setdiff</span>(<span class="kw">names</span>(BreastCancer),<span class="kw">c</span>(<span class="st">&quot;Id&quot;</span>,<span class="st">&quot;Class&quot;</span>))]) <span class="co"># matrix of predictors</span>
+x &lt;-<span class="st"> </span><span class="kw">as.matrix</span>(BreastCancer[<span class="kw">setdiff</span>(<span class="kw">names</span>(BreastCancer),<span class="kw">c</span>(<span class="st">&quot;Id&quot;</span>,<span class="st">&quot;Class&quot;</span>))]) <span class="co"># features</span>
 
 <span class="co"># remove missing values</span>
 
 id &lt;-<span class="st"> </span><span class="kw">which</span>(<span class="kw">apply</span>(X,<span class="dv">1</span>,<span class="cf">function</span>(x) <span class="kw">sum</span>(<span class="kw">is.na</span>(x)))<span class="op">&gt;</span><span class="dv">0</span>)
 y &lt;-<span class="st"> </span>y[<span class="op">-</span>id]
-x &lt;-<span class="st"> </span>x[<span class="op">-</span>id,]</code></pre></div>
-<p>The swag </p>
+x &lt;-<span class="st"> </span>x[<span class="op">-</span>id,]
+x &lt;-<span class="st"> </span><span class="kw">apply</span>(x,<span class="dv">2</span>,as.numeric)
+
+<span class="co"># Training and test set</span>
+
+<span class="kw">set.seed</span>(<span class="dv">180</span>) <span class="co"># for replication</span>
+
+ind &lt;-<span class="st"> </span><span class="kw">sample</span>(<span class="dv">1</span><span class="op">:</span><span class="kw">dim</span>(x)[<span class="dv">1</span>],<span class="kw">dim</span>(x)[<span class="dv">1</span>]<span class="op">*</span><span class="fl">0.2</span>)  
+
+y_test &lt;-<span class="st"> </span>y[ind]
+
+y_train &lt;-<span class="st"> </span>y[<span class="op">-</span>ind]
+
+x_test &lt;-<span class="st"> </span>x[ind]
+
+x_train &lt;-x[<span class="op">-</span>ind]</code></pre></div>
+<p>Now we are ready to train the <strong>swag</strong> on the breast cancer dataset. As explained before, we build on the framework of the package <strong>caret</strong> thus expert users of this package will find the whole implementation easier. In any case, we will explain all the important steps needed for <strong>swag</strong> and we suggest to the interested reader the following detailed e-book: <a href="http://topepo.github.io/caret/index.html">caret</a>. The first step is to fix the meta-parameters of the procedures: <span class="math inline">\(p_{max}\)</span>, <span class="math inline">\(\alpha\)</span> and <span class="math inline">\(m\)</span>. As the name suggests, <span class="math inline">\(p_{max}\)</span> is the maximum dimension of attributes that the user wants to be input in a learner, <span class="math inline">\(\alpha\)</span> is a performance quantile which represents the percentage of learners which are selected at each dimension $ 1  p_{max}$ and finally <span class="math inline">\(m\)</span> which represent the maximum numbers of learners which will be trained at each dimension <span class="math inline">\(\hat{p} &gt; 1\)</span> (this because we train all <span class="math inline">\(p\)</span> learners of dimension <span class="math inline">\(1\)</span>). The <em>swagcontrol()</em> function</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">
+<span class="kw">library</span>(caret)
+
+trial &lt;-<span class="st"> </span><span class="kw">swagControl</span>(<span class="dt">pmax =</span> <span class="dv">3</span>,<span class="dt">alpha =</span> <span class="fl">0.3</span>,<span class="dt">m =</span> <span class="dv">100</span>,<span class="dt">seed =</span> 163L, <span class="dt">verbose =</span> T)
+
+<span class="co"># Test with glmnet</span>
+test_swag_glmnet &lt;-<span class="st"> </span><span class="kw">swag</span>(
+  <span class="co"># arguments for swag</span>
+  <span class="dt">x =</span> x, <span class="dt">y =</span> y, <span class="dt">control =</span> <span class="kw">swagControl</span>(<span class="dt">alpha=</span>.<span class="dv">5</span>,<span class="dt">verbose=</span><span class="ot">TRUE</span>),
+  <span class="co"># arguments for caret</span>
+  <span class="dt">trControl =</span> <span class="kw">trainControl</span>(<span class="dt">method =</span> <span class="st">&quot;repeatedcv&quot;</span>, <span class="dt">number =</span> <span class="dv">10</span>, <span class="dt">repeats =</span> <span class="dv">1</span>, <span class="dt">allowParallel =</span> F),
+  <span class="dt">metric =</span> <span class="st">&quot;Accuracy&quot;</span>,
+  <span class="dt">method =</span> <span class="st">&quot;glmnet&quot;</span>,
+  <span class="dt">tuneGrid=</span><span class="kw">expand.grid</span>(<span class="dt">alpha =</span> <span class="dv">1</span>, <span class="dt">lambda =</span> <span class="kw">seq</span>(<span class="dv">0</span>,.<span class="dv">35</span>,<span class="dt">length.out=</span><span class="dv">10</span>)),
+  <span class="dt">family=</span><span class="st">&quot;binomial&quot;</span>,
+  <span class="co"># dynamically modify arguments for caret</span>
+  <span class="dt">caret_args_dyn =</span> <span class="cf">function</span>(list_arg,iter){
+    <span class="cf">if</span>(iter<span class="op">==</span><span class="dv">1</span>){
+      list_arg<span class="op">$</span>method =<span class="st"> &quot;glm&quot;</span>
+      list_arg<span class="op">$</span>tuneGrid =<span class="st"> </span><span class="ot">NULL</span>
+    }
+    list_arg
+  }
+)</code></pre></div>
 </div>
 
 
