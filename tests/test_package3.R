@@ -19,7 +19,7 @@ test_swag_glmnet <- swag(
   method = "glmnet",
   tuneGrid=expand.grid(alpha = 1, lambda = seq(0,.35,length.out=10)),
   family="binomial",
-  # modify arguments for caret
+  # dynamically modify arguments for caret
   caret_args_dyn = function(list_arg,iter){
     if(iter==1){
       list_arg$method = "glm"
@@ -28,6 +28,13 @@ test_swag_glmnet <- swag(
     list_arg
   }
 )
+# best prediction
+predict(test_swag_glmnet)
+# predictions below a given CV error
+predict(test_swag_glmnet,type="cv_performance",cv_performance = 0.05)
+# predictions for a given dimension
+predict(test_swag_glmnet,type="attribute",attribute = 4)
+
 
 # Test with random forest
 test_swag_rf <- swag(
@@ -37,7 +44,7 @@ test_swag_rf <- swag(
   trControl = trainControl(method = "repeatedcv", number = 10, repeats = 1, allowParallel = F),
   metric = "Accuracy",
   method = "rf",
-  # modify arguments for caret
+  # dynamically modify arguments for caret
   caret_args_dyn = function(list_arg,iter){
     list_arg$tuneGrid = expand.grid(.mtry=sqrt(iter))
     list_arg

@@ -100,7 +100,7 @@ swag <- function(x,
   args_caret$y <- y
 
   # Make a copy
-  if(!is.null(caret_args_dyn)) args_caret2 <- args_caret
+  if(!missing(caret_args_dyn)) args_caret2 <- args_caret
   #---------------------
   ## General parameters
   #---------------------
@@ -133,7 +133,7 @@ swag <- function(x,
     }
 
     # Modify dynamically arguments for `caret::train`
-    if(!is.null(caret_args_dyn)) args_caret <- caret_args_dyn(args_caret2,d)
+    if(!missing(caret_args_dyn)) args_caret <- caret_args_dyn(args_caret2,d)
 
     # Compute CV errors
     cv_errors <- rep(NA,ncol(var_mat))

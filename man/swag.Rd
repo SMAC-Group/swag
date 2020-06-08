@@ -4,7 +4,14 @@
 \alias{swag}
 \title{Spare Wrapper AlGorithm (swag)}
 \usage{
-swag(x, y, control = swagControl(), auto_control = TRUE, ...)
+swag(
+  x,
+  y,
+  control = swagControl(),
+  auto_control = TRUE,
+  caret_args_dyn = NULL,
+  ...
+)
 }
 \arguments{
 \item{x}{A \code{matrix} or \code{data.frame} of attributes}
@@ -15,6 +22,9 @@ swag(x, y, control = swagControl(), auto_control = TRUE, ...)
 
 \item{auto_control}{A \code{boolean}, whether some control parameters
 are adjusted depending on \code{x} and \code{y} (see \code{\link[swag]{swagControl}}).}
+
+\item{caret_args_dyn}{If not null, a function that can modify arguments for
+\code{\link[caret]{train}} dynamically (see the details).}
 
 \item{...}{Arguments to be passed to \code{\link[caret]{train}} functions (see the details).}
 }
@@ -39,6 +49,10 @@ Currently we expect the user to replace \code{...} with the arguments one would
 use for \code{\link[caret]{train}}. This requires to know how to use \code{\link[caret]{train}}
 function. If \code{...} is left unspecified, default values of \code{\link[caret]{train}}
 are used. But this might lead to unexpected results.
+
+The function \code{caret_args_dyn} is expected to take as a first
+argument a \code{list} with all arguments for \code{\link[caret]{train}}
+and as a second argument the number of attributes (see examples).
 }
 \author{
 Gaetan Bakalli, Samuel Orso and Cesare Miglioli
