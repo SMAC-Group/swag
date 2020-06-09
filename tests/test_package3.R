@@ -35,13 +35,6 @@ predict(test_swag_glmnet,type="cv_performance",cv_performance = 0.05)
 # predictions for a given dimension
 predict(test_swag_glmnet,type="attribute",attribute = 4)
 
-#To Sam
-
-# best prediction
-predict(object = train_swag_svmr,newdata = x_test) 
-
-# the above does not work, you can look at code on vignette to split train/test the dataset
-
 
 # Test with random forest
 test_swag_rf <- swag(
@@ -81,3 +74,36 @@ test_swag_svmr <- swag(
 )
 
 
+
+#To Cesare
+# the above does not work, you can look at code on vignette to split train/test the dataset
+
+# 80/20 train/test split
+set.seed(180) # for replication
+ind <- sample(length(y),round(length(y) * 0.2)) # 80/20 split
+y_test <- y[ind]
+y_train <- y[-ind]
+x_test <- x[ind,]
+x_train <-x[-ind,]
+
+# !This is not the same as in the vignette!
+swagcon <- swagControl(pmax = 3,
+                       alpha = 0.5,
+                       m = 10,
+                       seed = 163L, #for replicability
+                       verbose = T #keeps track of completed dimensions
+)
+
+train_swag_svml <- swag(
+  # arguments for swag
+  x = x_train,
+  y = y_train,
+  control = swagcon,
+  # arguments for caret
+  trControl = caret::trainControl(method = "repeatedcv", number = 10, repeats = 1, allowParallel = F),
+  metric = "Accuracy",
+  method = "svmLinear",
+  preProcess = c("center", "scale")
+)
+
+predict(train_swag_svml,newdata=x_test)

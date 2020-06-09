@@ -45,6 +45,8 @@
 #' argument a \code{list} with all arguments for \code{\link[caret]{train}}
 #' and as a second argument the number of attributes (see examples).
 #' @author Gaetan Bakalli, Samuel Orso and Cesare Miglioli
+#' @importFrom caret train
+#' @importFrom caret trainControl
 #' @import caret
 #' @export swag
 swag <- function(x,
