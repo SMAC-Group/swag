@@ -10,7 +10,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-<meta name="author" content="Gaetan Bakalli, Samuel Orso and Cesare Miglioli" />
+<meta name="author" content="Gaetan Bakalli, Samuel Orso, Cesare Miglioli, Roberto Molinari and Stephane Guerrier" />
 
 <meta name="date" content="2020-06-09" />
 
@@ -94,7 +94,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 
 <h1 class="title toc-ignore">swag vignette</h1>
-<h4 class="author">Gaetan Bakalli, Samuel Orso and Cesare Miglioli</h4>
+<h4 class="author">Gaetan Bakalli, Samuel Orso, Cesare Miglioli, Roberto Molinari and Stephane Guerrier</h4>
 <h4 class="date">2020-06-09</h4>
 
 
@@ -115,7 +115,7 @@ devtools<span class="op">::</span><span class="kw">install_github</span>(<span c
 <div id="start-with-swag" class="section level2">
 <h2>Start with swag!</h2>
 <p>The purpose of this section is to give a general sense of the package, including the components, what they do and some basic usage. We will briefly go over the main functions, see the basic operations and have a look at the outputs. You may have a better idea after this section regarding what functions are available, which one to choose, or at least where to seek help. More details are given in later sections.</p>
-<p>We propose to use a dataset readily available on the package mlbench. The dataset consists of a sample of <span class="math inline">\(n = 699\)</span> patients and the objective is to predict whether a new patient has a malignant tumour given a collection of <span class="math inline">\(p = 9\)</span> attributes. We can start by splitting the data into training and test set. Alternatively you can either load directly your own data or use those saved in the workspace following exactly the same steps outlined in the next paragraphs.</p>
+<p>We propose to use a dataset readily available on the package <strong>mlbench</strong>. The dataset consists of a sample of <span class="math inline">\(n = 699\)</span> patients and the objective is to predict whether a new patient has a malignant tumour given a collection of <span class="math inline">\(p = 9\)</span> attributes. We can start by splitting the data into training and test set. Alternatively you can either load directly your own data or use those saved in the workspace following exactly the same steps outlined in the next paragraphs.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">
 <span class="co"># After having installed the mlbench package</span>
 
@@ -152,7 +152,7 @@ x_train &lt;-x[<span class="op">-</span>ind,]</code></pre></div>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">
 <span class="co"># Meta-parameters chosen for the breast cancer dataset</span>
 
-swagcon &lt;-<span class="st"> </span><span class="kw">swagControl</span>(<span class="dt">pmax =</span> <span class="dv">5</span>, <span class="dt">alpha =</span> <span class="fl">0.5</span>, <span class="dt">m =</span> <span class="dv">1000</span>,
+swagcon &lt;-<span class="st"> </span><span class="kw">swagControl</span>(<span class="dt">pmax =</span> <span class="dv">5</span>, <span class="dt">alpha =</span> <span class="fl">0.5</span>, <span class="dt">m =</span> <span class="dv">100</span>,
                        
                        <span class="dt">seed =</span> 163L <span class="co">#for replicability</span>
                        
@@ -165,7 +165,7 @@ swagcon &lt;-<span class="st"> </span><span class="kw">swagControl</span>(<span 
 <p>If you do not specify these values, you will automatically get: <span class="math inline">\(p_{max} = 3\)</span>, <span class="math inline">\(\alpha = 0.05\)</span> and <span class="math inline">\(m= 100\)</span>. Ideally, with unlimited computing power, <span class="math inline">\(p_{max}\)</span> and <span class="math inline">\(m\)</span> would be as large as possible, i.e. <span class="math inline">\(p_{\text{max}} = p\)</span> and <span class="math inline">\(m = \binom{p}{\lceil \frac{p}{2}\rceil}\)</span>. However, this defeats the purpose of the algorithm and therefore the decision of these parameters must be based mainly on interpretability/replicability requirements as well as available computing power and time. Below are some rules-of-thumb for the choice of these parameters:</p>
 <ul>
 <li><p><span class="math inline">\(\mathbf{p_{\text{max}}}\)</span>: Fixing the available computing power and the efficiency of the learning mechanism <span class="math inline">\(\mathcal{L}\)</span>, this parameter will depend on the total dimension of the problem <span class="math inline">\(p\)</span>. Indeed, the goal of <strong>swag</strong> is to find extremely small dimensional learners. Therefore, even with very large <span class="math inline">\(p\)</span>, one could always fix this parameter within a range of 5-20 (or smaller) for interpretability and/or replicability purposes. In addition, if an embedded method is computationally efficient to compute on the entire dataset, this parameter could be the number of selected attributes through this method (given computational constraints). Another criterion, when working with binary classification problems, is to use the <em>Event Per Variable</em> (EPV) rule. In future work, this parameter can be implicitly determined by the algorithm based on the training error quantile (or other metric) thereby defining <span class="math inline">\(p_{\text{max}}\)</span> as the attribute dimension where the training error curve stops decreasing significantly similarly to the <em>scree plot</em> in factor or principal component analysis.</p></li>
-<li><p><span class="math inline">\(\boldsymbol{\alpha}\)</span>: as discussed previously, this parameter is related to the maximum number of learners <span class="math inline">\(m\)</span>. The larger <span class="math inline">\(\alpha\)</span>, the more the attribute space is explored. Ideally, we want to choose a small <span class="math inline">\(\alpha\)</span> since we would want to select strong learners (with extremely low training error) and this is possible if <span class="math inline">\(m\)</span> is large enough. Generally good values for <span class="math inline">\(\alpha\)</span> are <span class="math inline">\(0.01\)</span> or <span class="math inline">\(0.05\)</span>, implying that (roughly) 1% or 5% of the <span class="math inline">\(m\)</span> learners are selected at each step.</p></li>
+<li><p><span class="math inline">\(\boldsymbol{\alpha}\)</span>: this parameter is related to the maximum number of learners <span class="math inline">\(m\)</span>. The larger <span class="math inline">\(\alpha\)</span>, the more the attribute space is explored. Ideally, we want to choose a small <span class="math inline">\(\alpha\)</span> since we would want to select strong learners (with extremely low training error) and this is possible if <span class="math inline">\(m\)</span> is large enough. Generally good values for <span class="math inline">\(\alpha\)</span> are <span class="math inline">\(0.01\)</span> or <span class="math inline">\(0.05\)</span>, implying that (roughly) 1% or 5% of the <span class="math inline">\(m\)</span> learners are selected at each step.</p></li>
 <li><p><span class="math inline">\(\mathbf{m}\)</span>: Fixing the available computing power and the efficiency of the learning mechanism <span class="math inline">\(\mathcal{L}\)</span>, this parameter will determine the proportion of attribute space that will be explored by the algorithm. We know that it depends on the size of the problem <span class="math inline">\(p\)</span> since we necessarily have <span class="math inline">\(m \geq p\)</span> for the screening step with models of unitary dimension. In addition, this parameter needs to be chosen considering the performance percentile <span class="math inline">\(\alpha\)</span>: if <span class="math inline">\(m\)</span> is small and <span class="math inline">\(\alpha\)</span> is small, then the number of strong learners being selected could be extremely low (possibly zero). In general, we would want a large <span class="math inline">\(m\)</span> (so that <span class="math inline">\(\alpha\)</span> can eventually be chosen to be very small) and, fixing <span class="math inline">\(p^\star\)</span> as the number of attributes released from the first screening, a rule-of-thumb is to set <span class="math inline">\(m = \binom{p^\star}{2}\)</span> (or close to it) in order to explore the entire (or most of the) subspace of two-dimensional learners generated by <span class="math inline">\(p^\star\)</span>.</p></li>
 </ul>
 <p>Having set-up the meta-parameters as explained above, we are now ready to train the <strong>swag</strong>. We start with the Support Vector Machine learner, both linear and radial, as displayed by the chunks below:</p>
@@ -303,16 +303,55 @@ test_swag_rf &lt;-<span class="st"> </span><span class="kw">swag</span>(
   }
 )</code></pre></div>
 <p>Indeed a nice feature of <strong>swag</strong>, that derives from its building block <strong>caret</strong>, is that you can tailor the learning arguments of <em>swag()</em> as you like introducing for example grids for the hyper-parameters specific of a given learner or update these grids as the dimension increases. This gives to the user a wide range of possibilities and a lot of flexibility in the trainig phase.</p>
-<p>To conclude this opening section, we present the usual <em>predict()</em> function which can be applied to a <strong>swag</strong> trained object similarly to many other package in R.</p>
+<p>To conclude this opening section, we present the usual <em>predict()</em> function which can be applied to a <strong>swag</strong> trained object similarly to many other packages in R.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">
-<span class="co"># best prediction</span>
-<span class="kw">predict</span>(<span class="dt">object =</span> train_swag_svmr,<span class="dt">newdata =</span> x_test)
+<span class="co"># IN-SAMPLE</span>
 
-<span class="co"># predictions below a given CV error</span>
-<span class="kw">predict</span>(train_swag_svmr,<span class="dt">type=</span><span class="st">&quot;cv_performance&quot;</span>,<span class="dt">cv_performance =</span> <span class="fl">0.05</span>)
+<span class="co"># predictions below a given CV error in-sample</span>
+train_pred &lt;-<span class="st"> </span><span class="kw">predict</span>(train_swag_svmr,<span class="dt">type=</span><span class="st">&quot;cv_performance&quot;</span>,<span class="dt">cv_performance =</span> <span class="fl">0.05</span>)
 
-<span class="co"># predictions for a given dimension</span>
-<span class="kw">predict</span>(train_swag_svmr,<span class="dt">type=</span><span class="st">&quot;attribute&quot;</span>,<span class="dt">attribute =</span> <span class="dv">4</span>)</code></pre></div>
+<span class="co"># predictions for a given dimension in-sample</span>
+train_pred_att &lt;-<span class="st"> </span><span class="kw">predict</span>(train_swag_svmr,<span class="dt">type=</span><span class="st">&quot;attribute&quot;</span>,<span class="dt">attribute =</span> <span class="dv">4</span>)</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">
+<span class="co"># OUT-OF-SAMPLE</span>
+
+<span class="co"># best learner prediction </span>
+
+test_pred &lt;-<span class="st"> </span><span class="kw">predict</span>(<span class="dt">object =</span> train_swag_svmr,<span class="dt">newdata =</span> x_test)</code></pre></div>
+<p>Now we can for example evaluate the performance of the best learner selected by <strong>swag</strong> thanks to the <em>confusionMatrix()</em> function of <strong>caret</strong>.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">
+best_pred &lt;-<span class="st"> </span><span class="kw">as.factor</span>(<span class="kw">as.numeric</span>(test_pred<span class="op">$</span>predictions))
+
+<span class="kw">levels</span>(best_pred) &lt;-<span class="st"> </span><span class="kw">levels</span>(y_test)
+
+<span class="kw">confusionMatrix</span>(best_pred,y_test)
+<span class="co">#&gt; Confusion Matrix and Statistics</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt;            Reference</span>
+<span class="co">#&gt; Prediction  benign malignant</span>
+<span class="co">#&gt;   benign        85         4</span>
+<span class="co">#&gt;   malignant      5        42</span>
+<span class="co">#&gt;                                           </span>
+<span class="co">#&gt;                Accuracy : 0.9338          </span>
+<span class="co">#&gt;                  95% CI : (0.8781, 0.9693)</span>
+<span class="co">#&gt;     No Information Rate : 0.6618          </span>
+<span class="co">#&gt;     P-Value [Acc &gt; NIR] : 3.802e-14       </span>
+<span class="co">#&gt;                                           </span>
+<span class="co">#&gt;                   Kappa : 0.853           </span>
+<span class="co">#&gt;                                           </span>
+<span class="co">#&gt;  Mcnemar's Test P-Value : 1               </span>
+<span class="co">#&gt;                                           </span>
+<span class="co">#&gt;             Sensitivity : 0.9444          </span>
+<span class="co">#&gt;             Specificity : 0.9130          </span>
+<span class="co">#&gt;          Pos Pred Value : 0.9551          </span>
+<span class="co">#&gt;          Neg Pred Value : 0.8936          </span>
+<span class="co">#&gt;              Prevalence : 0.6618          </span>
+<span class="co">#&gt;          Detection Rate : 0.6250          </span>
+<span class="co">#&gt;    Detection Prevalence : 0.6544          </span>
+<span class="co">#&gt;       Balanced Accuracy : 0.9287          </span>
+<span class="co">#&gt;                                           </span>
+<span class="co">#&gt;        'Positive' Class : benign          </span>
+<span class="co">#&gt; </span></code></pre></div>
 </div>
 
 

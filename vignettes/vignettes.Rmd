@@ -1,6 +1,6 @@
 ---
 title: "swag vignette"
-author: "Gaetan Bakalli, Samuel Orso and Cesare Miglioli"
+author: "Gaetan Bakalli, Samuel Orso, Cesare Miglioli, Roberto Molinari and Stephane Guerrier"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
@@ -27,7 +27,16 @@ Given the above intuitive description, we now provide a more formal introduction
 
 First you need to install the *devtools* package. Now you are able to get the **swag** directly from Github with the following code:
 
-```{r, eval=T,warning=FALSE,message=FALSE}
+```{r,echo=FALSE,include=FALSE,eval=TRUE}
+
+devtools::install_github("SMAC-Group/SWAG-R-Package")
+
+library(swag) #load the new package
+
+```
+
+
+```{r, eval=F,echo=TRUE}
 
 devtools::install_github("SMAC-Group/SWAG-R-Package")
 
@@ -39,7 +48,7 @@ library(swag) #load the new package
 
 The purpose of this section is to give a general sense of the package, including the components, what they do and some basic usage. We will briefly go over the main functions, see the basic operations and have a look at the outputs. You may have a better idea after this section regarding what functions are available, which one to choose, or at least where to seek help. More details are given in later sections.
 
-We propose to use a dataset readily available on the package mlbench. The dataset consists of a sample of $n = 699$ patients and the objective is to predict whether a new patient has a malignant tumour given a collection of $p = 9$ attributes. We can start by splitting the data into training and test set. Alternatively you can either load directly your own data or use those saved in the workspace following exactly the same steps outlined in the next paragraphs. 
+We propose to use a dataset readily available on the package **mlbench**. The dataset consists of a sample of $n = 699$ patients and the objective is to predict whether a new patient has a malignant tumour given a collection of $p = 9$ attributes. We can start by splitting the data into training and test set. Alternatively you can either load directly your own data or use those saved in the workspace following exactly the same steps outlined in the next paragraphs. 
 
 ```{r, eval=T}
 
@@ -86,7 +95,7 @@ The first step is to fix the meta-parameters of the procedures: $p_{max}$, $\alp
 
 # Meta-parameters chosen for the breast cancer dataset
 
-swagcon <- swagControl(pmax = 5, alpha = 0.5, m = 1000,
+swagcon <- swagControl(pmax = 5, alpha = 0.5, m = 100,
                        
                        seed = 163L #for replicability
                        
@@ -103,7 +112,7 @@ If you do not specify these values, you will automatically get: $p_{max} = 3$, $
 
 * $\mathbf{p_{\text{max}}}$: Fixing the available computing power and the efficiency of the learning mechanism $\mathcal{L}$, this parameter will depend on the total dimension of the problem $p$. Indeed, the goal of **swag** is to find extremely small dimensional learners. Therefore, even with very large $p$, one could always fix this parameter within a range of 5-20 (or smaller) for interpretability and/or replicability purposes. In addition, if an embedded method is computationally efficient to compute on the entire dataset, this parameter could be the number of selected attributes through this method (given computational constraints). Another criterion, when working with binary classification problems, is to use the *Event Per Variable* (EPV) rule. In future work, this parameter can be implicitly determined by the algorithm based on the training error quantile (or other metric) thereby defining $p_{\text{max}}$ as the attribute dimension where the training error curve stops decreasing significantly similarly to the *scree plot* in factor or principal component analysis.
 
-* $\boldsymbol{\alpha}$: as discussed previously, this parameter is related to the maximum number of learners $m$. The larger $\alpha$, the more the attribute space is explored. Ideally, we want to choose a small $\alpha$ since we would want to select strong learners (with extremely low training error) and this is possible if $m$ is large enough. Generally good values for $\alpha$ are $0.01$ or $0.05$, implying that (roughly) 1\% or 5\% of the $m$ learners are selected at each step.
+* $\boldsymbol{\alpha}$: this parameter is related to the maximum number of learners $m$. The larger $\alpha$, the more the attribute space is explored. Ideally, we want to choose a small $\alpha$ since we would want to select strong learners (with extremely low training error) and this is possible if $m$ is large enough. Generally good values for $\alpha$ are $0.01$ or $0.05$, implying that (roughly) 1\% or 5\% of the $m$ learners are selected at each step.
 
 
 * $\mathbf{m}$: Fixing the available computing power and the efficiency of the learning mechanism $\mathcal{L}$, this parameter will determine the proportion of attribute space that will be explored by the algorithm. We know that it depends on the size of the problem $p$ since we necessarily have $m \geq p$ for the screening step with models of unitary dimension. In addition, this parameter needs to be chosen considering the performance percentile $\alpha$: if $m$ is small and $\alpha$ is small, then the number of strong learners being selected could be extremely low (possibly zero). In general, we would want a large $m$ (so that $\alpha$ can eventually be chosen to be very small) and, fixing $p^\star$ as the number of attributes released from the first screening, a rule-of-thumb is to set $m = \binom{p^\star}{2}$ (or close to it) in order to explore the entire (or most of the) subspace of two-dimensional learners generated by $p^\star$.
@@ -238,21 +247,42 @@ test_swag_rf <- swag(
 
 Indeed a nice feature of **swag**, that derives from its building block **caret**, is that you can tailor the learning arguments of *swag()* as you like introducing for example grids for the hyper-parameters specific of a given learner or update these grids as the dimension increases. This gives to the user a wide range of possibilities and a lot of flexibility in the trainig phase.
 
-To conclude this opening section, we present the usual *predict()* function which can be applied to a **swag** trained object similarly to many other package in R.  
+To conclude this opening section, we present the usual *predict()* function which can be applied to a **swag** trained object similarly to many other packages in R.  
 
-```{r, eval=F}
+```{r, eval=FALSE}
 
-# best prediction
-predict(object = train_swag_svmr,newdata = x_test)
+# IN-SAMPLE
 
-# predictions below a given CV error
-predict(train_swag_svmr,type="cv_performance",cv_performance = 0.05)
+# predictions below a given CV error in-sample
+train_pred <- predict(train_swag_svmr,type="cv_performance",cv_performance = 0.05)
 
-# predictions for a given dimension
-predict(train_swag_svmr,type="attribute",attribute = 4)
+# predictions for a given dimension in-sample
+train_pred_att <- predict(train_swag_svmr,type="attribute",attribute = 4)
 
 ```
 
 
+```{r, eval=T}
+
+# OUT-OF-SAMPLE
+
+# best learner prediction 
+
+test_pred <- predict(object = train_swag_svmr,newdata = x_test)
+
+```
+
+
+Now we can for example evaluate the performance of the best learner selected by **swag** thanks to the *confusionMatrix()* function of **caret**. 
+
+```{r, eval=T}
+
+best_pred <- as.factor(as.numeric(test_pred$predictions))
+
+levels(best_pred) <- levels(y_test)
+
+confusionMatrix(best_pred,y_test)
+
+```
 
 
