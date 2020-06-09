@@ -12,7 +12,7 @@
 
 <meta name="author" content="Gaetan Bakalli, Samuel Orso and Cesare Miglioli" />
 
-<meta name="date" content="2020-06-08" />
+<meta name="date" content="2020-06-09" />
 
 <title>swag vignette</title>
 
@@ -95,13 +95,14 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 <h1 class="title toc-ignore">swag vignette</h1>
 <h4 class="author">Gaetan Bakalli, Samuel Orso and Cesare Miglioli</h4>
-<h4 class="date">2020-06-08</h4>
+<h4 class="date">2020-06-09</h4>
 
 
 
 <div id="introduction" class="section level2">
 <h2>Introduction</h2>
 <p><strong>swag</strong> is a package that train a meta-learning procedure that combines screening and wrapper methods to find a set of extremely low-dimensional attribute combinations. <strong>swag</strong> works on top of the <strong>caret</strong> package and proceeds in a forward-step manner. More specifically, it builds and tests learners starting from very few attributes until it includes a maximal number of attributes by increasing the number of attributes at each step. Hence, for each fixed number of attributes, the algorithm tests various (randomly selected) learners and picks those with the best performance in terms of training error. Throughout, the algorithm uses the information coming from the best learners at the previous step to build and test learners in the following step. In the end, it outputs a set of strong low-dimensional learners.</p>
+<p>Given the above intuitive description, we now provide a more formal introduction and, for this reason, we define some basic notation. Let <span class="math inline">\(\mathbf{y} \in \mathbb{R}^n\)</span> denote the response and <span class="math inline">\(\mathbf{X} \in \mathbb{R}^{n \times p}\)</span> denote an attribute matrix with <span class="math inline">\(n\)</span> instances and <span class="math inline">\(p\)</span> attributes, the latter being indexed by a set <span class="math inline">\(\mathcal{S} := \{1, ... , p\}\)</span>. In addition, a generic learning mechanism is denoted as <span class="math inline">\(\mathcal{L}:= \mathcal{L}(\mathbf{y}, \mathbf{X})\)</span> with <span class="math inline">\(l\)</span> denoting a general learner which is built by using (i) the learning mechanism <span class="math inline">\(\mathcal{L}\)</span> and (ii) a subset of attributes in <span class="math inline">\(\mathbf{X}\)</span>.</p>
 </div>
 <div id="installation" class="section level2">
 <h2>Installation</h2>
@@ -111,10 +112,10 @@ devtools<span class="op">::</span><span class="kw">install_github</span>(<span c
 
 <span class="kw">library</span>(swag) <span class="co">#load the new package</span></code></pre></div>
 </div>
-<div id="quick-start" class="section level2">
-<h2>Quick Start</h2>
+<div id="start-with-swag" class="section level2">
+<h2>Start with swag!</h2>
 <p>The purpose of this section is to give a general sense of the package, including the components, what they do and some basic usage. We will briefly go over the main functions, see the basic operations and have a look at the outputs. You may have a better idea after this section regarding what functions are available, which one to choose, or at least where to seek help. More details are given in later sections.</p>
-<p>We propose to use a dataset readily available on the package mlbench. The dataset consists of a sample of <span class="math inline">\(699\)</span> patients and the objective is to predict whether a new patient has a malignant tumour given a collection of <span class="math inline">\(9\)</span> features. We can start by splitting the data in training and test set. Alternatively you can either load directly your own data or use those saved in the workspace following exactly the same steps outlined in the next paragraphs.</p>
+<p>We propose to use a dataset readily available on the package mlbench. The dataset consists of a sample of <span class="math inline">\(n = 699\)</span> patients and the objective is to predict whether a new patient has a malignant tumour given a collection of <span class="math inline">\(p = 9\)</span> attributes. We can start by splitting the data into training and test set. Alternatively you can either load directly your own data or use those saved in the workspace following exactly the same steps outlined in the next paragraphs.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">
 <span class="co"># After having installed the mlbench package</span>
 
@@ -128,7 +129,7 @@ x &lt;-<span class="st"> </span><span class="kw">as.matrix</span>(BreastCancer[<
 
 <span class="co"># remove missing values</span>
 
-id &lt;-<span class="st"> </span><span class="kw">which</span>(<span class="kw">apply</span>(X,<span class="dv">1</span>,<span class="cf">function</span>(x) <span class="kw">sum</span>(<span class="kw">is.na</span>(x)))<span class="op">&gt;</span><span class="dv">0</span>)
+id &lt;-<span class="st"> </span><span class="kw">which</span>(<span class="kw">apply</span>(x,<span class="dv">1</span>,<span class="cf">function</span>(x) <span class="kw">sum</span>(<span class="kw">is.na</span>(x)))<span class="op">&gt;</span><span class="dv">0</span>)
 y &lt;-<span class="st"> </span>y[<span class="op">-</span>id]
 x &lt;-<span class="st"> </span>x[<span class="op">-</span>id,]
 x &lt;-<span class="st"> </span><span class="kw">apply</span>(x,<span class="dv">2</span>,as.numeric)
@@ -143,19 +144,80 @@ y_test &lt;-<span class="st"> </span>y[ind]
 
 y_train &lt;-<span class="st"> </span>y[<span class="op">-</span>ind]
 
-x_test &lt;-<span class="st"> </span>x[ind]
+x_test &lt;-<span class="st"> </span>x[ind,]
 
-x_train &lt;-x[<span class="op">-</span>ind]</code></pre></div>
-<p>Now we are ready to train the <strong>swag</strong> on the breast cancer dataset. As explained before, we build on the framework of the package <strong>caret</strong> thus expert users of this package will find the whole implementation easier. In any case, we will explain all the important steps needed for <strong>swag</strong> and we suggest to the interested reader the following detailed e-book: <a href="http://topepo.github.io/caret/index.html">caret</a>. The first step is to fix the meta-parameters of the procedures: <span class="math inline">\(p_{max}\)</span>, <span class="math inline">\(\alpha\)</span> and <span class="math inline">\(m\)</span>. As the name suggests, <span class="math inline">\(p_{max}\)</span> is the maximum dimension of attributes that the user wants to be input in a learner, <span class="math inline">\(\alpha\)</span> is a performance quantile which represents the percentage of learners which are selected at each dimension $ 1  p_{max}$ and finally <span class="math inline">\(m\)</span> which represent the maximum numbers of learners which will be trained at each dimension <span class="math inline">\(\hat{p} &gt; 1\)</span> (this because we train all <span class="math inline">\(p\)</span> learners of dimension <span class="math inline">\(1\)</span>). The <em>swagcontrol()</em> function</p>
+x_train &lt;-x[<span class="op">-</span>ind,]</code></pre></div>
+<p>Now we are ready to train the <strong>swag</strong> on the breast cancer dataset. As explained before, we build on the framework of the package <strong>caret</strong> thus expert users of this package will find the whole implementation easier. In any case, we will explain in detail all the important steps needed for <strong>swag</strong> and we suggest to the interested reader the following detailed e-book: <a href="http://topepo.github.io/caret/index.html">caret</a>.</p>
+<p>The first step is to fix the meta-parameters of the procedures: <span class="math inline">\(p_{max}\)</span>, <span class="math inline">\(\alpha\)</span> and <span class="math inline">\(m\)</span>. As the name suggests, <span class="math inline">\(p_{max}\)</span> is the maximum dimension of attributes that the user wants to be input in a generic <span class="math inline">\(\mathcal{L}(\mathbf{y}, \mathbf{X})\)</span>. Based on this parameter, the <em>swag</em> aims at exploring the space of attributes in order to find sets of learners using <span class="math inline">\(\hat{p}\)</span> attributes (<span class="math inline">\(1 \leq \hat{p} \leq p_{\text{max}}\)</span>) with extremely high predictive power. To do so, the algorithm makes use of the step-wise screening procedure described briefly in the introduction. Another key element is <span class="math inline">\(\alpha\)</span>: a performance quantile which represents the percentage of learners which are selected at each dimension <span class="math inline">\(1 \leq \hat{p} \leq p_{max}\)</span>.Finally we need to choose <span class="math inline">\(m\)</span> which represent the maximum numbers of learners which will be trained at each dimension <span class="math inline">\(\hat{p} &gt; 1\)</span> (i.e. we train all <span class="math inline">\(p\)</span> learners of dimension <span class="math inline">\(1\)</span>). We can fix all these meta-parameters, together with a seed for replicability purposes and <code>verbose = T</code> to get a message as each dimension is completed, thanks to the <em>swagcontrol()</em> function which behaves similarly to the <code>trControl =</code> argument of <strong>caret</strong>.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">
-<span class="kw">library</span>(caret)
+<span class="co"># Meta-parameters chosen for the breast cancer dataset</span>
 
-trial &lt;-<span class="st"> </span><span class="kw">swagControl</span>(<span class="dt">pmax =</span> <span class="dv">3</span>,<span class="dt">alpha =</span> <span class="fl">0.3</span>,<span class="dt">m =</span> <span class="dv">100</span>,<span class="dt">seed =</span> 163L, <span class="dt">verbose =</span> T)
+swagcon &lt;-<span class="st"> </span><span class="kw">swagControl</span>(<span class="dt">pmax =</span> <span class="dv">5</span>, <span class="dt">alpha =</span> <span class="fl">0.5</span>, <span class="dt">m =</span> <span class="dv">1000</span>,
+                       
+                       <span class="dt">seed =</span> 163L <span class="co">#for replicability</span>
+                       
+                       , <span class="dt">verbose =</span> T <span class="co">#keeps track of completed dimensions</span>
+                       )
 
-<span class="co"># Test with glmnet</span>
-test_swag_glmnet &lt;-<span class="st"> </span><span class="kw">swag</span>(
+<span class="co"># Given the low dimensional dataset, we can afford a wider search by fixing alpha = 0.5 as a smaller alpha may also</span>
+
+<span class="co"># stop the training procedure earlier than expected.</span></code></pre></div>
+<p>If you do not specify these values, you will automatically get: <span class="math inline">\(p_{max} = 3\)</span>, <span class="math inline">\(\alpha = 0.05\)</span> and <span class="math inline">\(m= 100\)</span>. Ideally, with unlimited computing power, <span class="math inline">\(p_{max}\)</span> and <span class="math inline">\(m\)</span> would be as large as possible, i.e. <span class="math inline">\(p_{\text{max}} = p\)</span> and <span class="math inline">\(m = \binom{p}{\lceil \frac{p}{2}\rceil}\)</span>. However, this defeats the purpose of the algorithm and therefore the decision of these parameters must be based mainly on interpretability/replicability requirements as well as available computing power and time. Below are some rules-of-thumb for the choice of these parameters:</p>
+<ul>
+<li><p><span class="math inline">\(\mathbf{p_{\text{max}}}\)</span>: Fixing the available computing power and the efficiency of the learning mechanism <span class="math inline">\(\mathcal{L}\)</span>, this parameter will depend on the total dimension of the problem <span class="math inline">\(p\)</span>. Indeed, the goal of <strong>swag</strong> is to find extremely small dimensional learners. Therefore, even with very large <span class="math inline">\(p\)</span>, one could always fix this parameter within a range of 5-20 (or smaller) for interpretability and/or replicability purposes. In addition, if an embedded method is computationally efficient to compute on the entire dataset, this parameter could be the number of selected attributes through this method (given computational constraints). Another criterion, when working with binary classification problems, is to use the <em>Event Per Variable</em> (EPV) rule. In future work, this parameter can be implicitly determined by the algorithm based on the training error quantile (or other metric) thereby defining <span class="math inline">\(p_{\text{max}}\)</span> as the attribute dimension where the training error curve stops decreasing significantly similarly to the <em>scree plot</em> in factor or principal component analysis.</p></li>
+<li><p><span class="math inline">\(\boldsymbol{\alpha}\)</span>: as discussed previously, this parameter is related to the maximum number of learners <span class="math inline">\(m\)</span>. The larger <span class="math inline">\(\alpha\)</span>, the more the attribute space is explored. Ideally, we want to choose a small <span class="math inline">\(\alpha\)</span> since we would want to select strong learners (with extremely low training error) and this is possible if <span class="math inline">\(m\)</span> is large enough. Generally good values for <span class="math inline">\(\alpha\)</span> are <span class="math inline">\(0.01\)</span> or <span class="math inline">\(0.05\)</span>, implying that (roughly) 1% or 5% of the <span class="math inline">\(m\)</span> learners are selected at each step.</p></li>
+<li><p><span class="math inline">\(\mathbf{m}\)</span>: Fixing the available computing power and the efficiency of the learning mechanism <span class="math inline">\(\mathcal{L}\)</span>, this parameter will determine the proportion of attribute space that will be explored by the algorithm. We know that it depends on the size of the problem <span class="math inline">\(p\)</span> since we necessarily have <span class="math inline">\(m \geq p\)</span> for the screening step with models of unitary dimension. In addition, this parameter needs to be chosen considering the performance percentile <span class="math inline">\(\alpha\)</span>: if <span class="math inline">\(m\)</span> is small and <span class="math inline">\(\alpha\)</span> is small, then the number of strong learners being selected could be extremely low (possibly zero). In general, we would want a large <span class="math inline">\(m\)</span> (so that <span class="math inline">\(\alpha\)</span> can eventually be chosen to be very small) and, fixing <span class="math inline">\(p^\star\)</span> as the number of attributes released from the first screening, a rule-of-thumb is to set <span class="math inline">\(m = \binom{p^\star}{2}\)</span> (or close to it) in order to explore the entire (or most of the) subspace of two-dimensional learners generated by <span class="math inline">\(p^\star\)</span>.</p></li>
+</ul>
+<p>Having set-up the meta-parameters as explained above, we are now ready to train the <strong>swag</strong>. We start with the Support Vector Machine learner, both linear and radial, as displayed by the chunk below:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">
+<span class="kw">library</span>(caret) <span class="co"># swag is build around caret and uses it to train each learner</span>
+
+### SVM Linear Learner <span class="al">###</span>
+
+train_swag_svml &lt;-<span class="st"> </span><span class="kw">swag</span>(
+  
   <span class="co"># arguments for swag</span>
-  <span class="dt">x =</span> x, <span class="dt">y =</span> y, <span class="dt">control =</span> <span class="kw">swagControl</span>(<span class="dt">alpha=</span>.<span class="dv">5</span>,<span class="dt">verbose=</span><span class="ot">TRUE</span>),
+  <span class="dt">x =</span> x_train, <span class="dt">y =</span> y_train, <span class="dt">control =</span> swagcon,
+  
+  <span class="co"># arguments for caret</span>
+  <span class="dt">trControl =</span> <span class="kw">trainControl</span>(<span class="dt">method =</span> <span class="st">&quot;repeatedcv&quot;</span>, <span class="dt">number =</span> <span class="dv">10</span>, <span class="dt">repeats =</span> <span class="dv">1</span>, <span class="dt">allowParallel =</span> F),
+  <span class="dt">metric =</span> <span class="st">&quot;Accuracy&quot;</span>,
+  <span class="dt">method =</span> <span class="st">&quot;svmLinear&quot;</span>, <span class="dt">preProcess =</span> <span class="kw">c</span>(<span class="st">&quot;center&quot;</span>, <span class="st">&quot;scale&quot;</span>)
+)</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">
+### SVM Radial Learner <span class="al">###</span>
+
+train_swag_svmr &lt;-<span class="st"> </span><span class="kw">swag</span>(
+  
+  <span class="co"># arguments for swag</span>
+  <span class="dt">x =</span> x_train, <span class="dt">y =</span> y_train, <span class="dt">control =</span> swagcon,
+  
+  <span class="co"># arguments for caret</span>
+  <span class="dt">trControl =</span> <span class="kw">trainControl</span>(<span class="dt">method =</span> <span class="st">&quot;repeatedcv&quot;</span>, <span class="dt">number =</span> <span class="dv">10</span>, <span class="dt">repeats =</span> <span class="dv">1</span>, <span class="dt">allowParallel =</span> F),
+  <span class="dt">metric =</span> <span class="st">&quot;Accuracy&quot;</span>,
+  <span class="dt">method =</span> <span class="st">&quot;svmRadial&quot;</span>, <span class="dt">preProcess =</span> <span class="kw">c</span>(<span class="st">&quot;center&quot;</span>, <span class="st">&quot;scale&quot;</span>),<span class="dt">tuneLength =</span> <span class="dv">10</span>
+)</code></pre></div>
+<p>The only difference with respect to the classic <strong>caret</strong> train function, is the specification of the <strong>swag</strong> arguments which have been explained previously. To give an overview, in the above chunk for the <em>svmRadial</em> learner, we have chosen to fix 10-fold cross-validation repeated 1 time as our estimator of the out-of-sample accuracy that we selected as our metric to evaluate the classifier’s performance. For this specific case, we have chosen to center and rescale the data, as usually done for svms, and, by fixing <code>tuneLenght = 10</code>, to try ten different values of the usual <span class="math inline">\(c\)</span> parameter that controls the margin in svms. For further explanations, we redirect the interested reader to the detailed e-book: <a href="http://topepo.github.io/caret/index.html">caret</a>.</p>
+<p>Let’s have a look at the typical output of a <strong>swag</strong> training object for the <em>svmRadial</em> learner:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">
+train_swag_svmr<span class="op">$</span>CVs  
+
+<span class="co"># A list which contains the cv training errors of each learner explored in a given dimension</span></code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">
+train_swag_svmr<span class="op">$</span>VarMat 
+
+<span class="co"># A list which contrains a matrix, for each dimension, with the attributes tested at that step </span></code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">
+train_swag_svmr<span class="op">$</span>cv_alpha 
+
+<span class="co"># The cut-off cv training error, at each dimension, determined by the choice of alpha</span></code></pre></div>
+<p>The other two learners currently implemented on <strong>swag</strong> are: lasso and random forest. The training phase for these learners, differs a little with respect to the svm one. We start looking at the lasso:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">
+### Lasso Learner <span class="al">###</span>
+
+train_swag_lasso &lt;-<span class="st"> </span><span class="kw">swag</span>(
+  <span class="co"># arguments for swag</span>
+  <span class="dt">x =</span> x, <span class="dt">y =</span> y, <span class="dt">control =</span> swagcon,
   <span class="co"># arguments for caret</span>
   <span class="dt">trControl =</span> <span class="kw">trainControl</span>(<span class="dt">method =</span> <span class="st">&quot;repeatedcv&quot;</span>, <span class="dt">number =</span> <span class="dv">10</span>, <span class="dt">repeats =</span> <span class="dv">1</span>, <span class="dt">allowParallel =</span> F),
   <span class="dt">metric =</span> <span class="st">&quot;Accuracy&quot;</span>,
@@ -171,6 +233,34 @@ test_swag_glmnet &lt;-<span class="st"> </span><span class="kw">swag</span>(
     list_arg
   }
 )</code></pre></div>
+<p>The new element is the <code>caret_args_dyn =</code> argument which enables the user to modify the hyper-parameters related to a given learner in a dynamic way, meaning that they can change as the dimension <span class="math inline">\(\hat{p}\)</span> grows up to the desired <span class="math inline">\(p_{max}\)</span>. In the case of lasso, <code>caret_args_dyn =</code> clarifies that if we are training unitary <span class="math inline">\(\mathcal{L}(\mathbf{y}, \mathbf{x}_{i})\)</span> (i.e. learners with a unique attribute <span class="math inline">\(\mathbf{x}_{i} \; \forall \;i \in \mathcal{S}\)</span> ) then we will use a logistic regression (i.e. an un-penalized learner). On the other hand, for the random forest case, we would ideally want to adapt the <em>mtry</em> hyper-parameter as the dimension grows. In the example below, we fix <span class="math inline">\(mtry = \sqrt{\hat{p}}\)</span> as it is usually done in practice.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">
+### Random Forest Learner <span class="al">###</span>
+
+test_swag_rf &lt;-<span class="st"> </span><span class="kw">swag</span>(
+  <span class="co"># arguments for swag</span>
+  <span class="dt">x =</span> x, <span class="dt">y =</span> y, <span class="dt">control =</span> <span class="kw">swagControl</span>(<span class="dt">alpha=</span>.<span class="dv">5</span>,<span class="dt">verbose=</span><span class="ot">TRUE</span>),
+  <span class="co"># arguments for caret</span>
+  <span class="dt">trControl =</span> <span class="kw">trainControl</span>(<span class="dt">method =</span> <span class="st">&quot;repeatedcv&quot;</span>, <span class="dt">number =</span> <span class="dv">10</span>, <span class="dt">repeats =</span> <span class="dv">1</span>, <span class="dt">allowParallel =</span> F),
+  <span class="dt">metric =</span> <span class="st">&quot;Accuracy&quot;</span>,
+  <span class="dt">method =</span> <span class="st">&quot;rf&quot;</span>,
+  <span class="co"># dynamically modify arguments for caret</span>
+  <span class="dt">caret_args_dyn =</span> <span class="cf">function</span>(list_arg,iter){
+    list_arg<span class="op">$</span>tuneGrid =<span class="st"> </span><span class="kw">expand.grid</span>(<span class="dt">.mtry=</span><span class="kw">sqrt</span>(iter))
+    list_arg
+  }
+)</code></pre></div>
+<p>Indeed a nice feature of <strong>swag</strong>, that derives from its building block <strong>caret</strong>, is that you can tailor the learning arguments of <em>swag()</em> as you like introducing for example grids for the hyper-parameters specific of a given learner or update these grids as the dimension increases. This gives to the user a wide range of possibilities and a lot of flexibility in the trainig phase.</p>
+<p>To conclude this opening section, we present the usual <em>predict()</em> function which can be applied to a <strong>swag</strong> trained object similarly to many other package in R.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">
+<span class="co"># best prediction</span>
+<span class="kw">predict</span>(train_swag_svmr)
+
+<span class="co"># predictions below a given CV error</span>
+<span class="kw">predict</span>(train_swag_svmr,<span class="dt">type=</span><span class="st">&quot;cv_performance&quot;</span>,<span class="dt">cv_performance =</span> <span class="fl">0.05</span>)
+
+<span class="co"># predictions for a given dimension</span>
+<span class="kw">predict</span>(train_swag_svmr,<span class="dt">type=</span><span class="st">&quot;attribute&quot;</span>,<span class="dt">attribute =</span> <span class="dv">4</span>)</code></pre></div>
 </div>
 
 
