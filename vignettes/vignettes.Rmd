@@ -249,18 +249,17 @@ Indeed a nice feature of **swag**, that derives from its building block **caret*
 
 To conclude this opening section, we present the usual *predict()* function which can be applied to a **swag** trained object similarly to many other packages in R.  
 
-```{r, eval=FALSE}
+```{r, eval=T}
 
 # IN-SAMPLE
 
 # predictions below a given CV error in-sample
-train_pred <- predict(train_swag_svmr,type="cv_performance",cv_performance = 0.05)
+train_pred <- predict(train_swag_svmr,newdata = x_train, type="cv_performance",cv_performance = 0.05)
 
 # predictions for a given dimension in-sample
-train_pred_att <- predict(train_swag_svmr,type="attribute",attribute = 4)
+train_pred_att <- predict(train_swag_svmr,newdata = x_train,type="attribute",attribute = 4)
 
 ```
-
 
 ```{r, eval=T}
 
@@ -269,6 +268,7 @@ train_pred_att <- predict(train_swag_svmr,type="attribute",attribute = 4)
 # best learner prediction 
 
 test_pred <- predict(object = train_swag_svmr,newdata = x_test)
+
 
 ```
 

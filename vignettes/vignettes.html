@@ -308,10 +308,10 @@ test_swag_rf &lt;-<span class="st"> </span><span class="kw">swag</span>(
 <span class="co"># IN-SAMPLE</span>
 
 <span class="co"># predictions below a given CV error in-sample</span>
-train_pred &lt;-<span class="st"> </span><span class="kw">predict</span>(train_swag_svmr,<span class="dt">type=</span><span class="st">&quot;cv_performance&quot;</span>,<span class="dt">cv_performance =</span> <span class="fl">0.05</span>)
+train_pred &lt;-<span class="st"> </span><span class="kw">predict</span>(train_swag_svmr,<span class="dt">newdata =</span> x_train, <span class="dt">type=</span><span class="st">&quot;cv_performance&quot;</span>,<span class="dt">cv_performance =</span> <span class="fl">0.05</span>)
 
 <span class="co"># predictions for a given dimension in-sample</span>
-train_pred_att &lt;-<span class="st"> </span><span class="kw">predict</span>(train_swag_svmr,<span class="dt">type=</span><span class="st">&quot;attribute&quot;</span>,<span class="dt">attribute =</span> <span class="dv">4</span>)</code></pre></div>
+train_pred_att &lt;-<span class="st"> </span><span class="kw">predict</span>(train_swag_svmr,<span class="dt">newdata =</span> x_train,<span class="dt">type=</span><span class="st">&quot;attribute&quot;</span>,<span class="dt">attribute =</span> <span class="dv">4</span>)</code></pre></div>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">
 <span class="co"># OUT-OF-SAMPLE</span>
 
