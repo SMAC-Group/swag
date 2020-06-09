@@ -35,6 +35,13 @@ predict(test_swag_glmnet,type="cv_performance",cv_performance = 0.05)
 # predictions for a given dimension
 predict(test_swag_glmnet,type="attribute",attribute = 4)
 
+#To Sam
+
+# best prediction
+predict(object = train_swag_svmr,newdata = x_test) 
+
+# the above does not work, you can look at code on vignette to split train/test the dataset
+
 
 # Test with random forest
 test_swag_rf <- swag(
