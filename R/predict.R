@@ -117,7 +117,8 @@ predict.swag <- function(object,
     learn <- do.call(train,args_caret)
 
     # save prediction
-    x_test <- as.data.frame(newdata[,var_mat[[i]]])
+    x_test <- NULL
+    if(!missing(newdata)) x_test <- as.data.frame(newdata[,var_mat[[i]]])
     predictions[,i] <- predict(learn,newdata=x_test)
   }
 
