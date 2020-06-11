@@ -9,7 +9,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # `swag` package
 
-**swag** is a package that trains a meta-learning procedure that combines screening and wrapper methods to find a set of extremely low-dimensional attribute combinations.
+**swag** is a package that trains a meta-learning procedure which combines screening and wrapper methods to find a set of extremely low-dimensional attribute combinations.
 
 ## Installing the package with GitHub 
 
@@ -31,7 +31,7 @@ library(swag) #load the new package
 
 ## Quick start
 
-We propose to use a breastcancer dataset readily available from the package **mlbench** to give an overview of **swag**.
+We propose to use the **breastcancer** dataset readily available from the package **mlbench** to give an overview of **swag**.
 
 ```{r BreastCancer, eval=T}
 # After having installed the mlbench package
@@ -57,7 +57,7 @@ x_test <- x[ind,]
 x_train <-x[-ind,]
 ```
 
-Now we are ready to train with **swag**! The first step is to fix the meta-parameters of the **swag** procedure: $p_{max}$ which is the maximum dimension of attributes that the user wants to be input, $\alpha$ a performance quantile which represents the percentage of learners which are selected at each dimension and $m$ which represent the maximum numbers of learners which will be trained at each dimension. We can fix all these meta-parameters, together with a seed for replicability purposes and `verbose = TRUE` to get a message as each dimension is completed, thanks to the *swagcontrol()* function which behaves similarly to the `trControl = ` argument of **caret**.
+Now we are ready to train with **swag**! The first step is to define the meta-parameters of the **swag** procedure:  $p_{max}$ the maximum dimension of attributes, $\alpha$ a performance quantile which represents the percentage of learners which are selected at each dimension and $m$, the maximum numbers of learners trained at each dimension. We can set all these meta-parameters, together with a seed for replicability purposes and `verbose = TRUE` to get a message as each dimension is completed, thanks to the *swagcontrol()* function which behaves similarly to the `trControl = ` argument of **caret**.
 
 
 ```{r control-swag, eval=T}
@@ -69,7 +69,9 @@ swagcon <- swagControl(pmax = 4L,
                        verbose = T #keeps track of completed dimensions
                        )
 
-# Given the low dimensional dataset, we can afford a wider search by fixing alpha = 0.5 as a smaller alpha may also stop the training procedure earlier than expected.
+# Given the low dimensional dataset, we can afford a wider search 
+# by fixing alpha = 0.5 as a smaller alpha may also stop the 
+# training procedure earlier than expected.
 ```
 
 Having set-up the meta-parameters as explained above, we are now ready to train the **swag**. We start with the linear Support Vector Machine learner:  
@@ -95,7 +97,7 @@ train_swag_svml <- swag(
 )
 ```
 
-The only difference with respect to the classic **caret** train function, is the specification of the **swag** arguments which have been explained previously. In the above chunk for the *svmLinear* learner, we have chosen to fix 10-fold cross-validation repeated 1 time as our estimator of the out-of-sample accuracy that we selected as our metric to evaluate the classifier's performance. For this specific case, we have chosen to center and rescale the data, as usually done for svms, and, the parameter that controls the margin in svms is automatically fixed at unitary value (i.e. $c=1$).
+The only difference with respect to the classic **caret** train function, is the specification of the **swag** arguments which have been explained previously. In the above chunk for the *svmLinear* learner, we define the estimator of the out-of-sample accuracy as 10-fold cross-validation repeated 1 time. For this specific case, we have chosen to center and rescale the data, as usually done for SVMs, and, the parameter that controls the margin in SVMs is automatically fixed at unitary value (i.e. $c=1$).
 
 Let's have a look at the typical output of a **swag** training object for the *svmLinear* learner:
 
@@ -117,7 +119,7 @@ train_swag_svml$cv_alpha
 # The cut-off cv training error, at each dimension, determined by the choice of alpha
 ```
 
-The other two learners that we have implemented on **swag** are: lasso (**glmnet** package required) and random forest (**party** package required). The training phase for these learners, differs a little with respect to the svm one. We can look at the random forest for a practical example:
+The other two learners that we have implemented on **swag** are: lasso (**glmnet** package required) and random forest (**party** package required). The training phase for these learners, differs a little with respect to the SVM one. We can look at the random forest for a practical example:
 
 ```{r random-forest, eval=TRUE}
 ### Random Forest Learner ###
@@ -139,9 +141,9 @@ train_swag_rf <- swag(
 )
 ```
 
-The newly introduced argument `caret_args_dyn` enables the user to modify the hyper-parameters related to a given learner in a dynamic way since they can change as the dimension grows up to the desired $p_{max}$. This is interesting because we would ideally want to adapt the *mtry* hyper-parameter as the dimension grows. In the example above, we have fixed $mtry = \sqrt{\hat{p}}$ as it is usually done in practice.  
+The newly introduced argument `caret_args_dyn` enables the user to modify the hyper-parameters related to a given learner in a dynamic way since they can change as the dimension grows up to the desired $p_{max}$. This allows to adapt the *mtry* hyper-parameter as the dimension grows. In the example above, we have fixed *mtry* to the square root of the number of attributes at each step as it is usually done in practice.  
  
-You can tailor the learning arguments of *swag()* as you like introducing for example grids for the hyper-parameters specific of a given learner or update these grids as the dimension increases similarly to what is usually done for the **caret** package. This gives you a wide range of possibilities and a lot of flexibility in the training phase.
+You can tailor the learning arguments of *swag()* as you like, introducing for example grids for the hyper-parameters specific of a given learner or update these grids as the dimension increases similarly to what is usually done for the **caret** package. This gives you a wide range of possibilities and a lot of flexibility in the training phase.
 
 To conclude this brief introduction, we present the usual *predict()* function which can be applied to a **swag** trained object similarly to many other packages in R. We pick the random forest learner for this purpose.  
 
@@ -182,7 +184,7 @@ sapply(cv_pred,function(x) head(x))
 ```
 
 
-Now we can for example evaluate the performance of the best learner selected by **swag** thanks to the *confusionMatrix()* function of **caret**. 
+Now we can evaluate the performance of the best learner selected by **swag** thanks to the *confusionMatrix()* function of **caret**. 
 
 ```{r confusion-matrix, eval=T}
 # transform predictions into a data.frame of factors with levels of `y_test`
@@ -190,7 +192,7 @@ best_learn <- factor(levels(y_test)[best_pred$predictions])
 caret::confusionMatrix(best_learn,y_test)
 ```
 
-Thanks for the attention: you can  definitely say that you worked with **swag** !!!
+Thanks for the attention. You can  definitely say that you worked with **swag** !!!
 
 ## Licensing
 The license this source code is released under is the GNU AFFERO GENERAL PUBLIC LICENSE (AGPL) v3.0. In some cases, the GPL license does apply. However, in the majority of the cases, the license in effect is the GNU AFFERO GENERAL PUBLIC LICENSE (AGPL) v3.0 as the computational code is heavily dependent on Armadilllo, which use the MPL license that enables us to recast our code to use the GNU AFFERO GENERAL PUBLIC LICENSE (AGPL) v3.0. See the LICENSE file for full text. Otherwise, please consult [TLDR Legal](https://tldrlegal.com/license/gnu-affero-general-public-license-v3-(agpl-3.0)) or [GNU](https://www.gnu.org/licenses/agpl-3.0.en.html) which will provide a synopsis of the restrictions placed upon the code. Please note, this does NOT excuse you from talking about licensing with a lawyer!
