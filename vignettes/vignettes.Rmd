@@ -173,7 +173,7 @@ The newly introduced argument `caret_args_dyn` enables the user to modify the hy
 
 ```{r random-forest, eval=TRUE}
 ### Random Forest Learner ###
-test_swag_rf <- swag(
+train_swag_rf <- swag(
   # arguments for swag
   x = x, 
   y = y, 
