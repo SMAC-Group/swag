@@ -24,8 +24,8 @@ Given the above intuitive description, we now provide a more formal introduction
 
 ## Installation
 
-Before getting started, install the *devtools* package. Then,
-**swag** can be directly from Github with the following code:
+Before getting started, install the **devtools** package. Then,
+**swag** can be directly obtained from Github with the following code:
 
 ```{r,echo=FALSE,include=FALSE,eval=TRUE}
 # devtools::install_github("SMAC-Group/SWAG-R-Package")
@@ -42,7 +42,7 @@ library(swag) #load the new package
 
 ## Start with swag!
 
-The purpose of this section is to give a general sense of the package, including the components, what they do and some basic usage. We will briefly go over the main functions, see the basic operations and have a look at the outputs. You may have a better idea after this section regarding what functions are available, which one to choose, or at least where to seek help. More details are given in later sections.
+The purpose of this section is to give a general sense of the package, including the components, what they do and some basic usage. We will briefly go over the main functions, see the basic operations and have a look at the outputs. You may have a better idea after this section regarding what functions are available, which one to choose, or at least where to seek for more detailed informations.
 
 We propose to use a dataset readily available from the package **mlbench**. The dataset consists of a cohort of $n = 699$ patients and the objective is to predict whether a new patient has a malignant tumour given a collection of $p = 9$ attributes
 (tape `?mlbench::BreastCancer` for more details). We can start by splitting the data into training and test set. Alternatively you can either load directly your own data or use those saved in the workspace following exactly the same steps outlined in the next paragraphs. 
@@ -88,7 +88,7 @@ swagcon <- swagControl(pmax = 4L,
 # Given the low dimensional dataset, we can afford a wider search by fixing alpha = 0.5 as a smaller alpha may also stop the training procedure earlier than expected.
 ```
 
-If you do not specify these values, you will get the default values: $p_{max} = 3$, $\alpha = 0.05$ and $m = 100$. Ideally, with unlimited computing power, $p_{max}$ and $m$ should be as large as possible, i.e. $p_{\text{max}} = p$ and $m = \binom{p}{\lceil \frac{p}{2}\rceil}$. However, this typically unrealistic and therefore the decision of these parameters must be based mainly on interpretability/replicability requirements as well as available computing power and time contraint. Below are some rules-of-thumb for the choice of these parameters:
+If you do not specify these values, you will get the default values: $p_{max} = 3$, $\alpha = 0.05$ and $m = 100$. Ideally, with unlimited computing power, $p_{max}$ and $m$ should be as large as possible, i.e. $p_{\text{max}} = p$ and $m = \binom{p}{\lceil \frac{p}{2}\rceil}$. However, this is typically unrealistic and therefore the decision of these parameters must be based mainly on interpretability/replicability requirements as well as available computing power and time constraints. Below are some rules-of-thumb for the choice of these parameters:
 
 * $\mathbf{p_{\text{max}}}$: Fixing the available computing power and the efficiency of the learning mechanism $\mathcal{L}$, this parameter will depend on the total dimension of the problem $p$. Indeed, the goal of **swag** is to find extremely small dimensional learners. Therefore, even with very large $p$, one could always fix this parameter within a range of 5-20 (or smaller) for interpretability and/or replicability purposes. In addition, if an embedded method is computationally efficient to compute on the entire dataset, this parameter could be the number of selected attributes through this method (given computational constraints). Another criterion, when working with binary classification problems, is to use the *Event Per Variable* (EPV) rule. In future work, this parameter can be implicitly determined by the algorithm based on the training error quantile (or other metric) thereby defining $p_{\text{max}}$ as the attribute dimension where the training error curve stops decreasing significantly similarly to the *scree plot* in factor or principal component analysis.
 
@@ -96,14 +96,14 @@ If you do not specify these values, you will get the default values: $p_{max} = 
 
 * $\mathbf{m}$: Fixing the available computing power and the efficiency of the learning mechanism $\mathcal{L}$, this parameter will determine the proportion of attribute space that will be explored by the algorithm. We know that it depends on the size of the problem $p$ since we necessarily have $m \geq p$ for the screening step with models of unitary dimension. In addition, this parameter needs to be chosen considering the performance percentile $\alpha$: if $m$ is small and $\alpha$ is small, then the number of strong learners being selected could be extremely low (possibly zero). In general, we would want a large $m$ (so that $\alpha$ can eventually be chosen to be very small) and, fixing $p^\star$ as the number of attributes released from the first screening, a rule-of-thumb is to set $m = \binom{p^\star}{2}$ (or close to it) in order to explore the entire (or most of the) subspace of two-dimensional learners generated by $p^\star$.
 
-Having set-up the meta-parameters as explained above, we are now ready to train the **swag**. We start with the Support Vector Machine learner, both linear and radial, as displayed by the chunks below:  
+Having set-up the meta-parameters as explained above, we are now ready to train the **swag**. We start with the Support Vector Machine learner, both linear and radial, as displayed by the chunk below:  
 
 ```{r, eval=FALSE, message=FALSE,warning=FALSE,echo=FALSE}
 library(caret) # swag is build around caret and uses it to train each learner
 ```
 
 
-```{r SVM, eval=TRUE}
+```{r SVM, eval=TRUE, warning=FALSE,message=FALSE}
 ### SVM Linear Learner ###
 train_swag_svml <- swag(
   # arguments for swag
@@ -114,14 +114,14 @@ train_swag_svml <- swag(
   # arguments for caret
   trControl = caret::trainControl(method = "repeatedcv", number = 10, repeats = 1, allowParallel = F),
   metric = "Accuracy",
-  method = "svmLinear", 
+  method = "svmLinear",  # Use method = "svmRadial" to train this specific learner
   preProcess = c("center", "scale")
 )
 ```
 
-The only difference with respect to the classic **caret** train function, is the specification of the **swag** arguments which have been explained previously. To give an overview, in the above chunk for the *svmRadial* learner, we have chosen to fix 10-fold cross-validation repeated 1 time as our estimator of the out-of-sample accuracy that we selected as our metric to evaluate the classifier's performance. For this specific case, we have chosen to center and rescale the data, as usually done for svms, and, by fixing `tuneLenght = 10`, to try ten different values of the usual $c$ parameter that controls the margin in svms. For further explanations, we redirect the interested reader to the detailed e-book: [caret](http://topepo.github.io/caret/index.html). 
+The only difference with respect to the classic **caret** train function, is the specification of the **swag** arguments which have been explained previously. To give an overview, in the above chunk for the *svmLinear* learner, we have chosen to fix 10-fold cross-validation repeated 1 time as our estimator of the out-of-sample accuracy that we selected as our metric to evaluate the classifier's performance. For this specific case, we have chosen to center and rescale the data, as usually done for svms, and, the parameter that controls the margin in svms is automatically fixed at unitary value (i.e. $c=1$). For further explanations, we redirect the interested reader to the detailed e-book: [caret](http://topepo.github.io/caret/index.html). 
 
-Let's have a look at the typical output of a **swag** training object for the *svmRadial* learner:
+Let's have a look at the typical output of a **swag** training object for the *svmLinear* learner:
 
 ```{r CVs, eval=T}
 train_swag_svml$CVs  
@@ -141,7 +141,7 @@ train_swag_svml$cv_alpha
 # The cut-off cv training error, at each dimension, determined by the choice of alpha
 ```
 
-The other two learners that we have carefully verified on **swag** are: lasso (**glmnet** package required) and random forest (**party** package required). The training phase for these learners, differs a little with respect to the svm one. We start looking at the lasso:
+The other two learners that we have carefully implemented on **swag** are: lasso (**glmnet** package required) and random forest (**party** package required). The training phase for these learners, differs a little with respect to the svm one. We start looking at the lasso:
 
 ```{r lasso, eval=TRUE}
 ### Lasso Learner ###
@@ -168,7 +168,7 @@ train_swag_lasso <- swag(
 )
 ```
 
-The newly introduced argument `caret_args_dyn` enables the user to modify the hyper-parameters related to a given learner in a dynamic way, they can change as the dimension $\hat{p}$ grows up to the desired $p_{max}$. In the case of lasso, `caret_args_dyn =` clarifies that if we are training unitary $\mathcal{L}(\mathbf{y}, \mathbf{x}_{i})$  (i.e. learners with a unique attribute $\mathbf{x}_{i} \; \forall \;i \in \mathcal{S}$ ) then we will use a logistic regression (i.e. an un-penalized learner). This modification is in fact due to the implementation of the lasso in **glmnet** package as one attribute is not accepted (see this [link](https://stackoverflow.com/questions/29231123/why-cant-pass-only-1-coulmn-to-glmnet-when-it-is-possible-in-glm-function-in-r/59414707#59414707) for a discussion). On the other hand, for the random forest case, we would ideally want to adapt the *mtry* hyper-parameter as the dimension grows. In the example below, we fix $mtry = \sqrt{\hat{p}}$ as it is usually done in practice.  
+The newly introduced argument `caret_args_dyn` enables the user to modify the hyper-parameters related to a given learner in a dynamic way since they can change as the dimension $\hat{p}$ grows up to the desired $p_{max}$. In the case of lasso, `caret_args_dyn =` clarifies that if we are training unitary $\mathcal{L}(\mathbf{y}, \mathbf{x}_{i})$  (i.e. learners with a unique attribute $\mathbf{x}_{i} \; \forall \;i \in \mathcal{S}$ ) then we will use a logistic regression (i.e. an un-penalized learner). This modification is in fact due to the implementation of the lasso in **glmnet** package as one attribute is not accepted (see this [discussion](https://stackoverflow.com/questions/29231123/why-cant-pass-only-1-coulmn-to-glmnet-when-it-is-possible-in-glm-function-in-r/59414707#59414707)). On the other hand, for the random forest case, we would ideally want to adapt the *mtry* hyper-parameter as the dimension grows. In the example below, we fix $mtry = \sqrt{\hat{p}}$ as it is usually done in practice.  
 
 
 ```{r random-forest, eval=TRUE}
@@ -191,7 +191,7 @@ test_swag_rf <- swag(
 )
 ```
 
-Indeed a nice feature of **swag**, that derives from its building block **caret**, is that you can tailor the learning arguments of *swag()* as you like introducing for example grids for the hyper-parameters specific of a given learner or update these grids as the dimension increases. This gives to the user a wide range of possibilities and a lot of flexibility in the trainig phase.
+Indeed a nice feature of **swag**, that derives from its building block **caret**, is that you can tailor the learning arguments of *swag()* as you like introducing for example grids for the hyper-parameters specific of a given learner or update these grids as the dimension increases. This gives to the user a wide range of possibilities and a lot of flexibility in the training phase.
 
 To conclude this opening section, we present the usual *predict()* function which can be applied to a **swag** trained object similarly to many other packages in R.  
 
@@ -210,36 +210,39 @@ train_pred_att <- predict(train_swag_svml,newdata = x_train,type="attribute",att
 ```
 
 ```{r predictions, eval=T}
-# best learner prediction 
-# if `newdata` is not specified, then predict gives prediction based on the training 
+# best learner predictions 
+# if `newdata` is not specified, then predict gives predictions based on the training 
 # sample
-head(
-  predict(object = train_swag_svml)
-  )
 
-# best learner prediction 
-test_pred <- predict(object = train_swag_svml, 
+sapply(predict(object = train_swag_svml), function(x) head(x))
+
+# best learner predictions 
+best_pred <- predict(object = train_swag_svml, 
                      newdata = x_test)
-head(test_pred)
+
+sapply(best_pred, function(x) head(x))
 
 # predictions for a given dimension 
-head(
-  predict(
+
+dim_pred <-  predict(
   object = train_swag_svml, 
   newdata = x_test, 
   type = "attribute",
   attribute = 4L)
-)
 
+
+sapply(dim_pred,function(x) head(x))
 
 # predictions below a given CV error
-head(
-  predict(
+
+cv_pred <-  predict(
   object = train_swag_svml, 
   newdata = x_test, 
   type = "cv_performance",
   cv_performance = 0.04)
-)
+
+sapply(cv_pred,function(x) head(x))
+
 ```
 
 
@@ -247,8 +250,8 @@ Now we can for example evaluate the performance of the best learner selected by 
 
 ```{r confusion-matrix, eval=T}
 # transform predictions into a data.frame of factors with levels of `y_test`
-best_pred <- factor(levels(y_test)[test_pred$predictions])
-caret::confusionMatrix(best_pred,y_test)
+best_learn <- factor(levels(y_test)[best_pred$predictions])
+caret::confusionMatrix(best_learn,y_test)
 ```
 
 
