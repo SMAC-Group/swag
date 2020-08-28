@@ -8,7 +8,7 @@ Author@R: c(
     person("Cesare", "Miglioli", role="ctb"),
     person("Stephane", "Guerrier", role="ctb"),
     person("Roberto", "Molinari", role="ctb"),
-    person("Olivier", "Scaillet", role="cph"))
+    person("Olivier", "Scaillet", role="ctb"))
 Maintainer: Samuel Orso <Samuel.Orso@unige.ch>
 Description: `swag` is a package that trains a meta-learning procedure that combines 
     screening and wrapper methods to find a set of extremely low-dimensional attribute 
