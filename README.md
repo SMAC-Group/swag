@@ -1,4 +1,9 @@
 
+[![Travis-CI Build
+Status](https://travis-ci.com/SMAC-Group/SWAG-R-Package.svg?branch=master)](https://travis-ci.com/github/SMAC-Group/SWAG-R-Package)
+[![Last-changedate](https://img.shields.io/badge/last%20change-2020--11--04-green.svg)](https://github.com/SMAC-Group/SWAG-R-Package)
+[![license](https://img.shields.io/badge/license-GPL--3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0.en.html)
+
 # `swag` package
 
 **swag** is a package that trains a meta-learning procedure which

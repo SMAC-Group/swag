@@ -37,6 +37,11 @@ y_train <- y[-ind]
 x_test <- x[ind,]
 x_train <-x[-ind,]
 
+## ----caret, warning=FALSE-----------------------------------------------------
+## if not installed
+## install.packages("caret")
+library(caret)
+
 ## ----control-swag, eval=T-----------------------------------------------------
 # Meta-parameters chosen for the breast cancer dataset
 swagcon <- swagControl(pmax = 4L, 
@@ -52,7 +57,9 @@ swagcon <- swagControl(pmax = 4L,
 #  library(caret) # swag is build around caret and uses it to train each learner
 
 ## ----SVM, eval=TRUE, warning=FALSE,message=FALSE------------------------------
-### SVM Linear Learner ###
+## SVM Linear Learner
+## `kernlab` is needed
+## if not installed, install.packages("kernlab")
 train_swag_svml <- swag(
   # arguments for swag
   x = x_train, 
@@ -60,7 +67,7 @@ train_swag_svml <- swag(
   control = swagcon,
   auto_control = FALSE,
   # arguments for caret
-  trControl = caret::trainControl(method = "repeatedcv", number = 10, repeats = 1, allowParallel = F),
+  trControl = trainControl(method = "repeatedcv", number = 10, repeats = 1, allowParallel = F), # trainControl is from caret package
   metric = "Accuracy",
   method = "svmLinear",  # Use method = "svmRadial" to train this specific learner
   preProcess = c("center", "scale")
@@ -82,7 +89,9 @@ train_swag_svml$cv_alpha
 # The cut-off cv training error, at each dimension, determined by the choice of alpha
 
 ## ----lasso, eval=TRUE---------------------------------------------------------
-### Lasso Learner ###
+## Lasso Learner
+## `glmnet` is needed
+## if not installed, install.packages("glmnet")
 train_swag_lasso <- swag(
   # arguments for swag
   x = x, 
@@ -90,7 +99,7 @@ train_swag_lasso <- swag(
   control = swagcon,
   auto_control = FALSE,
   # arguments for caret
-  trControl = caret::trainControl(method = "repeatedcv", number = 10, repeats = 1, allowParallel = F),
+  trControl = trainControl(method = "repeatedcv", number = 10, repeats = 1, allowParallel = F), # trainControl is from caret package
   metric = "Accuracy",
   method = "glmnet",
   tuneGrid=expand.grid(alpha = 1, lambda = seq(0,.35,length.out=10)),
@@ -106,7 +115,9 @@ train_swag_lasso <- swag(
 )
 
 ## ----random-forest, eval=TRUE-------------------------------------------------
-### Random Forest Learner ###
+## Random Forest Learner
+## `randomForest` is needed
+## if not installed, install.packages("randomForest")
 train_swag_rf <- swag(
   # arguments for swag
   x = x, 
@@ -114,7 +125,7 @@ train_swag_rf <- swag(
   control = swagcon,
   auto_control = FALSE,
   # arguments for caret
-  trControl = caret::trainControl(method = "repeatedcv", number = 10, repeats = 1, allowParallel = F),
+  trControl = trainControl(method = "repeatedcv", number = 10, repeats = 1, allowParallel = F), # trainControl is from caret package
   metric = "Accuracy",
   method = "rf",
   # dynamically modify arguments for caret
@@ -139,8 +150,7 @@ train_swag_rf <- swag(
 
 ## ----predictions, eval=T------------------------------------------------------
 # best learner predictions 
-# if `newdata` is not specified, then predict gives predictions based on the training 
-# sample
+# if `newdata` is not specified, then predict gives predictions based on the training sample
 
 sapply(predict(object = train_swag_svml), function(x) head(x))
 
@@ -175,5 +185,5 @@ sapply(cv_pred,function(x) head(x))
 ## ----confusion-matrix, eval=T-------------------------------------------------
 # transform predictions into a data.frame of factors with levels of `y_test`
 best_learn <- factor(levels(y_test)[best_pred$predictions])
-caret::confusionMatrix(best_learn,y_test)
+confusionMatrix(best_learn,y_test) # from caret package
 

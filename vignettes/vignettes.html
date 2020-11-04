@@ -421,16 +421,22 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <span id="cb2-20"><a href="#cb2-20" aria-hidden="true"></a>x_test &lt;-<span class="st"> </span>x[ind,]</span>
 <span id="cb2-21"><a href="#cb2-21" aria-hidden="true"></a>x_train &lt;-x[<span class="op">-</span>ind,]</span></code></pre></div>
 <p>Now we are ready to train the <strong>swag</strong> on the breast cancer dataset. As previously mentionned, we build upon the framework of the package <strong>caret</strong> thus experimented users of this package will find the whole implementation easier. In any case, we will explain in detail all the important steps needed for <strong>swag</strong> and we suggest to the interested reader the following detailed e-book: <a href="http://topepo.github.io/caret/index.html">caret</a>.</p>
+<p>Before getting started, we load the <strong>caret</strong> library</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true"></a><span class="co">## if not installed</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true"></a><span class="co">## install.packages(&quot;caret&quot;)</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true"></a><span class="kw">library</span>(caret)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true"></a><span class="co">#&gt; Loading required package: lattice</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true"></a><span class="co">#&gt; Loading required package: ggplot2</span></span></code></pre></div>
 <p>The first step is to fix the meta-parameters of the <strong>swag</strong> procedures: <span class="math inline">\(p_{max}\)</span>, <span class="math inline">\(\alpha\)</span> and <span class="math inline">\(m\)</span>. As the name suggests, <span class="math inline">\(p_{max}\)</span> is the maximum dimension of attributes that the user wants to be input in a generic <span class="math inline">\(\mathcal{L}(\mathbf{y}, \mathbf{X})\)</span>. Based on this parameter, the <em>swag</em> aims at exploring the space of attributes in order to find sets of learners using <span class="math inline">\(\hat{p}\)</span> attributes (<span class="math inline">\(1 \leq \hat{p} \leq p_{\text{max}}\)</span>) with extremely high predictive power. To do so, the algorithm makes use of the step-wise screening procedure described briefly in the introduction. Another key element is <span class="math inline">\(\alpha\)</span>: a performance quantile which represents the percentage of learners which are selected at each dimension <span class="math inline">\(1 \leq \hat{p} \leq p_{max}\)</span>. Finally we need to choose <span class="math inline">\(m\)</span> which represent the maximum numbers of learners which will be trained at each dimension <span class="math inline">\(\hat{p} &gt; 1\)</span> (i.e. we train all <span class="math inline">\(p\)</span> learners of dimension <span class="math inline">\(1\)</span>). We can fix all these meta-parameters, together with a seed for replicability purposes and <code>verbose = TRUE</code> to get a message as each dimension is completed, thanks to the <em>swagcontrol()</em> function which behaves similarly to the <code>trControl =</code> argument of <strong>caret</strong>.</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true"></a><span class="co"># Meta-parameters chosen for the breast cancer dataset</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true"></a>swagcon &lt;-<span class="st"> </span><span class="kw">swagControl</span>(<span class="dt">pmax =</span> 4L, </span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true"></a>                       <span class="dt">alpha =</span> <span class="fl">0.5</span>, </span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true"></a>                       <span class="dt">m =</span> 20L,</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true"></a>                       <span class="dt">seed =</span> 163L, <span class="co">#for replicability</span></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true"></a>                       <span class="dt">verbose =</span> T <span class="co">#keeps track of completed dimensions</span></span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true"></a>                       )</span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true"></a></span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true"></a><span class="co"># Given the low dimensional dataset, we can afford a wider search by fixing alpha = 0.5 as a smaller alpha may also stop the training procedure earlier than expected.</span></span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true"></a><span class="co"># Meta-parameters chosen for the breast cancer dataset</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true"></a>swagcon &lt;-<span class="st"> </span><span class="kw">swagControl</span>(<span class="dt">pmax =</span> 4L, </span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true"></a>                       <span class="dt">alpha =</span> <span class="fl">0.5</span>, </span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true"></a>                       <span class="dt">m =</span> 20L,</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true"></a>                       <span class="dt">seed =</span> 163L, <span class="co">#for replicability</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true"></a>                       <span class="dt">verbose =</span> T <span class="co">#keeps track of completed dimensions</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true"></a>                       )</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true"></a></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true"></a><span class="co"># Given the low dimensional dataset, we can afford a wider search by fixing alpha = 0.5 as a smaller alpha may also stop the training procedure earlier than expected.</span></span></code></pre></div>
 <p>If you do not specify these values, you will get the default values: <span class="math inline">\(p_{max} = 3\)</span>, <span class="math inline">\(\alpha = 0.05\)</span> and <span class="math inline">\(m = 100\)</span>. Ideally, with unlimited computing power, <span class="math inline">\(p_{max}\)</span> and <span class="math inline">\(m\)</span> should be as large as possible, i.e. <span class="math inline">\(p_{\text{max}} = p\)</span> and <span class="math inline">\(m = \binom{p}{\lceil \frac{p}{2}\rceil}\)</span>. However, this is typically unrealistic and therefore the decision of these parameters must be based mainly on interpretability/replicability requirements as well as available computing power and time constraints. Below are some rules-of-thumb for the choice of these parameters:</p>
 <ul>
 <li><p><span class="math inline">\(\mathbf{p_{\text{max}}}\)</span>: Fixing the available computing power and the efficiency of the learning mechanism <span class="math inline">\(\mathcal{L}\)</span>, this parameter will depend on the total dimension of the problem <span class="math inline">\(p\)</span>. Indeed, the goal of <strong>swag</strong> is to find extremely small dimensional learners. Therefore, even with very large <span class="math inline">\(p\)</span>, one could always fix this parameter within a range of 5-20 (or smaller) for interpretability and/or replicability purposes. In addition, if an embedded method is computationally efficient to compute on the entire dataset, this parameter could be the number of selected attributes through this method (given computational constraints). Another criterion, when working with binary classification problems, is to use the <em>Event Per Variable</em> (EPV) rule. In future work, this parameter can be implicitly determined by the algorithm based on the training error quantile (or other metric) thereby defining <span class="math inline">\(p_{\text{max}}\)</span> as the attribute dimension where the training error curve stops decreasing significantly similarly to the <em>scree plot</em> in factor or principal component analysis.</p></li>
@@ -438,253 +444,258 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <li><p><span class="math inline">\(\mathbf{m}\)</span>: Fixing the available computing power and the efficiency of the learning mechanism <span class="math inline">\(\mathcal{L}\)</span>, this parameter will determine the proportion of attribute space that will be explored by the algorithm. We know that it depends on the size of the problem <span class="math inline">\(p\)</span> since we necessarily have <span class="math inline">\(m \geq p\)</span> for the screening step with models of unitary dimension. In addition, this parameter needs to be chosen considering the performance percentile <span class="math inline">\(\alpha\)</span>: if <span class="math inline">\(m\)</span> is small and <span class="math inline">\(\alpha\)</span> is small, then the number of strong learners being selected could be extremely low (possibly zero). In general, we would want a large <span class="math inline">\(m\)</span> (so that <span class="math inline">\(\alpha\)</span> can eventually be chosen to be very small) and, fixing <span class="math inline">\(p^\star\)</span> as the number of attributes released from the first screening, a rule-of-thumb is to set <span class="math inline">\(m = \binom{p^\star}{2}\)</span> (or close to it) in order to explore the entire (or most of the) subspace of two-dimensional learners generated by <span class="math inline">\(p^\star\)</span>.</p></li>
 </ul>
 <p>Having set-up the meta-parameters as explained above, we are now ready to train the <strong>swag</strong>. We start with the Support Vector Machine learner, both linear and radial, as displayed by the chunk below:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true"></a><span class="co">### SVM Linear Learner </span><span class="al">###</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true"></a>train_swag_svml &lt;-<span class="st"> </span><span class="kw">swag</span>(</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true"></a>  <span class="co"># arguments for swag</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true"></a>  <span class="dt">x =</span> x_train, </span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true"></a>  <span class="dt">y =</span> y_train, </span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true"></a>  <span class="dt">control =</span> swagcon,</span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true"></a>  <span class="dt">auto_control =</span> <span class="ot">FALSE</span>,</span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true"></a>  <span class="co"># arguments for caret</span></span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true"></a>  <span class="dt">trControl =</span> caret<span class="op">::</span><span class="kw">trainControl</span>(<span class="dt">method =</span> <span class="st">&quot;repeatedcv&quot;</span>, <span class="dt">number =</span> <span class="dv">10</span>, <span class="dt">repeats =</span> <span class="dv">1</span>, <span class="dt">allowParallel =</span> F),</span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true"></a>  <span class="dt">metric =</span> <span class="st">&quot;Accuracy&quot;</span>,</span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true"></a>  <span class="dt">method =</span> <span class="st">&quot;svmLinear&quot;</span>,  <span class="co"># Use method = &quot;svmRadial&quot; to train this specific learner</span></span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true"></a>  <span class="dt">preProcess =</span> <span class="kw">c</span>(<span class="st">&quot;center&quot;</span>, <span class="st">&quot;scale&quot;</span>)</span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true"></a>)</span>
-<span id="cb4-14"><a href="#cb4-14" aria-hidden="true"></a><span class="co">#&gt; [1] &quot;Dimension explored: 1 - CV errors at alpha: 0.115&quot;</span></span>
-<span id="cb4-15"><a href="#cb4-15" aria-hidden="true"></a><span class="co">#&gt; [1] &quot;Dimension explored: 2 - CV errors at alpha: 0.0549&quot;</span></span>
-<span id="cb4-16"><a href="#cb4-16" aria-hidden="true"></a><span class="co">#&gt; [1] &quot;Dimension explored: 3 - CV errors at alpha: 0.0403&quot;</span></span>
-<span id="cb4-17"><a href="#cb4-17" aria-hidden="true"></a><span class="co">#&gt; [1] &quot;Dimension explored: 4 - CV errors at alpha: 0.0394&quot;</span></span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true"></a><span class="co">## SVM Linear Learner</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true"></a><span class="co">## `kernlab` is needed</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true"></a><span class="co">## if not installed, install.packages(&quot;kernlab&quot;)</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true"></a>train_swag_svml &lt;-<span class="st"> </span><span class="kw">swag</span>(</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true"></a>  <span class="co"># arguments for swag</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true"></a>  <span class="dt">x =</span> x_train, </span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true"></a>  <span class="dt">y =</span> y_train, </span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true"></a>  <span class="dt">control =</span> swagcon,</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true"></a>  <span class="dt">auto_control =</span> <span class="ot">FALSE</span>,</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true"></a>  <span class="co"># arguments for caret</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true"></a>  <span class="dt">trControl =</span> <span class="kw">trainControl</span>(<span class="dt">method =</span> <span class="st">&quot;repeatedcv&quot;</span>, <span class="dt">number =</span> <span class="dv">10</span>, <span class="dt">repeats =</span> <span class="dv">1</span>, <span class="dt">allowParallel =</span> F), <span class="co"># trainControl is from caret package</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true"></a>  <span class="dt">metric =</span> <span class="st">&quot;Accuracy&quot;</span>,</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true"></a>  <span class="dt">method =</span> <span class="st">&quot;svmLinear&quot;</span>,  <span class="co"># Use method = &quot;svmRadial&quot; to train this specific learner</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true"></a>  <span class="dt">preProcess =</span> <span class="kw">c</span>(<span class="st">&quot;center&quot;</span>, <span class="st">&quot;scale&quot;</span>)</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true"></a>)</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true"></a><span class="co">#&gt; [1] &quot;Dimension explored: 1 - CV errors at alpha: 0.115&quot;</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true"></a><span class="co">#&gt; [1] &quot;Dimension explored: 2 - CV errors at alpha: 0.0549&quot;</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true"></a><span class="co">#&gt; [1] &quot;Dimension explored: 3 - CV errors at alpha: 0.0403&quot;</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true"></a><span class="co">#&gt; [1] &quot;Dimension explored: 4 - CV errors at alpha: 0.0394&quot;</span></span></code></pre></div>
 <p>The only difference with respect to the classic <strong>caret</strong> train function, is the specification of the <strong>swag</strong> arguments which have been explained previously. To give an overview, in the above chunk for the <em>svmLinear</em> learner, we have chosen to fix 10-fold cross-validation repeated 1 time as our estimator of the out-of-sample accuracy that we selected as our metric to evaluate the classifier’s performance. For this specific case, we have chosen to center and rescale the data, as usually done for svms, and, the parameter that controls the margin in svms is automatically fixed at unitary value (i.e. <span class="math inline">\(c=1\)</span>). For further explanations, we redirect the interested reader to the detailed e-book: <a href="http://topepo.github.io/caret/index.html">caret</a>.</p>
 <p>Let’s have a look at the typical output of a <strong>swag</strong> training object for the <em>svmLinear</em> learner:</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true"></a>train_swag_svml<span class="op">$</span>CVs  </span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true"></a><span class="co">#&gt; [[1]]</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true"></a><span class="co">#&gt; [1] 0.14094276 0.06959836 0.07499399 0.15157407 0.10811688 0.08592593 0.11502886</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true"></a><span class="co">#&gt; [8] 0.12070707 0.22122896</span></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true"></a><span class="co">#&gt; </span></span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true"></a><span class="co">#&gt; [[2]]</span></span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true"></a><span class="co">#&gt;  [1] 0.05107744 0.06225950 0.03852213 0.05492304 0.06030544 0.04377104</span></span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true"></a><span class="co">#&gt;  [7] 0.05108225 0.06212121 0.07485570 0.05491582</span></span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true"></a><span class="co">#&gt; </span></span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true"></a><span class="co">#&gt; [[3]]</span></span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true"></a><span class="co">#&gt; [1] 0.04010101 0.04761063 0.03848846 0.04030784 0.04575758 0.04016835 0.03841991</span></span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true"></a><span class="co">#&gt; [8] 0.04387205 0.05105099</span></span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true"></a><span class="co">#&gt; </span></span>
-<span id="cb5-14"><a href="#cb5-14" aria-hidden="true"></a><span class="co">#&gt; [[4]]</span></span>
-<span id="cb5-15"><a href="#cb5-15" aria-hidden="true"></a><span class="co">#&gt; [1] 0.03464646 0.04572751 0.04030664 0.03852213</span></span>
-<span id="cb5-16"><a href="#cb5-16" aria-hidden="true"></a></span>
-<span id="cb5-17"><a href="#cb5-17" aria-hidden="true"></a><span class="co"># A list which contains the cv training errors of each learner explored in a given dimension</span></span></code></pre></div>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true"></a>train_swag_svml<span class="op">$</span>VarMat </span>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true"></a>train_swag_svml<span class="op">$</span>CVs  </span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true"></a><span class="co">#&gt; [[1]]</span></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true"></a><span class="co">#&gt;      [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9]</span></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true"></a><span class="co">#&gt; [1,]    1    2    3    4    5    6    7    8    9</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true"></a><span class="co">#&gt; [1] 0.14094276 0.06959836 0.07499399 0.15157407 0.10811688 0.08592593 0.11502886</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true"></a><span class="co">#&gt; [8] 0.12070707 0.22122896</span></span>
 <span id="cb6-5"><a href="#cb6-5" aria-hidden="true"></a><span class="co">#&gt; </span></span>
 <span id="cb6-6"><a href="#cb6-6" aria-hidden="true"></a><span class="co">#&gt; [[2]]</span></span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true"></a><span class="co">#&gt;      [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9] [,10]</span></span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true"></a><span class="co">#&gt; [1,]    2    2    2    2    3    3    3    5    5     6</span></span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true"></a><span class="co">#&gt; [2,]    3    5    6    7    5    6    7    6    7     7</span></span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true"></a><span class="co">#&gt; </span></span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true"></a><span class="co">#&gt; [[3]]</span></span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true"></a><span class="co">#&gt;      [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9]</span></span>
-<span id="cb6-13"><a href="#cb6-13" aria-hidden="true"></a><span class="co">#&gt; [1,]    2    2    2    3    2    2    3    3    5</span></span>
-<span id="cb6-14"><a href="#cb6-14" aria-hidden="true"></a><span class="co">#&gt; [2,]    3    3    6    6    3    5    5    5    6</span></span>
-<span id="cb6-15"><a href="#cb6-15" aria-hidden="true"></a><span class="co">#&gt; [3,]    6    7    7    7    5    6    6    7    7</span></span>
-<span id="cb6-16"><a href="#cb6-16" aria-hidden="true"></a><span class="co">#&gt; </span></span>
-<span id="cb6-17"><a href="#cb6-17" aria-hidden="true"></a><span class="co">#&gt; [[4]]</span></span>
-<span id="cb6-18"><a href="#cb6-18" aria-hidden="true"></a><span class="co">#&gt;      [,1] [,2] [,3] [,4]</span></span>
-<span id="cb6-19"><a href="#cb6-19" aria-hidden="true"></a><span class="co">#&gt; [1,]    2    2    2    3</span></span>
-<span id="cb6-20"><a href="#cb6-20" aria-hidden="true"></a><span class="co">#&gt; [2,]    3    3    5    5</span></span>
-<span id="cb6-21"><a href="#cb6-21" aria-hidden="true"></a><span class="co">#&gt; [3,]    6    5    6    6</span></span>
-<span id="cb6-22"><a href="#cb6-22" aria-hidden="true"></a><span class="co">#&gt; [4,]    7    6    7    7</span></span>
-<span id="cb6-23"><a href="#cb6-23" aria-hidden="true"></a></span>
-<span id="cb6-24"><a href="#cb6-24" aria-hidden="true"></a><span class="co"># A list which contrains a matrix, for each dimension, with the attributes tested at that step </span></span></code></pre></div>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true"></a>train_swag_svml<span class="op">$</span>cv_alpha </span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true"></a><span class="co">#&gt; [1] 0.11502886 0.05491943 0.04030784 0.03941438</span></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true"></a></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true"></a><span class="co"># The cut-off cv training error, at each dimension, determined by the choice of alpha</span></span></code></pre></div>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true"></a><span class="co">#&gt;  [1] 0.05107744 0.06225950 0.03852213 0.05492304 0.06030544 0.04377104</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true"></a><span class="co">#&gt;  [7] 0.05108225 0.06212121 0.07485570 0.05491582</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true"></a><span class="co">#&gt; </span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true"></a><span class="co">#&gt; [[3]]</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true"></a><span class="co">#&gt; [1] 0.04010101 0.04761063 0.03848846 0.04030784 0.04575758 0.04016835 0.03841991</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true"></a><span class="co">#&gt; [8] 0.04387205 0.05105099</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true"></a><span class="co">#&gt; </span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true"></a><span class="co">#&gt; [[4]]</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true"></a><span class="co">#&gt; [1] 0.03464646 0.04572751 0.04030664 0.03852213</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true"></a></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true"></a><span class="co"># A list which contains the cv training errors of each learner explored in a given dimension</span></span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true"></a>train_swag_svml<span class="op">$</span>VarMat </span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true"></a><span class="co">#&gt; [[1]]</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true"></a><span class="co">#&gt;      [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9]</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true"></a><span class="co">#&gt; [1,]    1    2    3    4    5    6    7    8    9</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true"></a><span class="co">#&gt; </span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true"></a><span class="co">#&gt; [[2]]</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true"></a><span class="co">#&gt;      [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9] [,10]</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true"></a><span class="co">#&gt; [1,]    2    2    2    2    3    3    3    5    5     6</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true"></a><span class="co">#&gt; [2,]    3    5    6    7    5    6    7    6    7     7</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true"></a><span class="co">#&gt; </span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true"></a><span class="co">#&gt; [[3]]</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true"></a><span class="co">#&gt;      [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9]</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true"></a><span class="co">#&gt; [1,]    2    2    2    3    2    2    3    3    5</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true"></a><span class="co">#&gt; [2,]    3    3    6    6    3    5    5    5    6</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true"></a><span class="co">#&gt; [3,]    6    7    7    7    5    6    6    7    7</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true"></a><span class="co">#&gt; </span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true"></a><span class="co">#&gt; [[4]]</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true"></a><span class="co">#&gt;      [,1] [,2] [,3] [,4]</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true"></a><span class="co">#&gt; [1,]    2    2    2    3</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true"></a><span class="co">#&gt; [2,]    3    3    5    5</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true"></a><span class="co">#&gt; [3,]    6    5    6    6</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true"></a><span class="co">#&gt; [4,]    7    6    7    7</span></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true"></a></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true"></a><span class="co"># A list which contrains a matrix, for each dimension, with the attributes tested at that step </span></span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true"></a>train_swag_svml<span class="op">$</span>cv_alpha </span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true"></a><span class="co">#&gt; [1] 0.11502886 0.05491943 0.04030784 0.03941438</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true"></a><span class="co"># The cut-off cv training error, at each dimension, determined by the choice of alpha</span></span></code></pre></div>
 <p>The other two learners that we have carefully implemented on <strong>swag</strong> are: lasso (<strong>glmnet</strong> package required) and random forest (<strong>party</strong> package required). The training phase for these learners, differs a little with respect to the svm one. We start looking at the lasso:</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true"></a><span class="co">### Lasso Learner </span><span class="al">###</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true"></a>train_swag_lasso &lt;-<span class="st"> </span><span class="kw">swag</span>(</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true"></a>  <span class="co"># arguments for swag</span></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true"></a>  <span class="dt">x =</span> x, </span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true"></a>  <span class="dt">y =</span> y, </span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true"></a>  <span class="dt">control =</span> swagcon,</span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true"></a>  <span class="dt">auto_control =</span> <span class="ot">FALSE</span>,</span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true"></a>  <span class="co"># arguments for caret</span></span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true"></a>  <span class="dt">trControl =</span> caret<span class="op">::</span><span class="kw">trainControl</span>(<span class="dt">method =</span> <span class="st">&quot;repeatedcv&quot;</span>, <span class="dt">number =</span> <span class="dv">10</span>, <span class="dt">repeats =</span> <span class="dv">1</span>, <span class="dt">allowParallel =</span> F),</span>
-<span id="cb8-10"><a href="#cb8-10" aria-hidden="true"></a>  <span class="dt">metric =</span> <span class="st">&quot;Accuracy&quot;</span>,</span>
-<span id="cb8-11"><a href="#cb8-11" aria-hidden="true"></a>  <span class="dt">method =</span> <span class="st">&quot;glmnet&quot;</span>,</span>
-<span id="cb8-12"><a href="#cb8-12" aria-hidden="true"></a>  <span class="dt">tuneGrid=</span><span class="kw">expand.grid</span>(<span class="dt">alpha =</span> <span class="dv">1</span>, <span class="dt">lambda =</span> <span class="kw">seq</span>(<span class="dv">0</span>,.<span class="dv">35</span>,<span class="dt">length.out=</span><span class="dv">10</span>)),</span>
-<span id="cb8-13"><a href="#cb8-13" aria-hidden="true"></a>  <span class="dt">family=</span><span class="st">&quot;binomial&quot;</span>,</span>
-<span id="cb8-14"><a href="#cb8-14" aria-hidden="true"></a>  <span class="co"># dynamically modify arguments for caret</span></span>
-<span id="cb8-15"><a href="#cb8-15" aria-hidden="true"></a>  <span class="dt">caret_args_dyn =</span> <span class="cf">function</span>(list_arg,iter){</span>
-<span id="cb8-16"><a href="#cb8-16" aria-hidden="true"></a>    <span class="cf">if</span>(iter<span class="op">==</span><span class="dv">1</span>){</span>
-<span id="cb8-17"><a href="#cb8-17" aria-hidden="true"></a>      list_arg<span class="op">$</span>method =<span class="st"> &quot;glm&quot;</span></span>
-<span id="cb8-18"><a href="#cb8-18" aria-hidden="true"></a>      list_arg<span class="op">$</span>tuneGrid =<span class="st"> </span><span class="ot">NULL</span></span>
-<span id="cb8-19"><a href="#cb8-19" aria-hidden="true"></a>    }</span>
-<span id="cb8-20"><a href="#cb8-20" aria-hidden="true"></a>    list_arg</span>
-<span id="cb8-21"><a href="#cb8-21" aria-hidden="true"></a>  }</span>
-<span id="cb8-22"><a href="#cb8-22" aria-hidden="true"></a>)</span>
-<span id="cb8-23"><a href="#cb8-23" aria-hidden="true"></a><span class="co">#&gt; [1] &quot;Dimension explored: 1 - CV errors at alpha: 0.1214&quot;</span></span>
-<span id="cb8-24"><a href="#cb8-24" aria-hidden="true"></a><span class="co">#&gt; [1] &quot;Dimension explored: 2 - CV errors at alpha: 0.0616&quot;</span></span>
-<span id="cb8-25"><a href="#cb8-25" aria-hidden="true"></a><span class="co">#&gt; [1] &quot;Dimension explored: 3 - CV errors at alpha: 0.0483&quot;</span></span>
-<span id="cb8-26"><a href="#cb8-26" aria-hidden="true"></a><span class="co">#&gt; [1] &quot;Dimension explored: 4 - CV errors at alpha: 0.041&quot;</span></span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true"></a><span class="co">## Lasso Learner</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true"></a><span class="co">## `glmnet` is needed</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true"></a><span class="co">## if not installed, install.packages(&quot;glmnet&quot;)</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true"></a>train_swag_lasso &lt;-<span class="st"> </span><span class="kw">swag</span>(</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true"></a>  <span class="co"># arguments for swag</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true"></a>  <span class="dt">x =</span> x, </span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true"></a>  <span class="dt">y =</span> y, </span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true"></a>  <span class="dt">control =</span> swagcon,</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true"></a>  <span class="dt">auto_control =</span> <span class="ot">FALSE</span>,</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true"></a>  <span class="co"># arguments for caret</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true"></a>  <span class="dt">trControl =</span> <span class="kw">trainControl</span>(<span class="dt">method =</span> <span class="st">&quot;repeatedcv&quot;</span>, <span class="dt">number =</span> <span class="dv">10</span>, <span class="dt">repeats =</span> <span class="dv">1</span>, <span class="dt">allowParallel =</span> F), <span class="co"># trainControl is from caret package</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true"></a>  <span class="dt">metric =</span> <span class="st">&quot;Accuracy&quot;</span>,</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true"></a>  <span class="dt">method =</span> <span class="st">&quot;glmnet&quot;</span>,</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true"></a>  <span class="dt">tuneGrid=</span><span class="kw">expand.grid</span>(<span class="dt">alpha =</span> <span class="dv">1</span>, <span class="dt">lambda =</span> <span class="kw">seq</span>(<span class="dv">0</span>,.<span class="dv">35</span>,<span class="dt">length.out=</span><span class="dv">10</span>)),</span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true"></a>  <span class="dt">family=</span><span class="st">&quot;binomial&quot;</span>,</span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true"></a>  <span class="co"># dynamically modify arguments for caret</span></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true"></a>  <span class="dt">caret_args_dyn =</span> <span class="cf">function</span>(list_arg,iter){</span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true"></a>    <span class="cf">if</span>(iter<span class="op">==</span><span class="dv">1</span>){</span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true"></a>      list_arg<span class="op">$</span>method =<span class="st"> &quot;glm&quot;</span></span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true"></a>      list_arg<span class="op">$</span>tuneGrid =<span class="st"> </span><span class="ot">NULL</span></span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true"></a>    }</span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true"></a>    list_arg</span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true"></a>  }</span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true"></a>)</span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true"></a><span class="co">#&gt; [1] &quot;Dimension explored: 1 - CV errors at alpha: 0.1214&quot;</span></span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true"></a><span class="co">#&gt; [1] &quot;Dimension explored: 2 - CV errors at alpha: 0.0616&quot;</span></span>
+<span id="cb9-27"><a href="#cb9-27" aria-hidden="true"></a><span class="co">#&gt; [1] &quot;Dimension explored: 3 - CV errors at alpha: 0.0483&quot;</span></span>
+<span id="cb9-28"><a href="#cb9-28" aria-hidden="true"></a><span class="co">#&gt; [1] &quot;Dimension explored: 4 - CV errors at alpha: 0.041&quot;</span></span></code></pre></div>
 <p>The newly introduced argument <code>caret_args_dyn</code> enables the user to modify the hyper-parameters related to a given learner in a dynamic way since they can change as the dimension <span class="math inline">\(\hat{p}\)</span> grows up to the desired <span class="math inline">\(p_{max}\)</span>. In the case of lasso, <code>caret_args_dyn =</code> clarifies that if we are training unitary <span class="math inline">\(\mathcal{L}(\mathbf{y}, \mathbf{x}_{i})\)</span> (i.e. learners with a unique attribute <span class="math inline">\(\mathbf{x}_{i} \; \forall \;i \in \mathcal{S}\)</span> ) then we will use a logistic regression (i.e. an un-penalized learner). This modification is in fact due to the implementation of the lasso in <strong>glmnet</strong> package as one attribute is not accepted (see this <a href="https://stackoverflow.com/questions/29231123/why-cant-pass-only-1-coulmn-to-glmnet-when-it-is-possible-in-glm-function-in-r/59414707#59414707">discussion</a>). On the other hand, for the random forest case, we would ideally want to adapt the <em>mtry</em> hyper-parameter as the dimension grows. In the example below, we fix <span class="math inline">\(mtry = \sqrt{\hat{p}}\)</span> as it is usually done in practice.</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true"></a><span class="co">### Random Forest Learner </span><span class="al">###</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true"></a>train_swag_rf &lt;-<span class="st"> </span><span class="kw">swag</span>(</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true"></a>  <span class="co"># arguments for swag</span></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true"></a>  <span class="dt">x =</span> x, </span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true"></a>  <span class="dt">y =</span> y, </span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true"></a>  <span class="dt">control =</span> swagcon,</span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true"></a>  <span class="dt">auto_control =</span> <span class="ot">FALSE</span>,</span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true"></a>  <span class="co"># arguments for caret</span></span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true"></a>  <span class="dt">trControl =</span> caret<span class="op">::</span><span class="kw">trainControl</span>(<span class="dt">method =</span> <span class="st">&quot;repeatedcv&quot;</span>, <span class="dt">number =</span> <span class="dv">10</span>, <span class="dt">repeats =</span> <span class="dv">1</span>, <span class="dt">allowParallel =</span> F),</span>
-<span id="cb9-10"><a href="#cb9-10" aria-hidden="true"></a>  <span class="dt">metric =</span> <span class="st">&quot;Accuracy&quot;</span>,</span>
-<span id="cb9-11"><a href="#cb9-11" aria-hidden="true"></a>  <span class="dt">method =</span> <span class="st">&quot;rf&quot;</span>,</span>
-<span id="cb9-12"><a href="#cb9-12" aria-hidden="true"></a>  <span class="co"># dynamically modify arguments for caret</span></span>
-<span id="cb9-13"><a href="#cb9-13" aria-hidden="true"></a>  <span class="dt">caret_args_dyn =</span> <span class="cf">function</span>(list_arg,iter){</span>
-<span id="cb9-14"><a href="#cb9-14" aria-hidden="true"></a>    list_arg<span class="op">$</span>tuneGrid =<span class="st"> </span><span class="kw">expand.grid</span>(<span class="dt">.mtry=</span><span class="kw">sqrt</span>(iter))</span>
-<span id="cb9-15"><a href="#cb9-15" aria-hidden="true"></a>    list_arg</span>
-<span id="cb9-16"><a href="#cb9-16" aria-hidden="true"></a>  }</span>
-<span id="cb9-17"><a href="#cb9-17" aria-hidden="true"></a>)</span>
-<span id="cb9-18"><a href="#cb9-18" aria-hidden="true"></a><span class="co">#&gt; [1] &quot;Dimension explored: 1 - CV errors at alpha: 0.0996&quot;</span></span>
-<span id="cb9-19"><a href="#cb9-19" aria-hidden="true"></a><span class="co">#&gt; [1] &quot;Dimension explored: 2 - CV errors at alpha: 0.0534&quot;</span></span>
-<span id="cb9-20"><a href="#cb9-20" aria-hidden="true"></a><span class="co">#&gt; [1] &quot;Dimension explored: 3 - CV errors at alpha: 0.0461&quot;</span></span>
-<span id="cb9-21"><a href="#cb9-21" aria-hidden="true"></a><span class="co">#&gt; [1] &quot;Dimension explored: 4 - CV errors at alpha: 0.0425&quot;</span></span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true"></a><span class="co">## Random Forest Learner</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true"></a><span class="co">## `randomForest` is needed</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true"></a><span class="co">## if not installed, install.packages(&quot;randomForest&quot;)</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true"></a>train_swag_rf &lt;-<span class="st"> </span><span class="kw">swag</span>(</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true"></a>  <span class="co"># arguments for swag</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true"></a>  <span class="dt">x =</span> x, </span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true"></a>  <span class="dt">y =</span> y, </span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true"></a>  <span class="dt">control =</span> swagcon,</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true"></a>  <span class="dt">auto_control =</span> <span class="ot">FALSE</span>,</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true"></a>  <span class="co"># arguments for caret</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true"></a>  <span class="dt">trControl =</span> <span class="kw">trainControl</span>(<span class="dt">method =</span> <span class="st">&quot;repeatedcv&quot;</span>, <span class="dt">number =</span> <span class="dv">10</span>, <span class="dt">repeats =</span> <span class="dv">1</span>, <span class="dt">allowParallel =</span> F), <span class="co"># trainControl is from caret package</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true"></a>  <span class="dt">metric =</span> <span class="st">&quot;Accuracy&quot;</span>,</span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true"></a>  <span class="dt">method =</span> <span class="st">&quot;rf&quot;</span>,</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true"></a>  <span class="co"># dynamically modify arguments for caret</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true"></a>  <span class="dt">caret_args_dyn =</span> <span class="cf">function</span>(list_arg,iter){</span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true"></a>    list_arg<span class="op">$</span>tuneGrid =<span class="st"> </span><span class="kw">expand.grid</span>(<span class="dt">.mtry=</span><span class="kw">sqrt</span>(iter))</span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true"></a>    list_arg</span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true"></a>  }</span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true"></a>)</span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true"></a><span class="co">#&gt; [1] &quot;Dimension explored: 1 - CV errors at alpha: 0.0996&quot;</span></span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true"></a><span class="co">#&gt; [1] &quot;Dimension explored: 2 - CV errors at alpha: 0.0534&quot;</span></span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true"></a><span class="co">#&gt; [1] &quot;Dimension explored: 3 - CV errors at alpha: 0.0461&quot;</span></span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true"></a><span class="co">#&gt; [1] &quot;Dimension explored: 4 - CV errors at alpha: 0.0425&quot;</span></span></code></pre></div>
 <p>Indeed a nice feature of <strong>swag</strong>, that derives from its building block <strong>caret</strong>, is that you can tailor the learning arguments of <em>swag()</em> as you like introducing for example grids for the hyper-parameters specific of a given learner or update these grids as the dimension increases. This gives to the user a wide range of possibilities and a lot of flexibility in the training phase.</p>
 <p>To conclude this opening section, we present the usual <em>predict()</em> function which can be applied to a <strong>swag</strong> trained object similarly to many other packages in R.</p>
-<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true"></a><span class="co"># best learner predictions </span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true"></a><span class="co"># if `newdata` is not specified, then predict gives predictions based on the training </span></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true"></a><span class="co"># sample</span></span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true"></a></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true"></a><span class="kw">sapply</span>(<span class="kw">predict</span>(<span class="dt">object =</span> train_swag_svml), <span class="cf">function</span>(x) <span class="kw">head</span>(x))</span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true"></a><span class="co">#&gt; $predictions</span></span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true"></a><span class="co">#&gt;      [,1]</span></span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true"></a><span class="co">#&gt; [1,]    2</span></span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true"></a><span class="co">#&gt; [2,]    1</span></span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true"></a><span class="co">#&gt; [3,]    2</span></span>
-<span id="cb10-11"><a href="#cb10-11" aria-hidden="true"></a><span class="co">#&gt; [4,]    1</span></span>
-<span id="cb10-12"><a href="#cb10-12" aria-hidden="true"></a><span class="co">#&gt; [5,]    2</span></span>
-<span id="cb10-13"><a href="#cb10-13" aria-hidden="true"></a><span class="co">#&gt; [6,]    1</span></span>
-<span id="cb10-14"><a href="#cb10-14" aria-hidden="true"></a><span class="co">#&gt; </span></span>
-<span id="cb10-15"><a href="#cb10-15" aria-hidden="true"></a><span class="co">#&gt; $models</span></span>
-<span id="cb10-16"><a href="#cb10-16" aria-hidden="true"></a><span class="co">#&gt; $models[[1]]</span></span>
-<span id="cb10-17"><a href="#cb10-17" aria-hidden="true"></a><span class="co">#&gt; [1] 2 3 6 7</span></span>
-<span id="cb10-18"><a href="#cb10-18" aria-hidden="true"></a></span>
-<span id="cb10-19"><a href="#cb10-19" aria-hidden="true"></a><span class="co"># best learner predictions </span></span>
-<span id="cb10-20"><a href="#cb10-20" aria-hidden="true"></a>best_pred &lt;-<span class="st"> </span><span class="kw">predict</span>(<span class="dt">object =</span> train_swag_svml, </span>
-<span id="cb10-21"><a href="#cb10-21" aria-hidden="true"></a>                     <span class="dt">newdata =</span> x_test)</span>
-<span id="cb10-22"><a href="#cb10-22" aria-hidden="true"></a></span>
-<span id="cb10-23"><a href="#cb10-23" aria-hidden="true"></a><span class="kw">sapply</span>(best_pred, <span class="cf">function</span>(x) <span class="kw">head</span>(x))</span>
-<span id="cb10-24"><a href="#cb10-24" aria-hidden="true"></a><span class="co">#&gt; $predictions</span></span>
-<span id="cb10-25"><a href="#cb10-25" aria-hidden="true"></a><span class="co">#&gt;      [,1]</span></span>
-<span id="cb10-26"><a href="#cb10-26" aria-hidden="true"></a><span class="co">#&gt; [1,]    1</span></span>
-<span id="cb10-27"><a href="#cb10-27" aria-hidden="true"></a><span class="co">#&gt; [2,]    1</span></span>
-<span id="cb10-28"><a href="#cb10-28" aria-hidden="true"></a><span class="co">#&gt; [3,]    1</span></span>
-<span id="cb10-29"><a href="#cb10-29" aria-hidden="true"></a><span class="co">#&gt; [4,]    2</span></span>
-<span id="cb10-30"><a href="#cb10-30" aria-hidden="true"></a><span class="co">#&gt; [5,]    1</span></span>
-<span id="cb10-31"><a href="#cb10-31" aria-hidden="true"></a><span class="co">#&gt; [6,]    1</span></span>
-<span id="cb10-32"><a href="#cb10-32" aria-hidden="true"></a><span class="co">#&gt; </span></span>
-<span id="cb10-33"><a href="#cb10-33" aria-hidden="true"></a><span class="co">#&gt; $models</span></span>
-<span id="cb10-34"><a href="#cb10-34" aria-hidden="true"></a><span class="co">#&gt; $models[[1]]</span></span>
-<span id="cb10-35"><a href="#cb10-35" aria-hidden="true"></a><span class="co">#&gt; [1] 2 3 6 7</span></span>
-<span id="cb10-36"><a href="#cb10-36" aria-hidden="true"></a></span>
-<span id="cb10-37"><a href="#cb10-37" aria-hidden="true"></a><span class="co"># predictions for a given dimension </span></span>
-<span id="cb10-38"><a href="#cb10-38" aria-hidden="true"></a></span>
-<span id="cb10-39"><a href="#cb10-39" aria-hidden="true"></a>dim_pred &lt;-<span class="st">  </span><span class="kw">predict</span>(</span>
-<span id="cb10-40"><a href="#cb10-40" aria-hidden="true"></a>  <span class="dt">object =</span> train_swag_svml, </span>
-<span id="cb10-41"><a href="#cb10-41" aria-hidden="true"></a>  <span class="dt">newdata =</span> x_test, </span>
-<span id="cb10-42"><a href="#cb10-42" aria-hidden="true"></a>  <span class="dt">type =</span> <span class="st">&quot;attribute&quot;</span>,</span>
-<span id="cb10-43"><a href="#cb10-43" aria-hidden="true"></a>  <span class="dt">attribute =</span> 4L)</span>
-<span id="cb10-44"><a href="#cb10-44" aria-hidden="true"></a></span>
-<span id="cb10-45"><a href="#cb10-45" aria-hidden="true"></a></span>
-<span id="cb10-46"><a href="#cb10-46" aria-hidden="true"></a><span class="kw">sapply</span>(dim_pred,<span class="cf">function</span>(x) <span class="kw">head</span>(x))</span>
-<span id="cb10-47"><a href="#cb10-47" aria-hidden="true"></a><span class="co">#&gt; $predictions</span></span>
-<span id="cb10-48"><a href="#cb10-48" aria-hidden="true"></a><span class="co">#&gt;      [,1] [,2] [,3] [,4]</span></span>
-<span id="cb10-49"><a href="#cb10-49" aria-hidden="true"></a><span class="co">#&gt; [1,]    1    1    1    1</span></span>
-<span id="cb10-50"><a href="#cb10-50" aria-hidden="true"></a><span class="co">#&gt; [2,]    1    1    1    1</span></span>
-<span id="cb10-51"><a href="#cb10-51" aria-hidden="true"></a><span class="co">#&gt; [3,]    1    1    1    1</span></span>
-<span id="cb10-52"><a href="#cb10-52" aria-hidden="true"></a><span class="co">#&gt; [4,]    2    2    2    2</span></span>
-<span id="cb10-53"><a href="#cb10-53" aria-hidden="true"></a><span class="co">#&gt; [5,]    1    1    1    1</span></span>
-<span id="cb10-54"><a href="#cb10-54" aria-hidden="true"></a><span class="co">#&gt; [6,]    1    1    1    1</span></span>
-<span id="cb10-55"><a href="#cb10-55" aria-hidden="true"></a><span class="co">#&gt; </span></span>
-<span id="cb10-56"><a href="#cb10-56" aria-hidden="true"></a><span class="co">#&gt; $models</span></span>
-<span id="cb10-57"><a href="#cb10-57" aria-hidden="true"></a><span class="co">#&gt; $models[[1]]</span></span>
-<span id="cb10-58"><a href="#cb10-58" aria-hidden="true"></a><span class="co">#&gt; [1] 2 3 6 7</span></span>
-<span id="cb10-59"><a href="#cb10-59" aria-hidden="true"></a><span class="co">#&gt; </span></span>
-<span id="cb10-60"><a href="#cb10-60" aria-hidden="true"></a><span class="co">#&gt; $models[[2]]</span></span>
-<span id="cb10-61"><a href="#cb10-61" aria-hidden="true"></a><span class="co">#&gt; [1] 2 3 5 6</span></span>
-<span id="cb10-62"><a href="#cb10-62" aria-hidden="true"></a><span class="co">#&gt; </span></span>
-<span id="cb10-63"><a href="#cb10-63" aria-hidden="true"></a><span class="co">#&gt; $models[[3]]</span></span>
-<span id="cb10-64"><a href="#cb10-64" aria-hidden="true"></a><span class="co">#&gt; [1] 2 5 6 7</span></span>
-<span id="cb10-65"><a href="#cb10-65" aria-hidden="true"></a><span class="co">#&gt; </span></span>
-<span id="cb10-66"><a href="#cb10-66" aria-hidden="true"></a><span class="co">#&gt; $models[[4]]</span></span>
-<span id="cb10-67"><a href="#cb10-67" aria-hidden="true"></a><span class="co">#&gt; [1] 3 5 6 7</span></span>
-<span id="cb10-68"><a href="#cb10-68" aria-hidden="true"></a></span>
-<span id="cb10-69"><a href="#cb10-69" aria-hidden="true"></a><span class="co"># predictions below a given CV error</span></span>
-<span id="cb10-70"><a href="#cb10-70" aria-hidden="true"></a></span>
-<span id="cb10-71"><a href="#cb10-71" aria-hidden="true"></a>cv_pred &lt;-<span class="st">  </span><span class="kw">predict</span>(</span>
-<span id="cb10-72"><a href="#cb10-72" aria-hidden="true"></a>  <span class="dt">object =</span> train_swag_svml, </span>
-<span id="cb10-73"><a href="#cb10-73" aria-hidden="true"></a>  <span class="dt">newdata =</span> x_test, </span>
-<span id="cb10-74"><a href="#cb10-74" aria-hidden="true"></a>  <span class="dt">type =</span> <span class="st">&quot;cv_performance&quot;</span>,</span>
-<span id="cb10-75"><a href="#cb10-75" aria-hidden="true"></a>  <span class="dt">cv_performance =</span> <span class="fl">0.04</span>)</span>
-<span id="cb10-76"><a href="#cb10-76" aria-hidden="true"></a></span>
-<span id="cb10-77"><a href="#cb10-77" aria-hidden="true"></a><span class="kw">sapply</span>(cv_pred,<span class="cf">function</span>(x) <span class="kw">head</span>(x))</span>
-<span id="cb10-78"><a href="#cb10-78" aria-hidden="true"></a><span class="co">#&gt; $predictions</span></span>
-<span id="cb10-79"><a href="#cb10-79" aria-hidden="true"></a><span class="co">#&gt;      [,1] [,2] [,3] [,4] [,5]</span></span>
-<span id="cb10-80"><a href="#cb10-80" aria-hidden="true"></a><span class="co">#&gt; [1,]    1    1    1    1    1</span></span>
-<span id="cb10-81"><a href="#cb10-81" aria-hidden="true"></a><span class="co">#&gt; [2,]    1    1    1    1    1</span></span>
-<span id="cb10-82"><a href="#cb10-82" aria-hidden="true"></a><span class="co">#&gt; [3,]    1    1    1    1    1</span></span>
-<span id="cb10-83"><a href="#cb10-83" aria-hidden="true"></a><span class="co">#&gt; [4,]    2    2    2    2    2</span></span>
-<span id="cb10-84"><a href="#cb10-84" aria-hidden="true"></a><span class="co">#&gt; [5,]    1    1    1    1    1</span></span>
-<span id="cb10-85"><a href="#cb10-85" aria-hidden="true"></a><span class="co">#&gt; [6,]    1    1    1    1    1</span></span>
-<span id="cb10-86"><a href="#cb10-86" aria-hidden="true"></a><span class="co">#&gt; </span></span>
-<span id="cb10-87"><a href="#cb10-87" aria-hidden="true"></a><span class="co">#&gt; $models</span></span>
-<span id="cb10-88"><a href="#cb10-88" aria-hidden="true"></a><span class="co">#&gt; $models[[1]]</span></span>
-<span id="cb10-89"><a href="#cb10-89" aria-hidden="true"></a><span class="co">#&gt; [1] 2 6</span></span>
-<span id="cb10-90"><a href="#cb10-90" aria-hidden="true"></a><span class="co">#&gt; </span></span>
-<span id="cb10-91"><a href="#cb10-91" aria-hidden="true"></a><span class="co">#&gt; $models[[2]]</span></span>
-<span id="cb10-92"><a href="#cb10-92" aria-hidden="true"></a><span class="co">#&gt; [1] 2 6 7</span></span>
-<span id="cb10-93"><a href="#cb10-93" aria-hidden="true"></a><span class="co">#&gt; </span></span>
-<span id="cb10-94"><a href="#cb10-94" aria-hidden="true"></a><span class="co">#&gt; $models[[3]]</span></span>
-<span id="cb10-95"><a href="#cb10-95" aria-hidden="true"></a><span class="co">#&gt; [1] 3 5 6</span></span>
-<span id="cb10-96"><a href="#cb10-96" aria-hidden="true"></a><span class="co">#&gt; </span></span>
-<span id="cb10-97"><a href="#cb10-97" aria-hidden="true"></a><span class="co">#&gt; $models[[4]]</span></span>
-<span id="cb10-98"><a href="#cb10-98" aria-hidden="true"></a><span class="co">#&gt; [1] 2 3 6 7</span></span>
-<span id="cb10-99"><a href="#cb10-99" aria-hidden="true"></a><span class="co">#&gt; </span></span>
-<span id="cb10-100"><a href="#cb10-100" aria-hidden="true"></a><span class="co">#&gt; $models[[5]]</span></span>
-<span id="cb10-101"><a href="#cb10-101" aria-hidden="true"></a><span class="co">#&gt; [1] 3 5 6 7</span></span></code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true"></a><span class="co"># best learner predictions </span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true"></a><span class="co"># if `newdata` is not specified, then predict gives predictions based on the training sample</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true"></a><span class="kw">sapply</span>(<span class="kw">predict</span>(<span class="dt">object =</span> train_swag_svml), <span class="cf">function</span>(x) <span class="kw">head</span>(x))</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true"></a><span class="co">#&gt; $predictions</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true"></a><span class="co">#&gt;      [,1]</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true"></a><span class="co">#&gt; [1,]    2</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true"></a><span class="co">#&gt; [2,]    1</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true"></a><span class="co">#&gt; [3,]    2</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true"></a><span class="co">#&gt; [4,]    1</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true"></a><span class="co">#&gt; [5,]    2</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true"></a><span class="co">#&gt; [6,]    1</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true"></a><span class="co">#&gt; </span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true"></a><span class="co">#&gt; $models</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true"></a><span class="co">#&gt; $models[[1]]</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true"></a><span class="co">#&gt; [1] 2 3 6 7</span></span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true"></a></span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true"></a><span class="co"># best learner predictions </span></span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true"></a>best_pred &lt;-<span class="st"> </span><span class="kw">predict</span>(<span class="dt">object =</span> train_swag_svml, </span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true"></a>                     <span class="dt">newdata =</span> x_test)</span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true"></a></span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true"></a><span class="kw">sapply</span>(best_pred, <span class="cf">function</span>(x) <span class="kw">head</span>(x))</span>
+<span id="cb11-23"><a href="#cb11-23" aria-hidden="true"></a><span class="co">#&gt; $predictions</span></span>
+<span id="cb11-24"><a href="#cb11-24" aria-hidden="true"></a><span class="co">#&gt;      [,1]</span></span>
+<span id="cb11-25"><a href="#cb11-25" aria-hidden="true"></a><span class="co">#&gt; [1,]    1</span></span>
+<span id="cb11-26"><a href="#cb11-26" aria-hidden="true"></a><span class="co">#&gt; [2,]    1</span></span>
+<span id="cb11-27"><a href="#cb11-27" aria-hidden="true"></a><span class="co">#&gt; [3,]    1</span></span>
+<span id="cb11-28"><a href="#cb11-28" aria-hidden="true"></a><span class="co">#&gt; [4,]    2</span></span>
+<span id="cb11-29"><a href="#cb11-29" aria-hidden="true"></a><span class="co">#&gt; [5,]    1</span></span>
+<span id="cb11-30"><a href="#cb11-30" aria-hidden="true"></a><span class="co">#&gt; [6,]    1</span></span>
+<span id="cb11-31"><a href="#cb11-31" aria-hidden="true"></a><span class="co">#&gt; </span></span>
+<span id="cb11-32"><a href="#cb11-32" aria-hidden="true"></a><span class="co">#&gt; $models</span></span>
+<span id="cb11-33"><a href="#cb11-33" aria-hidden="true"></a><span class="co">#&gt; $models[[1]]</span></span>
+<span id="cb11-34"><a href="#cb11-34" aria-hidden="true"></a><span class="co">#&gt; [1] 2 3 6 7</span></span>
+<span id="cb11-35"><a href="#cb11-35" aria-hidden="true"></a></span>
+<span id="cb11-36"><a href="#cb11-36" aria-hidden="true"></a><span class="co"># predictions for a given dimension </span></span>
+<span id="cb11-37"><a href="#cb11-37" aria-hidden="true"></a></span>
+<span id="cb11-38"><a href="#cb11-38" aria-hidden="true"></a>dim_pred &lt;-<span class="st">  </span><span class="kw">predict</span>(</span>
+<span id="cb11-39"><a href="#cb11-39" aria-hidden="true"></a>  <span class="dt">object =</span> train_swag_svml, </span>
+<span id="cb11-40"><a href="#cb11-40" aria-hidden="true"></a>  <span class="dt">newdata =</span> x_test, </span>
+<span id="cb11-41"><a href="#cb11-41" aria-hidden="true"></a>  <span class="dt">type =</span> <span class="st">&quot;attribute&quot;</span>,</span>
+<span id="cb11-42"><a href="#cb11-42" aria-hidden="true"></a>  <span class="dt">attribute =</span> 4L)</span>
+<span id="cb11-43"><a href="#cb11-43" aria-hidden="true"></a></span>
+<span id="cb11-44"><a href="#cb11-44" aria-hidden="true"></a></span>
+<span id="cb11-45"><a href="#cb11-45" aria-hidden="true"></a><span class="kw">sapply</span>(dim_pred,<span class="cf">function</span>(x) <span class="kw">head</span>(x))</span>
+<span id="cb11-46"><a href="#cb11-46" aria-hidden="true"></a><span class="co">#&gt; $predictions</span></span>
+<span id="cb11-47"><a href="#cb11-47" aria-hidden="true"></a><span class="co">#&gt;      [,1] [,2] [,3] [,4]</span></span>
+<span id="cb11-48"><a href="#cb11-48" aria-hidden="true"></a><span class="co">#&gt; [1,]    1    1    1    1</span></span>
+<span id="cb11-49"><a href="#cb11-49" aria-hidden="true"></a><span class="co">#&gt; [2,]    1    1    1    1</span></span>
+<span id="cb11-50"><a href="#cb11-50" aria-hidden="true"></a><span class="co">#&gt; [3,]    1    1    1    1</span></span>
+<span id="cb11-51"><a href="#cb11-51" aria-hidden="true"></a><span class="co">#&gt; [4,]    2    2    2    2</span></span>
+<span id="cb11-52"><a href="#cb11-52" aria-hidden="true"></a><span class="co">#&gt; [5,]    1    1    1    1</span></span>
+<span id="cb11-53"><a href="#cb11-53" aria-hidden="true"></a><span class="co">#&gt; [6,]    1    1    1    1</span></span>
+<span id="cb11-54"><a href="#cb11-54" aria-hidden="true"></a><span class="co">#&gt; </span></span>
+<span id="cb11-55"><a href="#cb11-55" aria-hidden="true"></a><span class="co">#&gt; $models</span></span>
+<span id="cb11-56"><a href="#cb11-56" aria-hidden="true"></a><span class="co">#&gt; $models[[1]]</span></span>
+<span id="cb11-57"><a href="#cb11-57" aria-hidden="true"></a><span class="co">#&gt; [1] 2 3 6 7</span></span>
+<span id="cb11-58"><a href="#cb11-58" aria-hidden="true"></a><span class="co">#&gt; </span></span>
+<span id="cb11-59"><a href="#cb11-59" aria-hidden="true"></a><span class="co">#&gt; $models[[2]]</span></span>
+<span id="cb11-60"><a href="#cb11-60" aria-hidden="true"></a><span class="co">#&gt; [1] 2 3 5 6</span></span>
+<span id="cb11-61"><a href="#cb11-61" aria-hidden="true"></a><span class="co">#&gt; </span></span>
+<span id="cb11-62"><a href="#cb11-62" aria-hidden="true"></a><span class="co">#&gt; $models[[3]]</span></span>
+<span id="cb11-63"><a href="#cb11-63" aria-hidden="true"></a><span class="co">#&gt; [1] 2 5 6 7</span></span>
+<span id="cb11-64"><a href="#cb11-64" aria-hidden="true"></a><span class="co">#&gt; </span></span>
+<span id="cb11-65"><a href="#cb11-65" aria-hidden="true"></a><span class="co">#&gt; $models[[4]]</span></span>
+<span id="cb11-66"><a href="#cb11-66" aria-hidden="true"></a><span class="co">#&gt; [1] 3 5 6 7</span></span>
+<span id="cb11-67"><a href="#cb11-67" aria-hidden="true"></a></span>
+<span id="cb11-68"><a href="#cb11-68" aria-hidden="true"></a><span class="co"># predictions below a given CV error</span></span>
+<span id="cb11-69"><a href="#cb11-69" aria-hidden="true"></a></span>
+<span id="cb11-70"><a href="#cb11-70" aria-hidden="true"></a>cv_pred &lt;-<span class="st">  </span><span class="kw">predict</span>(</span>
+<span id="cb11-71"><a href="#cb11-71" aria-hidden="true"></a>  <span class="dt">object =</span> train_swag_svml, </span>
+<span id="cb11-72"><a href="#cb11-72" aria-hidden="true"></a>  <span class="dt">newdata =</span> x_test, </span>
+<span id="cb11-73"><a href="#cb11-73" aria-hidden="true"></a>  <span class="dt">type =</span> <span class="st">&quot;cv_performance&quot;</span>,</span>
+<span id="cb11-74"><a href="#cb11-74" aria-hidden="true"></a>  <span class="dt">cv_performance =</span> <span class="fl">0.04</span>)</span>
+<span id="cb11-75"><a href="#cb11-75" aria-hidden="true"></a></span>
+<span id="cb11-76"><a href="#cb11-76" aria-hidden="true"></a><span class="kw">sapply</span>(cv_pred,<span class="cf">function</span>(x) <span class="kw">head</span>(x))</span>
+<span id="cb11-77"><a href="#cb11-77" aria-hidden="true"></a><span class="co">#&gt; $predictions</span></span>
+<span id="cb11-78"><a href="#cb11-78" aria-hidden="true"></a><span class="co">#&gt;      [,1] [,2] [,3] [,4] [,5]</span></span>
+<span id="cb11-79"><a href="#cb11-79" aria-hidden="true"></a><span class="co">#&gt; [1,]    1    1    1    1    1</span></span>
+<span id="cb11-80"><a href="#cb11-80" aria-hidden="true"></a><span class="co">#&gt; [2,]    1    1    1    1    1</span></span>
+<span id="cb11-81"><a href="#cb11-81" aria-hidden="true"></a><span class="co">#&gt; [3,]    1    1    1    1    1</span></span>
+<span id="cb11-82"><a href="#cb11-82" aria-hidden="true"></a><span class="co">#&gt; [4,]    2    2    2    2    2</span></span>
+<span id="cb11-83"><a href="#cb11-83" aria-hidden="true"></a><span class="co">#&gt; [5,]    1    1    1    1    1</span></span>
+<span id="cb11-84"><a href="#cb11-84" aria-hidden="true"></a><span class="co">#&gt; [6,]    1    1    1    1    1</span></span>
+<span id="cb11-85"><a href="#cb11-85" aria-hidden="true"></a><span class="co">#&gt; </span></span>
+<span id="cb11-86"><a href="#cb11-86" aria-hidden="true"></a><span class="co">#&gt; $models</span></span>
+<span id="cb11-87"><a href="#cb11-87" aria-hidden="true"></a><span class="co">#&gt; $models[[1]]</span></span>
+<span id="cb11-88"><a href="#cb11-88" aria-hidden="true"></a><span class="co">#&gt; [1] 2 6</span></span>
+<span id="cb11-89"><a href="#cb11-89" aria-hidden="true"></a><span class="co">#&gt; </span></span>
+<span id="cb11-90"><a href="#cb11-90" aria-hidden="true"></a><span class="co">#&gt; $models[[2]]</span></span>
+<span id="cb11-91"><a href="#cb11-91" aria-hidden="true"></a><span class="co">#&gt; [1] 2 6 7</span></span>
+<span id="cb11-92"><a href="#cb11-92" aria-hidden="true"></a><span class="co">#&gt; </span></span>
+<span id="cb11-93"><a href="#cb11-93" aria-hidden="true"></a><span class="co">#&gt; $models[[3]]</span></span>
+<span id="cb11-94"><a href="#cb11-94" aria-hidden="true"></a><span class="co">#&gt; [1] 3 5 6</span></span>
+<span id="cb11-95"><a href="#cb11-95" aria-hidden="true"></a><span class="co">#&gt; </span></span>
+<span id="cb11-96"><a href="#cb11-96" aria-hidden="true"></a><span class="co">#&gt; $models[[4]]</span></span>
+<span id="cb11-97"><a href="#cb11-97" aria-hidden="true"></a><span class="co">#&gt; [1] 2 3 6 7</span></span>
+<span id="cb11-98"><a href="#cb11-98" aria-hidden="true"></a><span class="co">#&gt; </span></span>
+<span id="cb11-99"><a href="#cb11-99" aria-hidden="true"></a><span class="co">#&gt; $models[[5]]</span></span>
+<span id="cb11-100"><a href="#cb11-100" aria-hidden="true"></a><span class="co">#&gt; [1] 3 5 6 7</span></span></code></pre></div>
 <p>Now we can for example evaluate the performance of the best learner selected by <strong>swag</strong> thanks to the <em>confusionMatrix()</em> function of <strong>caret</strong>.</p>
-<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true"></a><span class="co"># transform predictions into a data.frame of factors with levels of `y_test`</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true"></a>best_learn &lt;-<span class="st"> </span><span class="kw">factor</span>(<span class="kw">levels</span>(y_test)[best_pred<span class="op">$</span>predictions])</span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true"></a>caret<span class="op">::</span><span class="kw">confusionMatrix</span>(best_learn,y_test)</span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true"></a><span class="co">#&gt; Confusion Matrix and Statistics</span></span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true"></a><span class="co">#&gt; </span></span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true"></a><span class="co">#&gt;            Reference</span></span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true"></a><span class="co">#&gt; Prediction  benign malignant</span></span>
-<span id="cb11-8"><a href="#cb11-8" aria-hidden="true"></a><span class="co">#&gt;   benign        87         4</span></span>
-<span id="cb11-9"><a href="#cb11-9" aria-hidden="true"></a><span class="co">#&gt;   malignant      3        42</span></span>
-<span id="cb11-10"><a href="#cb11-10" aria-hidden="true"></a><span class="co">#&gt;                                           </span></span>
-<span id="cb11-11"><a href="#cb11-11" aria-hidden="true"></a><span class="co">#&gt;                Accuracy : 0.9485          </span></span>
-<span id="cb11-12"><a href="#cb11-12" aria-hidden="true"></a><span class="co">#&gt;                  95% CI : (0.8968, 0.9791)</span></span>
-<span id="cb11-13"><a href="#cb11-13" aria-hidden="true"></a><span class="co">#&gt;     No Information Rate : 0.6618          </span></span>
-<span id="cb11-14"><a href="#cb11-14" aria-hidden="true"></a><span class="co">#&gt;     P-Value [Acc &gt; NIR] : 6.123e-16       </span></span>
-<span id="cb11-15"><a href="#cb11-15" aria-hidden="true"></a><span class="co">#&gt;                                           </span></span>
-<span id="cb11-16"><a href="#cb11-16" aria-hidden="true"></a><span class="co">#&gt;                   Kappa : 0.8844          </span></span>
-<span id="cb11-17"><a href="#cb11-17" aria-hidden="true"></a><span class="co">#&gt;                                           </span></span>
-<span id="cb11-18"><a href="#cb11-18" aria-hidden="true"></a><span class="co">#&gt;  Mcnemar&#39;s Test P-Value : 1               </span></span>
-<span id="cb11-19"><a href="#cb11-19" aria-hidden="true"></a><span class="co">#&gt;                                           </span></span>
-<span id="cb11-20"><a href="#cb11-20" aria-hidden="true"></a><span class="co">#&gt;             Sensitivity : 0.9667          </span></span>
-<span id="cb11-21"><a href="#cb11-21" aria-hidden="true"></a><span class="co">#&gt;             Specificity : 0.9130          </span></span>
-<span id="cb11-22"><a href="#cb11-22" aria-hidden="true"></a><span class="co">#&gt;          Pos Pred Value : 0.9560          </span></span>
-<span id="cb11-23"><a href="#cb11-23" aria-hidden="true"></a><span class="co">#&gt;          Neg Pred Value : 0.9333          </span></span>
-<span id="cb11-24"><a href="#cb11-24" aria-hidden="true"></a><span class="co">#&gt;              Prevalence : 0.6618          </span></span>
-<span id="cb11-25"><a href="#cb11-25" aria-hidden="true"></a><span class="co">#&gt;          Detection Rate : 0.6397          </span></span>
-<span id="cb11-26"><a href="#cb11-26" aria-hidden="true"></a><span class="co">#&gt;    Detection Prevalence : 0.6691          </span></span>
-<span id="cb11-27"><a href="#cb11-27" aria-hidden="true"></a><span class="co">#&gt;       Balanced Accuracy : 0.9399          </span></span>
-<span id="cb11-28"><a href="#cb11-28" aria-hidden="true"></a><span class="co">#&gt;                                           </span></span>
-<span id="cb11-29"><a href="#cb11-29" aria-hidden="true"></a><span class="co">#&gt;        &#39;Positive&#39; Class : benign          </span></span>
-<span id="cb11-30"><a href="#cb11-30" aria-hidden="true"></a><span class="co">#&gt; </span></span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true"></a><span class="co"># transform predictions into a data.frame of factors with levels of `y_test`</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true"></a>best_learn &lt;-<span class="st"> </span><span class="kw">factor</span>(<span class="kw">levels</span>(y_test)[best_pred<span class="op">$</span>predictions])</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true"></a><span class="kw">confusionMatrix</span>(best_learn,y_test) <span class="co"># from caret package</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true"></a><span class="co">#&gt; Confusion Matrix and Statistics</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true"></a><span class="co">#&gt; </span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true"></a><span class="co">#&gt;            Reference</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true"></a><span class="co">#&gt; Prediction  benign malignant</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true"></a><span class="co">#&gt;   benign        87         4</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true"></a><span class="co">#&gt;   malignant      3        42</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true"></a><span class="co">#&gt;                                           </span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true"></a><span class="co">#&gt;                Accuracy : 0.9485          </span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true"></a><span class="co">#&gt;                  95% CI : (0.8968, 0.9791)</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true"></a><span class="co">#&gt;     No Information Rate : 0.6618          </span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true"></a><span class="co">#&gt;     P-Value [Acc &gt; NIR] : 6.123e-16       </span></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true"></a><span class="co">#&gt;                                           </span></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true"></a><span class="co">#&gt;                   Kappa : 0.8844          </span></span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true"></a><span class="co">#&gt;                                           </span></span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true"></a><span class="co">#&gt;  Mcnemar&#39;s Test P-Value : 1               </span></span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true"></a><span class="co">#&gt;                                           </span></span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true"></a><span class="co">#&gt;             Sensitivity : 0.9667          </span></span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true"></a><span class="co">#&gt;             Specificity : 0.9130          </span></span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true"></a><span class="co">#&gt;          Pos Pred Value : 0.9560          </span></span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true"></a><span class="co">#&gt;          Neg Pred Value : 0.9333          </span></span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true"></a><span class="co">#&gt;              Prevalence : 0.6618          </span></span>
+<span id="cb12-25"><a href="#cb12-25" aria-hidden="true"></a><span class="co">#&gt;          Detection Rate : 0.6397          </span></span>
+<span id="cb12-26"><a href="#cb12-26" aria-hidden="true"></a><span class="co">#&gt;    Detection Prevalence : 0.6691          </span></span>
+<span id="cb12-27"><a href="#cb12-27" aria-hidden="true"></a><span class="co">#&gt;       Balanced Accuracy : 0.9399          </span></span>
+<span id="cb12-28"><a href="#cb12-28" aria-hidden="true"></a><span class="co">#&gt;                                           </span></span>
+<span id="cb12-29"><a href="#cb12-29" aria-hidden="true"></a><span class="co">#&gt;        &#39;Positive&#39; Class : benign          </span></span>
+<span id="cb12-30"><a href="#cb12-30" aria-hidden="true"></a><span class="co">#&gt; </span></span></code></pre></div>
 </div>
 
 
