@@ -74,6 +74,15 @@ x_train <-x[-ind,]
 
 Now we are ready to train the **swag** on the breast cancer dataset. As previously mentionned, we build upon the framework of the package **caret** thus experimented users of this package will find the whole implementation easier. In any case, we will explain in detail all the important steps needed for **swag** and we suggest to the interested reader the following detailed e-book: [caret](http://topepo.github.io/caret/index.html). 
 
+Before getting started, we load the **caret** library
+
+```{r caret, warning=FALSE}
+## if not installed
+## install.packages("caret")
+library(caret)
+```
+
+
 The first step is to fix the meta-parameters of the **swag** procedures: $p_{max}$, $\alpha$ and $m$. As the name suggests, $p_{max}$ is the maximum dimension of attributes that the user wants to be input in a generic $\mathcal{L}(\mathbf{y}, \mathbf{X})$. Based on this parameter, the *swag* aims at exploring the space of attributes in order to find sets of learners using $\hat{p}$ attributes ($1 \leq \hat{p} \leq p_{\text{max}}$) with extremely high predictive power. To do so, the algorithm makes use of the step-wise screening procedure described briefly in the introduction. Another key element is $\alpha$: a performance quantile which represents the percentage of learners which are selected at each dimension $1 \leq \hat{p} \leq p_{max}$. Finally we need to choose $m$ which represent the maximum numbers of learners which will be trained at each dimension $\hat{p} > 1$ (i.e. we train all $p$ learners of dimension $1$). We can fix all these meta-parameters, together with a seed for replicability purposes and `verbose = TRUE` to get a message as each dimension is completed, thanks to the *swagcontrol()* function which behaves similarly to the `trControl = ` argument of **caret**.  
 
 ```{r control-swag, eval=T}
@@ -104,7 +113,9 @@ library(caret) # swag is build around caret and uses it to train each learner
 
 
 ```{r SVM, eval=TRUE, warning=FALSE,message=FALSE}
-### SVM Linear Learner ###
+## SVM Linear Learner
+## `kernlab` is needed
+## if not installed, install.packages("kernlab")
 train_swag_svml <- swag(
   # arguments for swag
   x = x_train, 
@@ -112,7 +123,7 @@ train_swag_svml <- swag(
   control = swagcon,
   auto_control = FALSE,
   # arguments for caret
-  trControl = caret::trainControl(method = "repeatedcv", number = 10, repeats = 1, allowParallel = F),
+  trControl = trainControl(method = "repeatedcv", number = 10, repeats = 1, allowParallel = F), # trainControl is from caret package
   metric = "Accuracy",
   method = "svmLinear",  # Use method = "svmRadial" to train this specific learner
   preProcess = c("center", "scale")
@@ -144,7 +155,9 @@ train_swag_svml$cv_alpha
 The other two learners that we have carefully implemented on **swag** are: lasso (**glmnet** package required) and random forest (**party** package required). The training phase for these learners, differs a little with respect to the svm one. We start looking at the lasso:
 
 ```{r lasso, eval=TRUE}
-### Lasso Learner ###
+## Lasso Learner
+## `glmnet` is needed
+## if not installed, install.packages("glmnet")
 train_swag_lasso <- swag(
   # arguments for swag
   x = x, 
@@ -152,7 +165,7 @@ train_swag_lasso <- swag(
   control = swagcon,
   auto_control = FALSE,
   # arguments for caret
-  trControl = caret::trainControl(method = "repeatedcv", number = 10, repeats = 1, allowParallel = F),
+  trControl = trainControl(method = "repeatedcv", number = 10, repeats = 1, allowParallel = F), # trainControl is from caret package
   metric = "Accuracy",
   method = "glmnet",
   tuneGrid=expand.grid(alpha = 1, lambda = seq(0,.35,length.out=10)),
@@ -172,7 +185,9 @@ The newly introduced argument `caret_args_dyn` enables the user to modify the hy
 
 
 ```{r random-forest, eval=TRUE}
-### Random Forest Learner ###
+## Random Forest Learner
+## `randomForest` is needed
+## if not installed, install.packages("randomForest")
 train_swag_rf <- swag(
   # arguments for swag
   x = x, 
@@ -180,7 +195,7 @@ train_swag_rf <- swag(
   control = swagcon,
   auto_control = FALSE,
   # arguments for caret
-  trControl = caret::trainControl(method = "repeatedcv", number = 10, repeats = 1, allowParallel = F),
+  trControl = trainControl(method = "repeatedcv", number = 10, repeats = 1, allowParallel = F), # trainControl is from caret package
   metric = "Accuracy",
   method = "rf",
   # dynamically modify arguments for caret
@@ -211,8 +226,7 @@ train_pred_att <- predict(train_swag_svml,newdata = x_train,type="attribute",att
 
 ```{r predictions, eval=T}
 # best learner predictions 
-# if `newdata` is not specified, then predict gives predictions based on the training 
-# sample
+# if `newdata` is not specified, then predict gives predictions based on the training sample
 
 sapply(predict(object = train_swag_svml), function(x) head(x))
 
@@ -251,7 +265,7 @@ Now we can for example evaluate the performance of the best learner selected by 
 ```{r confusion-matrix, eval=T}
 # transform predictions into a data.frame of factors with levels of `y_test`
 best_learn <- factor(levels(y_test)[best_pred$predictions])
-caret::confusionMatrix(best_learn,y_test)
+confusionMatrix(best_learn,y_test) # from caret package
 ```
 
 

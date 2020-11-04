@@ -9,9 +9,9 @@ Authors@R: c(
     person("Stephane", "Guerrier", role="ctb"),
     person("Roberto", "Molinari", role="ctb"))
 Maintainer: Samuel Orso <Samuel.Orso@unige.ch>
-Description: `swag` is a package that trains a meta-learning procedure that combines 
+Description: An algorithm that trains a meta-learning procedure that combines 
     screening and wrapper methods to find a set of extremely low-dimensional attribute 
-    combinations. `swag` works on top of the `caret` package and proceeds in a 
+    combinations. This package works on top of the caret package and proceeds in a 
     forward-step manner. More specifically, it builds and tests learners starting 
     from very few attributes until it includes a maximal number of attributes by 
     increasing the number of attributes at each step. Hence, for each fixed number
@@ -29,11 +29,13 @@ Imports:
   stats
 Suggests:
   doParallel,
+  e1071,
   foreach,
   ggplot2,
   glmnet,
   grDevices,
   iterators,
+  kernlab,
   knitr,
   lattice,
   methods,
