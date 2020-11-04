@@ -2,3 +2,10 @@
 ^\.Rproj\.user$
 ^doc$
 ^Meta$
+cran-comments.md
+^\.tmp$
+^\.git$
+.gitignore
+README.md
+README.Rmd
+^\.travis\.yml$

@@ -24,7 +24,10 @@ library(swag) #load the new package
 
 
 ```{r, eval=F,echo=TRUE}
-devtools::install_github("SMAC-Group/SWAG-R-Package")
+## if not installed
+## install.packages("remotes")
+
+remotes::install_github("SMAC-Group/SWAG-R-Package")
 
 library(swag) #load the new package
 ```
@@ -193,6 +196,3 @@ caret::confusionMatrix(best_learn,y_test)
 ```
 
 Thanks for the attention. You can  definitely say that you worked with **swag** !!!
-
-## Licensing
-The license this source code is released under is the GNU AFFERO GENERAL PUBLIC LICENSE (AGPL) v3.0. In some cases, the GPL license does apply. However, in the majority of the cases, the license in effect is the GNU AFFERO GENERAL PUBLIC LICENSE (AGPL) v3.0 as the computational code is heavily dependent on Armadilllo, which use the MPL license that enables us to recast our code to use the GNU AFFERO GENERAL PUBLIC LICENSE (AGPL) v3.0. See the LICENSE file for full text. Otherwise, please consult [TLDR Legal](https://tldrlegal.com/license/gnu-affero-general-public-license-v3-(agpl-3.0)) or [GNU](https://www.gnu.org/licenses/agpl-3.0.en.html) which will provide a synopsis of the restrictions placed upon the code. Please note, this does NOT excuse you from talking about licensing with a lawyer!

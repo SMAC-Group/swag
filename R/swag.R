@@ -1,18 +1,6 @@
 # Copyright (C) 2020 Gaetan Bakalli, Samuel Orso and Cesare Miglioli
 #
 # This file is part of SWAG-R Package
-#
-# The `swag` R package is free software: you can redistribute it and/or modify
-# it under the terms of the GNU Affero General Public License as
-# published by the Free Software Foundation, either version 3 of the
-# License, or (at your option) any later version.
-#
-# The `swag` R package is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-#
-# You should have received a copy of the GNU Affero General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #' @title Spare Wrapper AlGorithm (swag)
 #'
@@ -47,6 +35,7 @@
 #' @author Gaetan Bakalli, Samuel Orso and Cesare Miglioli
 #' @importFrom caret train
 #' @importFrom caret trainControl
+#' @importFrom stats quantile
 #' @import caret
 #' @export swag
 swag <- function(x,
@@ -194,7 +183,7 @@ model_combination <- function(
 ){
   # Generate all combinations of var_mat and id_screening
   A <- rbind(
-    matrix(rep(var_mat,length(id_screening)),nr=nrow(var_mat)),
+    matrix(rep(var_mat,length(id_screening)),nrow=nrow(var_mat)),
     rep(id_screening,each=ncol(var_mat))
   )
 

@@ -2,13 +2,12 @@ Package: swag
 Type: Package
 Title: Sparse Wrapper AlGorithm
 Version: 0.1.0
-Author@R: c(
-    person("Samuel", "Orso", email="Samuel.Orso@unige.ch", role=c("aut","cre","")),
-    person("Gaetan", "Bakalli", email="Gaetan.Bakalli@unige.ch", role=c("aut","cre")),
-    person("Cesare", "Miglioli", role="ctb"),
+Authors@R: c(
+    person("Samuel", "Orso", email="Samuel.Orso@unige.ch", role=c("aut","cre")),
+    person("Gaetan", "Bakalli", role="aut"),
+    person("Cesare", "Miglioli", role="aut"),
     person("Stephane", "Guerrier", role="ctb"),
-    person("Roberto", "Molinari", role="ctb"),
-    person("Olivier", "Scaillet", role="ctb"))
+    person("Roberto", "Molinari", role="ctb"))
 Maintainer: Samuel Orso <Samuel.Orso@unige.ch>
 Description: `swag` is a package that trains a meta-learning procedure that combines 
     screening and wrapper methods to find a set of extremely low-dimensional attribute 
@@ -21,16 +20,38 @@ Description: `swag` is a package that trains a meta-learning procedure that comb
     the algorithm uses the information coming from the best learners at the previous
     step to build and test learners in the following step. In the end, it outputs
     a set of strong low-dimensional learners.
-License: AGPL-3 | file LICENSE
+License: GPL (>= 2) 
 Encoding: UTF-8
 LazyData: false
-Depends: R (>= 3.6.0)
+Depends: R (>= 4.0.0)
 Imports: 
-  doParallel,
   caret,
-  parallel
-RoxygenNote: 7.1.0
-Suggests: knitr, rmarkdown
+  stats
+Suggests:
+  doParallel,
+  foreach,
+  ggplot2,
+  glmnet,
+  grDevices,
+  iterators,
+  knitr,
+  lattice,
+  methods,
+  mlbench,
+  ModelMetrics,
+  nlme,
+  parallel,
+  plyr,
+  pROC,
+  randomForest,
+  recipes,
+  remotes,
+  reshape2,
+  stats4,
+  rmarkdown,
+  utils,
+  withr
+RoxygenNote: 7.1.1
 VignetteBuilder: knitr
 URL: https://github.com/SMAC-Group/SWAG-R-Package
 BugReports: https://github.com/SMAC-Group/SWAG-R-Package/issues

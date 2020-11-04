@@ -35,7 +35,7 @@ library(swag) #load the new package
 
 
 ```{r, eval=F,echo=TRUE}
-devtools::install_github("SMAC-Group/SWAG-R-Package")
+remotes::install_github("SMAC-Group/SWAG-R-Package")
 
 library(swag) #load the new package
 ```
