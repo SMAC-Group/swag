@@ -11,7 +11,7 @@ Authors@R: c(
 Maintainer: Samuel Orso <Samuel.Orso@unige.ch>
 Description: An algorithm that trains a meta-learning procedure that combines 
     screening and wrapper methods to find a set of extremely low-dimensional attribute 
-    combinations. This package works on top of the caret package and proceeds in a 
+    combinations. This package works on top of the 'caret' package and proceeds in a 
     forward-step manner. More specifically, it builds and tests learners starting 
     from very few attributes until it includes a maximal number of attributes by 
     increasing the number of attributes at each step. Hence, for each fixed number
