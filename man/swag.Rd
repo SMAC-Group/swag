@@ -18,10 +18,10 @@ swag(
 
 \item{y}{A \code{vector} of binary response variable.}
 
-\item{control}{see \code{\link[swag]{swagControl}}}
+\item{control}{see \code{\link{swagControl}}}
 
 \item{auto_control}{A \code{boolean}, whether some control parameters
-are adjusted depending on \code{x} and \code{y} (see \code{\link[swag]{swagControl}}).}
+are adjusted depending on \code{x} and \code{y} (see \code{\link{swagControl}}).}
 
 \item{caret_args_dyn}{If not null, a function that can modify arguments for
 \code{\link[caret]{train}} dynamically (see the details).}
@@ -29,20 +29,27 @@ are adjusted depending on \code{x} and \code{y} (see \code{\link[swag]{swagContr
 \item{...}{Arguments to be passed to \code{\link[caret]{train}} functions (see the details).}
 }
 \value{
-A \code{swag} object.
+\code{swag} returns an object of class "\code{swag}". It is a \code{list}
+with the following components:
+\tabular{ll}{
+   \code{x} \tab same as \code{x} input \cr
+   \code{y} \tab same as \code{y} input \cr
+   \code{control} \tab the \code{control} used (see \code{\link{swagControl}}) \cr
+   \code{CVs} \tab a \code{list} containing cross-validation errors from all trained models \cr
+   \code{VarMat} \tab a \code{list} containing information about which models are trained \cr
+   \code{cv_alpha} \tab a \code{vector} of size \code{pmax} containing the
+   cross-validation error at \code{alpha} (see \code{\link{swagControl}}) \cr
+   \code{IDs} \tab a \code{list} containing information about trained model
+   that performs better than corresponding \code{cv_alpha} error \cr
+   \code{args_caret} \tab arguments used for \code{\link[caret]{train}} \cr
+   \code{args_caret_dyn} \tab same as \code{args_caret_dyn} input \cr
+}
 }
 \description{
-\code{swag} trains a meta-learning procedure that combines
+\code{swag} is used to trains a meta-learning procedure that combines
 screening and wrapper methods to find a set of extremely low-dimensional attribute
 combinations. \code{swag} works on top of the \pkg{caret} package and proceeds in a
-forward-step manner. More specifically, it builds and tests learners starting
-from very few attributes until it includes a maximal number of attributes by
-increasing the number of attributes at each step. Hence, for each fixed number
-of attributes, the algorithm tests various (randomly selected) learners and
-picks those with the best performance in terms of training error. Throughout,
-the algorithm uses the information coming from the best learners at the previous
-step to build and test learners in the following step. In the end, it outputs
-a set of strong low-dimensional learners.
+forward-step manner.
 }
 \details{
 Currently we expect the user to replace \code{...} with the arguments one would
@@ -52,7 +59,20 @@ are used. But this might lead to unexpected results.
 
 The function \code{caret_args_dyn} is expected to take as a first
 argument a \code{list} with all arguments for \code{\link[caret]{train}}
-and as a second argument the number of attributes (see examples).
+and as a second argument the number of attributes (see examples in the vignette).
+
+More specifically, \code{swag} builds and tests learners starting
+from very few attributes until it includes a maximal number of attributes by
+increasing the number of attributes at each step. Hence, for each fixed number
+of attributes, the algorithm tests various (randomly selected) learners and
+picks those with the best performance in terms of training error. Throughout,
+the algorithm uses the information coming from the best learners at the previous
+step to build and test learners in the following step. In the end, it outputs
+a set of strong low-dimensional learners. See \insertCite{molinari2020swag;textual}{swag} for
+more details.
+}
+\references{
+\insertAllCited{}
 }
 \author{
 Gaetan Bakalli, Samuel Orso and Cesare Miglioli

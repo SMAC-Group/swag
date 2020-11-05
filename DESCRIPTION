@@ -26,6 +26,7 @@ LazyData: false
 Depends: R (>= 4.0.0)
 Imports: 
   caret,
+  Rdpack (>= 0.7),
   stats
 Suggests:
   doParallel,
@@ -53,7 +54,8 @@ Suggests:
   rmarkdown,
   utils,
   withr
+RdMacros: Rdpack
 RoxygenNote: 7.1.1
 VignetteBuilder: knitr
-URL: https://github.com/SMAC-Group/SWAG-R-Package
-BugReports: https://github.com/SMAC-Group/SWAG-R-Package/issues
+URL: https://github.com/SMAC-Group/SWAG-R-Package/
+BugReports: https://github.com/SMAC-Group/SWAG-R-Package/issues/
