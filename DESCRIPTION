@@ -1,7 +1,7 @@
 Package: swag
 Type: Package
 Title: Sparse Wrapper Algorithm
-Version: 0.1.0
+Version: 0.1.1
 Authors@R: c(
     person("Samuel", "Orso", email="Samuel.Orso@unige.ch", role=c("aut","cre")),
     person("Gaetan", "Bakalli", role="aut"),

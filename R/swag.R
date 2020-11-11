@@ -62,7 +62,7 @@
 #' @export swag
 swag <- function(x,
                  y,
-                 control = swagControl(),
+                 control = list(...),
                  auto_control = TRUE,
                  # arguments for `caret::train()`
                  caret_args_dyn = NULL,
@@ -92,9 +92,7 @@ swag <- function(x,
   p <- dim_x[2]
   n <- dim_x[1]
 
-  if(class(control) != "swagControl")
-    stop("`control` must be of class `swagControl`")
-
+  control <- do.call("swagControl",control)
   if(isTRUE(auto_control)) control <- auto_swagControl(x,y,control)
 
  # Existence of arguments for `caret::train()`

@@ -25,7 +25,7 @@ swagControl <- function(
   if(!is.numeric(alpha) || alpha > 1 || alpha <=0 ) stop("value of 0<`alpha`<=1")
   if(!is.numeric(seed) || seed <= 0) stop("value of `seed` > 0")
   if(!is.logical(verbose)) stop("verbose must be a logical")
-  structure(list(pmax=pmax,m=m,alpha=alpha,seed=seed,verbose=verbose),class="swagControl")
+  list(pmax=pmax,m=m,alpha=alpha,seed=seed,verbose=verbose)
 }
 
 auto_swagControl <- function(
