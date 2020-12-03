@@ -2,7 +2,7 @@
 % Please edit documentation in R/swag.R
 \name{print.swag}
 \alias{print.swag}
-\title{Print gmwm object}
+\title{Print swag object}
 \usage{
 \method{print}{swag}(x, ...)
 }

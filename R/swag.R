@@ -24,12 +24,14 @@
 #'    \code{y} \tab same as \code{y} input \cr
 #'    \code{control} \tab the \code{control} used (see \code{\link{swagControl}}) \cr
 #'    \code{CVs} \tab a \code{list} containing cross-validation errors from all trained models \cr
+#'    \code{med_cv_errors} \tab a \code{vector} containing the median cross-validation errors from all dimension explored \cr
 #'    \code{VarMat} \tab a \code{list} containing information about which models are trained \cr
 #'    \code{cv_alpha} \tab a \code{vector} of size \code{pmax} containing the
 #'    cross-validation error at \code{alpha} (see \code{\link{swagControl}}) \cr
 #'    \code{IDs} \tab a \code{list} containing information about trained model
 #'    that performs better than corresponding \code{cv_alpha} error \cr
 #'    \code{args_caret} \tab arguments used for \code{\link[caret]{train}} \cr
+#'    \code{dim_max} \tab a \code{integer} containing the maximum dimension explorec \cr
 #'    \code{args_caret_dyn} \tab same as \code{args_caret_dyn} input \cr
 #' }
 #' @details
@@ -55,6 +57,7 @@
 #' @importFrom caret train
 #' @importFrom caret trainControl
 #' @importFrom stats quantile
+#' @importFrom stats median
 #' @importFrom Rdpack reprompt
 #' @import caret
 #' @references
@@ -66,7 +69,6 @@ swag <- function(x,
                  auto_control = TRUE,
                  # arguments for `caret::train()`
                  caret_args_dyn = NULL,
-                 post.process = TRUE,
                  ...){
 
   #---------------------
