@@ -168,7 +168,7 @@ swag <- function(x,
     VarMat[[d]] <- var_mat
     cv_alpha[d] <- quantile(cv_errors,control$alpha,na.rm=T)
     IDs[[d]] <- which(cv_errors <= cv_alpha[d])
-    med_cv_errors[d] = median(cv_errors)
+    med_cv_errors[d] = median(cv_errors, na.rm = T)
 
     if(d == 1) id_screening <- IDs[[d]]
 
@@ -177,7 +177,7 @@ swag <- function(x,
 
     if(d>3){
       #if((med_cv_errors[d]/med_cv_errors[d-1]) <= tol) break
-      if((med_cv_errors[d]>+med_cv_errors[d-1])) break
+      if(med_cv_errors[d]>med_cv_errors[d-1]) break
     }
   }
 
