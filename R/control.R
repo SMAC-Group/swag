@@ -50,5 +50,6 @@ auto_swagControl <- function(
   # are explored.
   m <- choose(ceiling(control$alpha * n[2]), 2)
 
+
   swagControl(pmax,m,control$alpha,control$seed,control$verbose)
 }

@@ -66,6 +66,7 @@ swag <- function(x,
                  auto_control = TRUE,
                  # arguments for `caret::train()`
                  caret_args_dyn = NULL,
+                 post.process = TRUE,
                  ...){
 
   #---------------------
@@ -83,6 +84,7 @@ swag <- function(x,
 
   # verify y is binary
   if(nlevels(y)>2) stop("Please provide a binary response `y`")
+
 
   ## object dimension
   # Number of attributes
@@ -124,6 +126,7 @@ swag <- function(x,
   IDs <- vector("list",control$pmax)
   VarMat <- vector("list",control$pmax)
   cv_alpha <- rep(NA,control$pmax)
+  med_cv_errors = vector("numeric")
 
   #---------------------
   ## SWAG
@@ -153,7 +156,7 @@ swag <- function(x,
       args_caret$x <- as.data.frame(x[,var_mat[,i]])
 
       # learner
-      set.seed(graine[1]+i)
+      set.seed(graine[d]+i)
       learn <- do.call(train,args_caret)
 
       # save performance
@@ -165,11 +168,17 @@ swag <- function(x,
     VarMat[[d]] <- var_mat
     cv_alpha[d] <- quantile(cv_errors,control$alpha,na.rm=T)
     IDs[[d]] <- which(cv_errors <= cv_alpha[d])
+    med_cv_errors[d] = median(cv_errors)
 
     if(d == 1) id_screening <- IDs[[d]]
 
     if(control$verbose) print(paste0("Dimension explored: ",d," - CV errors at alpha: ",round(cv_alpha[d],4)))
     if(ncol(var_mat)==1) break
+
+    if(d>3){
+      #if((med_cv_errors[d]/med_cv_errors[d-1]) <= tol) break
+      if((med_cv_errors[d]>+med_cv_errors[d-1])) break
+    }
   }
 
   #---------------------
@@ -179,16 +188,19 @@ swag <- function(x,
   args_caret$y <- NULL
   args_caret$x <- NULL
 
+
   structure(
     list(
       x=x,
       y=y,
       control=control,
       CVs=CVs[1:d],
+      med_cv_errors = med_cv_errors[1:d],
       VarMat=VarMat[1:d],
       cv_alpha=cv_alpha[1:d],
       IDs=IDs[1:d],
       args_caret=args_caret,
+      dim_max = d,
       caret_args_dyn=caret_args_dyn
     ),
     class="swag"
@@ -218,4 +230,23 @@ model_combination <- function(
   }else{
     return(subset(A,select=!id))
   }
+}
+
+
+#' Print gmwm object
+#'
+#' Displays information about GMWM object
+#' @method print swag
+#' @export
+#' @keywords internal
+#' @param x   A \code{swag} object
+#' @param ... Other arguments passed to specific methods
+#' @return Text output via print
+#' @author Gaetan Bakalli
+print.swag = function(x, ...){
+  cat("SWAG information: \n")
+  cat(paste0(" Method: ", x$args_caret$trControl$repeats," times ",
+             x$args_caret$trControl$number," folds cv with ", x$args_caret$method, "\n"))
+
+  cat(paste0(" Maximum number of features: ", x$dim_max))
 }

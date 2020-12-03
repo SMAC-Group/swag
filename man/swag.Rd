@@ -10,6 +10,7 @@ swag(
   control = list(...),
   auto_control = TRUE,
   caret_args_dyn = NULL,
+  post.process = TRUE,
   ...
 )
 }
