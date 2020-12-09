@@ -4,7 +4,14 @@
 \alias{swagControl}
 \title{Control for swag function}
 \usage{
-swagControl(pmax = 3, m = 100, alpha = 0.05, seed = 163L, verbose = FALSE)
+swagControl(
+  pmax = 3,
+  m = 100,
+  alpha = 0.05,
+  seed = 163L,
+  verbose = FALSE,
+  median_stop = TRUE
+)
 }
 \arguments{
 \item{pmax}{A \code{integer} representing the maximum number of attributes per learner.}
@@ -16,6 +23,9 @@ swagControl(pmax = 3, m = 100, alpha = 0.05, seed = 163L, verbose = FALSE)
 \item{seed}{An \code{integer} that controls the reproducibility.}
 
 \item{verbose}{A \code{boolean} for printing current progress of the algorithm.}
+
+\item{median_stop}{If \code{TRUE}, the algorithm stops if no progress is made
+in terms of median prediction error (after exploring a minimum of 3 attributes per learner).}
 }
 \description{
 The Spare Wrapper AlGorithm depends on some meta-parameters that are

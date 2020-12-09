@@ -97,7 +97,7 @@ swag <- function(x,
   n <- dim_x[1]
 
   control <- do.call("swagControl",control)
-  if(isTRUE(auto_control)) control <- auto_swagControl(x,y,control)
+  if(auto_control) control <- auto_swagControl(x,y,control)
 
  # Existence of arguments for `caret::train()`
   # with default values
@@ -127,8 +127,8 @@ swag <- function(x,
   CVs <- vector("list",control$pmax)
   IDs <- vector("list",control$pmax)
   VarMat <- vector("list",control$pmax)
-  cv_alpha <- rep(NA,control$pmax)
-  med_cv_errors = vector("numeric")
+  cv_alpha <- rep(NA_real_,control$pmax)
+  med_cv_errors <- rep(NA_real_,control$pmax)
 
   #---------------------
   ## SWAG
@@ -177,9 +177,8 @@ swag <- function(x,
     if(control$verbose) print(paste0("Dimension explored: ",d," - CV errors at alpha: ",round(cv_alpha[d],4)))
     if(ncol(var_mat)==1) break
 
-    if(d>3){
-      #if((med_cv_errors[d]/med_cv_errors[d-1]) <= tol) break
-      if(med_cv_errors[d]>med_cv_errors[d-1]) break
+    if(d > 3 && control$median_stop){
+      if(med_cv_errors[d] >= med_cv_errors[d-1L]) break
     }
   }
 
