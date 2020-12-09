@@ -99,7 +99,7 @@ swag <- function(x,
   control <- do.call("swagControl",control)
   if(auto_control) control <- auto_swagControl(x,y,control)
 
- # Existence of arguments for `caret::train()`
+  # Existence of arguments for `caret::train()`
   # with default values
   args_caret <- list(...)
   if(is.null(args_caret$method)) args_caret$method = "rf"
