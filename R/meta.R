@@ -2,15 +2,23 @@
 #
 # This file is part of SWAG-R Package
 
-#' @title Method for selecting meta-parameter for \code{swag}
+#' @title Method for selecting meta-parameters for \code{swag} a
 #' @description
 #' @param x A \code{matrix} or \code{data.frame} of attributes
 #' @param y A \code{vector} of binary response variable.
-#' @param space_exp
-#' @param ... Arguments to be passed to \code{\link[caret]{train}} functions (see the details).
+#' @param space_exp A \code{double} representing the percentage of the space of all possible learners of size two to explore.
+#' @param pmax A \code{integer} representing the maximum number of attributes per learner.
+#'  @param caret_args_dyn If not null, a function that can modify arguments for
+#' \code{\link[caret]{train}} dynamically (see the details).
 #' @return
+#' \code{meta_select} returns a \code{list} with the following components:
+#' \tabular{ll}{
+#'    \code{control} \tab the \code{control} that contains the suggested \code{swag} meta-parameters (see \code{\link{swagControl}}) \cr
+#'    \code{max_eta} \tab a \code{vector} containing the \code{swag} maximum expected time of arrival (eta) for each dimension up to \code{pmax} \cr
+#' }
 #' @details
-#' @author Cesare Miglioli
+#' @author Cesare Miglioli and Samuel Orso
+#' @importFrom caret train
 #' @export
 meta_select <- function(x,
                         y,
@@ -19,19 +27,32 @@ meta_select <- function(x,
                         # arguments for `caret::train()`
                         caret_args_dyn = NULL,
                         ...){
-  # check arguments validity
 
-  # This function takes as inputs the feature matrix X, the target y, the desired percentage of model space of size 2 to explore,
+  #---------------------
+  ## Verify the arguments
+  #---------------------
+  if(missing(x)) stop("Please provide a `x`")
+  if(missing(y)) stop("Please provide a response vector `y`")
 
-  # the maximum size of learners features and the type of learner chosen.
+  # Check missing observations (not supported currently)
+  if(sum(is.na(y)) > 0 || sum(is.na(x)) > 0)
+    stop("Please provide data without missing values")
 
+  # is y a factor
+  if(!is.factor(y)) y <- as.factor(y)
 
-  # The output is a matrix with suggested alpha, m (both meta-parameters in swag) and maximal ETA for each dimension up to p_max.
+  # verify y is binary
+  if(nlevels(y)>2) stop("Please provide a binary response `y`")
 
+  ## object dimension
+  # Number of attributes
+  dim_x <- dim(x)
+  if(is.null(dim_x) || length(dim_x) != 2) stop("`x` must be a two-dimensional object")
+  if(dim_x[1] != length(y)) stop("dimensions of `x` and `y` does not match")
 
-  n <- dim(X)[1]
+  n <- dim(x)[1]
 
-  p <- dim(X)[2]
+  p <- dim(x)[2]
 
   ### 1st step --> find m ###
 
@@ -65,58 +86,36 @@ meta_select <- function(x,
   if(is.null(args_caret$tuneGrid)) args_caret$tuneGrid = NULL
   if(is.null(args_caret$tuneLength)) args_caret$tuneLength = ifelse(args_caret$trControl$method == "none", 1, 3)
 
+  # Add `y` to the list of arguments
+  args_caret$y <- y
+
+  # Cesare: I think it will not run without a traincontrol, let's choose one (ask Sam)
   # trctrl <- caret::trainControl(method = "repeatedcv", number = 10, repeats = 1) #10 fold CV repeated 1 times
 
   # FIXME:
-  # * remove caret::
-  # * use pkg microbenchmark
-  # * use `learn <- do.call(train,args_caret)` : args_caret is list of arguments
-  #   and args_caret$x <- as.data.frame(x[,var_mat[,i]])
+  # * remove caret::  --> done
+  # * use pkg microbenchmark  --> done
+  # * use `learn <- do.call(train,args_caret)` : args_caret is list of arguments --> done
+  #   and args_caret$x <- as.data.frame(x[,var_mat[,i]]) --> done
   # for example:
   # sapply(1:pmax, FUN = function(i) {
   #   args_caret$x <- as.data.frame(x[,var_mat[,1L:i]])
   #   do.call(train,args_caret)})
 
+  eta <- sapply(1:pmax, FUN = function(i) {
+       args_caret$x <- as.data.frame(x[,1L:i])
+       mean(microbenchmark(do.call(train,args_caret),times = 5L)$time)})
 
-  metric <- "Accuracy"
-
-  if (method == "glmnet") {
-
-    eta_1 <- system.time(caret::train(y ~ ., data = data.frame(y,X[,1]), method = "glm",family = binomial()))[3]
-
-    # From 2 up to p_max
-
-    eta_2 <- sapply(2:p_max, function(x) system.time(caret::train(y ~., data = data.frame(y,X[,1:x]), method = "glmnet", metric = metric,tuneGrid=tunegrid, trControl=trctrl,family="binomial"))[3])
-
-    eta <- c(eta_1,eta_2)
-
-  } else if (method == "rf") {
-
-    eta <- sapply(1:p_max, function(x) system.time(caret::train(y ~ ., data = data.frame(y,X[,1:x]), method = "rf", metric = metric,tuneGrid=expand.grid(.mtry= 1:sqrt(x)), trControl=trctrl))[3])
-
-  } else if (method == "svmLinear") {
-
-    eta <- sapply(1:p_max, function(x) system.time(caret::train(y ~ ., data = data.frame(y,X[,1:x]), method = "svmLinear", trControl=trctrl, preProcess = c("center", "scale"),tuneLength = tunelength))[3])
-
-  } else if (method == "svmRadial") {
-
-    eta <- sapply(1:p_max, function(x) system.time(caret::train(y ~ ., data = data.frame(y,X[,1:x]), method = "svmRadial", trControl=trctrl, preProcess = c("center", "scale"),tuneLength = tunelength))[3])
-
-  } else {
-
-    print("Choose a valid method")
-  }
 
   # Multiplication of eta and m learners at each dimension
 
-  max_eta <- cumsum(c(p*eta[1],m*eta[2:p_max]))
+  max_eta <- cumsum(c(p*eta[1],m*eta[2:pmax]))
 
   names(max_eta) <- sapply(1:p_max, function(x) paste("Max_ETA_dim_", x, sep = ""))
 
-  # out = structure(list(alpha = alpha,
-  #                      m = m,
-  #                      max_eta = max_eta ))
-  # invisible(out)
+  #---------------------
+  ## Return
+  #---------------------
 
   control <- swagControl(pmax = pmax, m = m, alpha = alpha)
   list(control = control,
