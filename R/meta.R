@@ -89,19 +89,6 @@ meta_select <- function(x,
   # Add `y` to the list of arguments
   args_caret$y <- y
 
-  # Cesare: I think it will not run without a traincontrol, let's choose one (ask Sam)
-  # trctrl <- caret::trainControl(method = "repeatedcv", number = 10, repeats = 1) #10 fold CV repeated 1 times
-
-  # FIXME:
-  # * remove caret::  --> done
-  # * use pkg microbenchmark  --> done
-  # * use `learn <- do.call(train,args_caret)` : args_caret is list of arguments --> done
-  #   and args_caret$x <- as.data.frame(x[,var_mat[,i]]) --> done
-  # for example:
-  # sapply(1:pmax, FUN = function(i) {
-  #   args_caret$x <- as.data.frame(x[,var_mat[,1L:i]])
-  #   do.call(train,args_caret)})
-
   eta <- sapply(1:pmax, FUN = function(i) {
        args_caret$x <- as.data.frame(x[,1L:i])
        mean(microbenchmark(do.call(train,args_caret),times = 5L)$time)})
