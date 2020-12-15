@@ -4,7 +4,7 @@
 
 #' @title Control for swag function
 #'
-#' @description The Spare Wrapper AlGorithm depends on some meta-parameters that are
+#' @description The Sparse Wrapper AlGorithm depends on some meta-parameters that are
 #' described below.
 #' @param pmax A \code{integer} representing the maximum number of attributes per learner.
 #' @param m A \code{integer} representing the maximum number of learners per dimension explored.

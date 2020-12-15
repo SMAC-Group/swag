@@ -2,8 +2,9 @@
 #
 # This file is part of SWAG-R Package
 
-#' @title Method for selecting meta-parameters for \code{swag} a
-#' @description
+#' @title Method for selecting meta-parameters for \code{swag}
+#' @description The Sparse Wrapper AlGorithm depends on some meta-parameters that are
+#'  selected by this function given the learning ingredients described below.
 #' @param x A \code{matrix} or \code{data.frame} of attributes
 #' @param y A \code{vector} of binary response variable.
 #' @param space_exp A \code{double} representing the percentage of the space of all possible learners of size two to explore.
@@ -19,6 +20,7 @@
 #' @details
 #' @author Cesare Miglioli and Samuel Orso
 #' @importFrom caret train
+#' @importFrom microbenchmark microbenchmark
 #' @export
 meta_select <- function(x,
                         y,
