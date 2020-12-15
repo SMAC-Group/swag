@@ -15,17 +15,19 @@
 #' \code{meta_select} returns a \code{list} with the following components:
 #' \tabular{ll}{
 #'    \code{control} \tab the \code{control} that contains the suggested \code{swag} meta-parameters (see \code{\link{swagControl}}) \cr
-#'    \code{max_eta} \tab a \code{vector} containing the \code{swag} maximum expected time of arrival (eta) for each dimension up to \code{pmax} \cr
+#'    \code{max_eta} \tab a \code{vector} containing the \code{swag} maximum expected time of arrival (eta) for each dimension up to \code{pmax}.
+#'    The eta is obtained directly from \code{\link[microbenchmark]{microbenchmark}} function with a default value of 5 repetitions. \cr
 #' }
 #' @details
 #' @author Cesare Miglioli and Samuel Orso
 #' @importFrom caret train
 #' @importFrom microbenchmark microbenchmark
-#' @export
+#' @import caret
+#' @export meta_select
 meta_select <- function(x,
                         y,
-                        space_exp,
-                        pmax,
+                        space_exp = 0.5,
+                        pmax = 3,
                         # arguments for `caret::train()`
                         caret_args_dyn = NULL,
                         ...){
@@ -35,6 +37,9 @@ meta_select <- function(x,
   #---------------------
   if(missing(x)) stop("Please provide a `x`")
   if(missing(y)) stop("Please provide a response vector `y`")
+  if(!is.numeric(space_exp) || space_exp > 1 || space_exp <=0 ) stop("value of 0<`space_exp`<=1")
+  if(!is.numeric(pmax) || pmax <= 0) stop("value of `pmax` > 0")
+
 
   # Check missing observations (not supported currently)
   if(sum(is.na(y)) > 0 || sum(is.na(x)) > 0)
@@ -91,10 +96,13 @@ meta_select <- function(x,
   # Add `y` to the list of arguments
   args_caret$y <- y
 
-  eta <- sapply(1:pmax, FUN = function(i) {
-       args_caret$x <- as.data.frame(x[,1L:i])
-       mean(microbenchmark(do.call(train,args_caret),times = 5L)$time)})
+  # Make a copy
+  if(!missing(caret_args_dyn)) args_caret2 <- args_caret
 
+  eta <- sapply(1:pmax, FUN = function(i) {
+    args_caret$x <- as.data.frame(x[,1L:i])
+    if(!missing(caret_args_dyn)) args_caret <- caret_args_dyn(args_caret2,i) # Modify dynamically arguments for `caret::train`
+    mean(microbenchmark(do.call(train,args_caret),times = 5L)$time)})
 
   # Multiplication of eta and m learners at each dimension
 
