@@ -9,4 +9,4 @@
 ^README.Rmd
 ^\.travis\.yml$
 ^CRAN-RELEASE$
-^R/meta.R
+
