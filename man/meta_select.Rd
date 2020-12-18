@@ -4,7 +4,7 @@
 \alias{meta_select}
 \title{Method for selecting meta-parameters for \code{swag}}
 \usage{
-meta_select(x, y, space_exp = 0.5, pmax = 3, caret_args_dyn = NULL, ...)
+meta_select(x, y, space_exp = 0.5, pmax = 3, caret_args_dyn = NULL)
 }
 \arguments{
 \item{x}{A \code{matrix} or \code{data.frame} of attributes}

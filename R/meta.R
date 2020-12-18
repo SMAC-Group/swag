@@ -46,8 +46,8 @@ meta_select <- function(x,
                         space_exp = 0.5,
                         pmax = 3,
                         # arguments for `caret::train()`
-                        caret_args_dyn = NULL,
-                        ...){
+                        caret_args_dyn = NULL
+                        ){
 
   #---------------------
   ## Verify the arguments
@@ -100,7 +100,7 @@ meta_select <- function(x,
 
   # Existence of arguments for `caret::train()`
   # with default values
-  args_caret <- list(...)
+  args_caret <- list()
   if(is.null(args_caret$method)) args_caret$method = "rf"
   if(is.null(args_caret$preProcess)) args_caret$preProcess = NULL
   if(is.null(args_caret$weights)) args_caret$weights = NULL
