@@ -27,7 +27,8 @@ Depends: R (>= 4.0.0)
 Imports: 
   caret,
   Rdpack (>= 0.7),
-  stats
+  stats,
+  microbenchmark
 Suggests:
   doParallel,
   e1071,

@@ -28,7 +28,7 @@ swagControl(
 in terms of median prediction error (after exploring a minimum of 3 attributes per learner).}
 }
 \description{
-The Spare Wrapper AlGorithm depends on some meta-parameters that are
+The Sparse Wrapper AlGorithm depends on some meta-parameters that are
 described below.
 }
 \seealso{

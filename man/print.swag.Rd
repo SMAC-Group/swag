@@ -15,7 +15,7 @@
 Text output via print
 }
 \description{
-Displays information about GMWM object
+Displays information about swag object
 }
 \author{
 Gaetan Bakalli

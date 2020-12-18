@@ -23,8 +23,8 @@ swag(
 \item{auto_control}{A \code{boolean}, whether some control parameters
 are adjusted depending on \code{x} and \code{y} (see \code{\link{swagControl}}).}
 
-\item{caret_args_dyn}{If not null, a function that can modify arguments for
-\code{\link[caret]{train}} dynamically (see the details).}
+\item{caret_args_dyn}{If not \code{NULL}, a function that can modify arguments for
+\code{\link[caret]{train}} dynamically (see 'Details').}
 
 \item{...}{Arguments to be passed to \code{\link[caret]{train}} functions (see the details).}
 }
