@@ -55,7 +55,7 @@ meta_select <- function(x,
   # Number of attributes
   dim_x <- dim(x)
   if(is.null(dim_x) || length(dim_x) != 2) stop("`x` must be a two-dimensional object")
-  if(dim_x[1] != length(y)) stop("dimensions of `x` and `y` does not match")
+  if(dim_x[1] != length(y)) stop("dimensions of `x` and `y` do not match")
 
   n <- dim(x)[1]
 
@@ -97,11 +97,11 @@ meta_select <- function(x,
   args_caret$y <- y
 
   # Make a copy
-  if(!missing(caret_args_dyn)) args_caret2 <- args_caret
+  if(!is.null(caret_args_dyn)) args_caret2 <- args_caret
 
   eta <- sapply(1:pmax, FUN = function(i) {
     args_caret$x <- as.data.frame(x[,1L:i])
-    if(!missing(caret_args_dyn)) args_caret <- caret_args_dyn(args_caret2,i) # Modify dynamically arguments for `caret::train`
+    if(!is.null(caret_args_dyn)) args_caret <- caret_args_dyn(args_caret2,i) # Modify dynamically arguments for `caret::train`
     mean(microbenchmark(do.call(train,args_caret),times = 5L)$time)})
 
   # Multiplication of eta and m learners at each dimension

@@ -236,7 +236,7 @@ model_combination <- function(
 
 #' Print swag object
 #'
-#' Displays information about GMWM object
+#' Displays information about swag object
 #' @method print swag
 #' @export
 #' @keywords internal
