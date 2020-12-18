@@ -13,8 +13,8 @@
 #' @param control see \code{\link{swagControl}}
 #' @param auto_control A \code{boolean}, whether some control parameters
 #' are adjusted depending on \code{x} and \code{y} (see \code{\link{swagControl}}).
-#' @param caret_args_dyn If not null, a function that can modify arguments for
-#' \code{\link[caret]{train}} dynamically (see the details).
+#' @param caret_args_dyn If not \code{NULL}, a function that can modify arguments for
+#' \code{\link[caret]{train}} dynamically (see 'Details').
 #' @param ... Arguments to be passed to \code{\link[caret]{train}} functions (see the details).
 #' @return
 #' \code{swag} returns an object of class "\code{swag}". It is a \code{list}
@@ -115,7 +115,7 @@ swag <- function(x,
   args_caret$y <- y
 
   # Make a copy
-  if(!missing(caret_args_dyn)) args_caret2 <- args_caret
+  if(!is.null(caret_args_dyn)) args_caret2 <- args_caret
   #---------------------
   ## General parameters
   #---------------------
@@ -149,7 +149,7 @@ swag <- function(x,
     }
 
     # Modify dynamically arguments for `caret::train`
-    if(!missing(caret_args_dyn)) args_caret <- caret_args_dyn(args_caret2,d)
+    if(!is.null(caret_args_dyn)) args_caret <- caret_args_dyn(args_caret2,d)
 
     # Compute CV errors
     cv_errors <- rep(NA,ncol(var_mat))
