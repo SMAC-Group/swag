@@ -122,7 +122,7 @@ meta_select <- function(x,
   eta <- sapply(1:pmax, FUN = function(i) {
     args_caret$x <- as.data.frame(x[,1L:i])
     if(!is.null(caret_args_dyn)) args_caret <- caret_args_dyn(args_caret2,i) # Modify dynamically arguments for `caret::train`
-    mean(microbenchmark(do.call(train,args_caret),times = 5L)$time)})
+    print(microbenchmark(do.call(train,args_caret),times = 5L,unit = "s"))$mean})
 
   # Multiplication of eta and m learners at each dimension
 
