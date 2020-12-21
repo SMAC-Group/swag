@@ -11,6 +11,7 @@
 #' @param pmax A \code{integer} representing the maximum number of attributes per learner.
 #' @param caret_args_dyn If not \code{NULL}, a function that can modify arguments for
 #' \code{\link[caret]{train}} dynamically (see 'Details').
+#' @param ... Arguments to be passed to \code{\link[caret]{train}} functions (see the details).
 #' @return
 #' \code{meta_select} returns a \code{list} with the following components:
 #' \tabular{ll}{
@@ -43,11 +44,11 @@
 #' @export meta_select
 meta_select <- function(x,
                         y,
-                        space_exp = 0.5,
+                        space_exp = 0.1,
                         pmax = 3,
                         # arguments for `caret::train()`
-                        caret_args_dyn = NULL
-                        ){
+                        caret_args_dyn = NULL,
+                        ...){
 
   #---------------------
   ## Verify the arguments
@@ -96,11 +97,13 @@ meta_select <- function(x,
 
   alpha <- p_star/p
 
+  m <- pmax*m #linear approx. of increasing model complexity
+
   ### 3rd step --> find the maximal ETA for each dimension up to pmax ###
 
-  # Existence of arguments for `caret::train()`
-  # with default values
-  args_caret <- list()
+  # Existence of arguments for `caret::train()` with default values
+
+  args_caret <- list(...)
   if(is.null(args_caret$method)) args_caret$method = "rf"
   if(is.null(args_caret$preProcess)) args_caret$preProcess = NULL
   if(is.null(args_caret$weights)) args_caret$weights = NULL

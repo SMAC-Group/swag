@@ -4,7 +4,7 @@
 \alias{meta_select}
 \title{Method for selecting meta-parameters for \code{swag}}
 \usage{
-meta_select(x, y, space_exp = 0.5, pmax = 3, caret_args_dyn = NULL)
+meta_select(x, y, space_exp = 0.1, pmax = 3, caret_args_dyn = NULL, ...)
 }
 \arguments{
 \item{x}{A \code{matrix} or \code{data.frame} of attributes}
@@ -17,6 +17,8 @@ meta_select(x, y, space_exp = 0.5, pmax = 3, caret_args_dyn = NULL)
 
 \item{caret_args_dyn}{If not \code{NULL}, a function that can modify arguments for
 \code{\link[caret]{train}} dynamically (see 'Details').}
+
+\item{...}{Arguments to be passed to \code{\link[caret]{train}} functions (see the details).}
 }
 \value{
 \code{meta_select} returns a \code{list} with the following components:
