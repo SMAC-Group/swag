@@ -8,7 +8,7 @@ swag(
   x,
   y,
   control = swagControl(),
-  auto_control = TRUE,
+  auto_control = T,
   caret_args_dyn = NULL,
   ...
 )
