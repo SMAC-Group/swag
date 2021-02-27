@@ -217,7 +217,7 @@ swag <- function(x,
 
 
       if(procedure == "reg"){
-        cv_errors[i] <- max(learn$results$RMSE)
+        cv_errors[i] <- min(learn$results$RMSE)
 
       }else if(procedure == "class"){
         cv_errors[i] <- 0.1e1 - max(learn$results$Accuracy)
