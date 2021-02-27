@@ -2,6 +2,33 @@
 #
 # This file is part of SWAG-R Package
 
+# build all possible combinations
+model_combination <- function(
+  id_screening,
+  var_mat
+){
+  # Generate all combinations of var_mat and id_screening
+  A <- rbind(
+    matrix(rep(var_mat,length(id_screening)),nrow=nrow(var_mat)),
+    rep(id_screening,each=ncol(var_mat))
+  )
+
+  # Remove duplicates:
+  # remove same model
+  A <- unique(apply(A,2,sort), MARGIN = 2)
+
+  # remove same attributes
+  id <- apply(A,2,anyDuplicated)>0
+  if(sum(id)==0){
+    return(A)
+  }else{
+    return(subset(A,select=!id))
+  }
+}
+
+
+
+
 #' @title Spare Wrapper AlGorithm (swag)
 #'
 #' @description \code{swag} is used to trains a meta-learning procedure that combines
@@ -63,10 +90,37 @@
 swag <- function(x,
                  y,
                  control = swagControl(),
-                 auto_control = TRUE,
+                 auto_control = T,
                  # arguments for `caret::train()`
                  caret_args_dyn = NULL,
                  ...){
+
+
+  # Existence of arguments for `caret::train()`
+  # with default values
+  args_caret <- list(...)
+
+
+  # default learner rf
+  if(is.null(args_caret$method)) args_caret$method = "rf"
+  if(is.null(args_caret$preProcess)) args_caret$preProcess = NULL
+  if(is.null(args_caret$weights)) args_caret$weights = NULL
+
+  # stop if no metric provided
+  if(is.null(args_caret$metric)) stop("Please provide a loss metric for your problem. Supported loss functions are RMSE or Accuracy")
+
+  # define if max loss function based on loss
+  if(is.null(args_caret$maximize)) args_caret$maximize = ifelse(args_caret$metric %in% c("RMSE", "logLoss", "MAE"), FALSE, TRUE)
+  if(is.null(args_caret$trControl)) args_caret$trControl = trainControl()
+  if(is.null(args_caret$tuneGrid)) args_caret$tuneGrid = NULL
+  if(is.null(args_caret$tuneLength)) args_caret$tuneLength = ifelse(args_caret$trControl$method == "none", 1, 3)
+
+  # define procedure
+  if(args_caret$metric == "RMSE"){
+    procedure = "reg"
+  }else if(args_caret$metric == "Accuracy"){
+    procedure = "class"
+  }
 
   #---------------------
   ## Verify the arguments
@@ -75,14 +129,19 @@ swag <- function(x,
   if(missing(y)) stop("Please provide a response vector `y`")
 
   # Check missing observations (not supported currently)
-  if(sum(is.na(y)) > 0 || sum(is.na(x)) > 0)
-    stop("Please provide data without missing values")
+  if(sum(is.na(y)) > 0 || sum(is.na(x)) > 0){    stop("Please provide data without missing values")}
 
-  # is y a factor
-  if(!is.factor(y)) y <- as.factor(y)
+  # transform y to factor if class task
+  if(procedure == "class"){
+    if(!is.factor(y)) y <- as.factor(y)
+
+  }
 
   # verify y is binary
-  if(nlevels(y)>2) stop("Please provide a binary response `y`")
+  if(procedure == "class"){
+    if(nlevels(y)>2) stop("Please provide a binary response `y`")
+  }
+
 
   ## object dimension
   # Number of attributes
@@ -92,28 +151,21 @@ swag <- function(x,
   p <- dim_x[2]
   n <- dim_x[1]
 
-  if(class(control) != "swagControl")
+  if(class(control) != "swagControl"){
     stop("`control` must be of class `swagControl`")
+  }
 
-  if(isTRUE(auto_control)) control <- auto_swagControl(x,y,control)
+  # define swag control if auto
+  if(isTRUE(auto_control)) control <- auto_swagControl(x,y,control, procedure)
 
- # Existence of arguments for `caret::train()`
-  # with default values
-  args_caret <- list(...)
-  if(is.null(args_caret$method)) args_caret$method = "rf"
-  if(is.null(args_caret$preProcess)) args_caret$preProcess = NULL
-  if(is.null(args_caret$weights)) args_caret$weights = NULL
-  if(is.null(args_caret$metric)) args_caret$metric = ifelse(is.factor(y), "Accuracy", "RMSE")
-  if(is.null(args_caret$maximize)) args_caret$maximize = ifelse(args_caret$metric %in% c("RMSE", "logLoss", "MAE"), FALSE, TRUE)
-  if(is.null(args_caret$trControl)) args_caret$trControl = trainControl()
-  if(is.null(args_caret$tuneGrid)) args_caret$tuneGrid = NULL
-  if(is.null(args_caret$tuneLength)) args_caret$tuneLength = ifelse(args_caret$trControl$method == "none", 1, 3)
+
 
   # Add `y` to the list of arguments
   args_caret$y <- y
 
   # Make a copy
   if(!missing(caret_args_dyn)) args_caret2 <- args_caret
+
   #---------------------
   ## General parameters
   #---------------------
@@ -130,7 +182,9 @@ swag <- function(x,
   #---------------------
   ## SWAG
   #---------------------
+  # explore d dimension
   for(d in seq_len(control$pmax)){
+
     # Build all combinations
     if(d == 1){
       var_mat <- seq_len(p)
@@ -151,6 +205,7 @@ swag <- function(x,
     # Compute CV errors
     cv_errors <- rep(NA,ncol(var_mat))
     for(i in seq_len(ncol(var_mat))){
+
       # select the variable
       args_caret$x <- as.data.frame(x[,var_mat[,i]])
 
@@ -159,7 +214,15 @@ swag <- function(x,
       learn <- do.call(train,args_caret)
 
       # save performance
-      cv_errors[i] <- 0.1e1 - max(learn$results$Accuracy)
+
+
+      if(procedure == "reg"){
+        cv_errors[i] <- max(learn$results$RMSE)
+
+      }else if(procedure == "class"){
+        cv_errors[i] <- 0.1e1 - max(learn$results$Accuracy)
+
+      }
     }
 
     # Store results
@@ -195,29 +258,4 @@ swag <- function(x,
     ),
     class="swag"
   )
-}
-
-
-# build all possible combinations
-model_combination <- function(
-  id_screening,
-  var_mat
-){
-  # Generate all combinations of var_mat and id_screening
-  A <- rbind(
-    matrix(rep(var_mat,length(id_screening)),nrow=nrow(var_mat)),
-    rep(id_screening,each=ncol(var_mat))
-  )
-
-  # Remove duplicates:
-  # remove same model
-  A <- unique(apply(A,2,sort), MARGIN = 2)
-
-  # remove same attributes
-  id <- apply(A,2,anyDuplicated)>0
-  if(sum(id)==0){
-    return(A)
-  }else{
-    return(subset(A,select=!id))
-  }
 }

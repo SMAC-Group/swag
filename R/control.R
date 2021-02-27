@@ -31,24 +31,35 @@ swagControl <- function(
 auto_swagControl <- function(
   x,
   y,
-  control
+  control,
+  procedure = "class"
 ){
-  n <- dim(x)
+  if(!procedure %in% c("class", "reg")){stop("Please provide a procedure for your problem. Supported procedure are class and reg")}
 
-  # Data-dependent `pmax`: corresponds to approximatively
-  # an EPV of 5
-  event <- table(y)
-  pmax <- ceiling(min(event[1],n[1]-event[2])/5)
+  if(procedure == "class"){
+    n <- dim(x)
 
-  # At minima explore 3 attributes
-  if(pmax == 1) pmax <- 3
+    # Data-dependent `pmax`: corresponds to approximatively
+    # an EPV of 5
+    event <- table(y)
+    pmax <- ceiling(min(event[1],n[1]-event[2])/5)
 
-  # But do not exceed p
-  if(pmax > n[2]) pmax <- n[2]
+    # At minima explore 3 attributes
+    if(pmax == 1) pmax <- 3
 
-  # Define `m` such that all learners of two attributes
-  # are explored.
-  m <- choose(ceiling(control$alpha * n[2]), 2)
+    # But do not exceed p
+    if(pmax > n[2]) pmax <- n[2]
 
-  swagControl(pmax,m,control$alpha,control$seed,control$verbose)
+    # Define `m` such that all learners of two attributes
+    # are explored.
+    m <- choose(ceiling(control$alpha * n[2]), 2)
+
+    return(swagControl(pmax,m,control$alpha,control$seed,control$verbose))
+
+  }
+  else if(procedure == "reg"){
+    return(swagControl(control$pmax, control$m,control$alpha,control$seed,control$verbose))
+  }
+
+
 }
