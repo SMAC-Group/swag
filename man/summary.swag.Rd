@@ -21,5 +21,5 @@
 return a formatted output of a \code{swag} object based on some model selection rules to be specified.
 }
 \author{
-Gaetan Bakalli and Lionel Voirol
+Gaetan Bakalli, Samuel Orso, Cesare Miglioli and Lionel Voirol
 }

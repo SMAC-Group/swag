@@ -5,7 +5,7 @@
 #' @param swag_obj A \code{swag_obj}.
 #' @param min_dim_method A \code{string} that specify the method to identify the dimension on which to compute the quantile to set the minimal CV to select model.
 #' @param min_dim_min_cv_error_quantile The quantile of CV error in the selected dimension to specify the minimum CV value for selected models.
-#' @author Gaetan Bakalli and Lionel Voirol
+#' @author Gaetan Bakalli, Samuel Orso, Cesare Miglioli and Lionel Voirol
 #' @export
 #' @method  summary swag
 #' @export
