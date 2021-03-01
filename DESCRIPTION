@@ -26,6 +26,7 @@ LazyData: false
 Depends: R (>= 4.0.0)
 Imports: 
   caret,
+  lattice,
   Rdpack (>= 0.7),
   stats
 Suggests:
