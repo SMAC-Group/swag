@@ -10,6 +10,7 @@ swag(
   control = swagControl(),
   auto_control = T,
   caret_args_dyn = NULL,
+  metric = NULL,
   ...
 )
 }
@@ -25,6 +26,8 @@ are adjusted depending on \code{x} and \code{y} (see \code{\link{swagControl}}).
 
 \item{caret_args_dyn}{If not null, a function that can modify arguments for
 \code{\link[caret]{train}} dynamically (see the details).}
+
+\item{metric}{A \code{string} that indicates the measure of predictive performance to be used. Supported measure are RMSE and Accuracy.}
 
 \item{...}{Arguments to be passed to \code{\link[caret]{train}} functions (see the details).}
 }

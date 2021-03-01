@@ -42,6 +42,7 @@ model_combination <- function(
 #' are adjusted depending on \code{x} and \code{y} (see \code{\link{swagControl}}).
 #' @param caret_args_dyn If not null, a function that can modify arguments for
 #' \code{\link[caret]{train}} dynamically (see the details).
+#' @param metric A \code{string} that indicates the measure of predictive performance to be used. Supported measure are RMSE and Accuracy.
 #' @param ... Arguments to be passed to \code{\link[caret]{train}} functions (see the details).
 #' @return
 #' \code{swag} returns an object of class "\code{swag}". It is a \code{list}
@@ -93,6 +94,7 @@ swag <- function(x,
                  auto_control = T,
                  # arguments for `caret::train()`
                  caret_args_dyn = NULL,
+                 metric = NULL,
                  ...){
 
 
@@ -100,9 +102,14 @@ swag <- function(x,
   # with default values
   args_caret <- list(...)
 
+  # append metric to args caret
+  args_caret[["metric"]] = metric
+
 
   # default learner rf
   if(is.null(args_caret$method)) args_caret$method = "rf"
+
+  # default arg for args_caret
   if(is.null(args_caret$preProcess)) args_caret$preProcess = NULL
   if(is.null(args_caret$weights)) args_caret$weights = NULL
 
@@ -193,7 +200,7 @@ swag <- function(x,
       var_mat <- model_combination(id_screening,subset(VarMat[[d-1L]],select=IDs[[d-1]]))
     }
 
-    # Reduce number of model if exceeding `m`
+    # Reduce number of model if exceeding `m` and if dimension is greater than 1
     if(d>1 && ncol(var_mat)>control$m){
       set.seed(graine[d]-1)
       var_mat <- var_mat[,sample.int(ncol(var_mat),control$m)]
@@ -213,7 +220,7 @@ swag <- function(x,
       set.seed(graine[1]+i)
       learn <- do.call(train,args_caret)
 
-      # save performance
+      # save performance of best model
 
 
       if(procedure == "reg"){

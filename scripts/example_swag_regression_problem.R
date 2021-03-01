@@ -3,9 +3,12 @@
 # clean ws
 rm(list=ls())
 
+# library
+source("R/control.R")
+library(swag)
+
 # load data
 data("BostonHousing", package = "mlbench")
-source("R/control.R")
 
 # inspect str
 str(BostonHousing)
@@ -27,7 +30,7 @@ results_swag_continuous_y = swag(x = x_train,
      y = y_train,
      control =  swag_con,
      trControl = caret::trainControl(method = "repeatedcv", number = 10, repeats = 1, allowParallel = F),
-     metric = "RMSE" , # "Accuracy"
+     metric = "RMSE",
      method = "lm"  # Use method = "svmRadial" to train this alternative learner
      )
 
