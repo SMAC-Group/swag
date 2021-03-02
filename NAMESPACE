@@ -2,6 +2,7 @@
 
 S3method(predict,swag)
 S3method(summary,swag)
+export(return_lm_beta_selected_models)
 export(swag)
 export(swagControl)
 import(caret)

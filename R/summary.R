@@ -1,7 +1,10 @@
 # Copyright (C) 2020 Gaetan Bakalli, Samuel Orso, Cesare Miglioli and Lionel Voirol
 
 #' @title Summary method for SWAG
-#' @description return a formatted output of a \code{swag} object based on some model selection rules to be specified.
+#' @description Method `summary` that returns the number and proportion of appearance of each variables on a subset of selected model.
+#' The selection procedure of models proceed in two steps. First we select an explored dimension in which the `mean`, `min` or `median` is the lowest.
+#'  We then compute the selected percentile of the CV error on this dimension.
+#'  We then select all models in all explored dimensions that have a lower CV error than the CV value set by this two-steps procedure.
 #' @param object A \code{object}.
 #' @param min_dim_method A \code{string} that specify the method to identify the dimension on which to compute the quantile to set the minimal CV to select model.
 #' @param min_dim_min_cv_error_quantile The quantile of CV error in the selected dimension to specify the minimum CV value for selected models.
@@ -71,6 +74,7 @@
   # set name to table_prop
   names(table_prop) <- variable_name
 
+  # order table prop
   table_prop <- sort(table_prop, decreasing = T)
 
   # return out
