@@ -57,14 +57,15 @@ return_lm_beta_selected_models <- function(swag_summary) {
         # save fit coefficients
         beta_models_df[model_index, names(fit$coefficients)] <- coeff_lm
 
-        # reorder based on table of model
-        beta_models_df <- beta_models_df[, names(swag_summary$variable_table_prop)]
-
         # update model index
         model_index <- model_index + 1
       }
     }
   }
+
+  # reorder based on table of model
+  beta_models_df <- beta_models_df[, names(swag_summary$variable_table_prop)]
+
   out <- structure(list(
     beta_models_df = beta_models_df,
     swag_summary = swag_summary
