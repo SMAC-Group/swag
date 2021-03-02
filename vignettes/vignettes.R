@@ -42,7 +42,7 @@ x_train <-x[-ind,]
 ## install.packages("caret")
 library(caret)
 
-## ----control-swag, eval=T-----------------------------------------------------
+## ----control-swag, eval=T, cache = T------------------------------------------
 # Meta-parameters chosen for the breast cancer dataset
 swagcon <- swagControl(pmax = 4L, 
                        alpha = 0.5, 
@@ -56,7 +56,7 @@ swagcon <- swagControl(pmax = 4L,
 ## ---- eval=FALSE, message=FALSE,warning=FALSE,echo=FALSE----------------------
 #  library(caret) # swag is build around caret and uses it to train each learner
 
-## ----SVM, eval=TRUE, warning=FALSE,message=FALSE------------------------------
+## ----SVM, eval=TRUE, warning=FALSE,message=FALSE, cache = T-------------------
 ## SVM Linear Learner
 ## `kernlab` is needed
 ## if not installed, install.packages("kernlab")
@@ -88,7 +88,7 @@ train_swag_svml$cv_alpha
 
 # The cut-off cv training error, at each dimension, determined by the choice of alpha
 
-## ----lasso, eval=TRUE---------------------------------------------------------
+## ----lasso, eval=TRUE, cache =T-----------------------------------------------
 ## Lasso Learner
 ## `glmnet` is needed
 ## if not installed, install.packages("glmnet")
@@ -114,7 +114,7 @@ train_swag_lasso <- swag(
   }
 )
 
-## ----random-forest, eval=TRUE-------------------------------------------------
+## ----random-forest, eval=TRUE, cache = T--------------------------------------
 ## Random Forest Learner
 ## `randomForest` is needed
 ## if not installed, install.packages("randomForest")

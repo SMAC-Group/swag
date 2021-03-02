@@ -5,17 +5,20 @@
 \title{Summary method for SWAG}
 \usage{
 \method{summary}{swag}(
-  swag_obj,
+  object,
   min_dim_method = "median",
-  min_dim_min_cv_error_quantile = 0.01
+  min_dim_min_cv_error_quantile = 0.01,
+  ...
 )
 }
 \arguments{
-\item{swag_obj}{A \code{swag_obj}.}
+\item{object}{A \code{object}.}
 
 \item{min_dim_method}{A \code{string} that specify the method to identify the dimension on which to compute the quantile to set the minimal CV to select model.}
 
 \item{min_dim_min_cv_error_quantile}{The quantile of CV error in the selected dimension to specify the minimum CV value for selected models.}
+
+\item{...}{additional arguments affecting the summary produced.}
 }
 \description{
 return a formatted output of a \code{swag} object based on some model selection rules to be specified.
