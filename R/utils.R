@@ -9,6 +9,7 @@
 #' @importFrom stats lm
 #' @export
 return_lm_beta_selected_models <- function(swag_summary) {
+  swag_summary <- summary(results_4_interactions_alpha_05)
 
   # stop if not object summary.swag
   if (class(swag_summary) != "summary.swag") {
@@ -26,17 +27,25 @@ return_lm_beta_selected_models <- function(swag_summary) {
   model_index <- 1
   # iterate over all dimensions
   for (dim_i in seq(max_dim_explored)) {
-
     # if selected model in this dimension
     if (length(swag_summary$model_select[[dim_i]]) != 0) {
 
-      nbr_model <- dim(swag_summary$model_select[[dim_i]])[2]
-
+      # define nbr of model differently if only one or multiple selected models for that dimension
+      if (is.vector(swag_summary$model_select[[dim_i]])) {
+        nbr_model <- 1
+      } else if (is.matrix(swag_summary$model_select[[dim_i]])) {
+        nbr_model <- dim(swag_summary$model_select[[dim_i]])[2]
+      }
       # iterate over selected model in this dimension
       for (model_i_dim_i in seq(nbr_model)) {
 
+        # define selected variables differently if only one or multiple selected models for that dimension
+        if (nbr_model == 1) {
+          selected_variables <- swag_summary$model_select[[dim_i]]
+        } else {
+          selected_variables <- swag_summary$model_select[[dim_i]][, model_i_dim_i]
+        }
         # get selected variables in the model
-        selected_variables <- swag_summary$model_select[[dim_i]][, model_i_dim_i]
         x_mat <- as.matrix(swag_summary$x[, selected_variables])
         df_model_i <- cbind(swag_summary$y, x_mat)
 
@@ -48,6 +57,9 @@ return_lm_beta_selected_models <- function(swag_summary) {
 
         # save fit coefficients
         beta_models_df[model_index, names(fit$coefficients)] <- coeff_lm
+
+        # reorder based on table of model
+        beta_models_df <- beta_models_df[, names(swag_summary$variable_table_prop)]
 
         # update model index
         model_index <- model_index + 1

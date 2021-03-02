@@ -19,6 +19,8 @@
                            min_dim_min_cv_error_quantile = 0.01,
                            ...){
 
+
+
   # check for object class
   if(class(object) != "swag"){stop("Please provide a swag object")}
 
