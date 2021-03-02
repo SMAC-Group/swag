@@ -6,6 +6,7 @@
 #' and where each row are the estimated coefficients from a selected models using the classical lm procedure.
 #' @param swag_summary A \code{swag_summary} object.
 #' @author Gaetan Bakalli, Samuel Orso, Cesare Miglioli and Lionel Voirol
+#' @importFrom stats lm
 #' @export
 return_lm_beta_selected_models <- function(swag_summary) {
 
