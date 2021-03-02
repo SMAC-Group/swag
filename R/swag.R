@@ -84,6 +84,7 @@ model_combination <- function(
 #' @importFrom caret trainControl
 #' @importFrom stats quantile
 #' @importFrom Rdpack reprompt
+#' @import lattice
 #' @import caret
 #' @references
 #' \insertAllCited{}
@@ -163,7 +164,7 @@ swag <- function(x,
   }
 
   # define swag control if auto
-  if(isTRUE(auto_control)) control <- auto_swagControl(x,y,control, procedure)
+  if(isTRUE(auto_control)) control <- auto_swagControl(x = x,y = y, control = control, procedure = procedure)
 
 
 

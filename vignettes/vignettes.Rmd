@@ -85,7 +85,7 @@ library(caret)
 
 The first step is to fix the meta-parameters of the **swag** procedures: $p_{max}$, $\alpha$ and $m$. As the name suggests, $p_{max}$ is the maximum dimension of attributes that the user wants to be input in a generic $\mathcal{L}(\mathbf{y}, \mathbf{X})$. Based on this parameter, the *swag* aims at exploring the space of attributes in order to find sets of learners using $\hat{p}$ attributes ($1 \leq \hat{p} \leq p_{\text{max}}$) with extremely high predictive power. To do so, the algorithm makes use of the step-wise screening procedure described briefly in the introduction. Another key element is $\alpha$: a performance quantile which represents the percentage of learners which are selected at each dimension $1 \leq \hat{p} \leq p_{max}$. Finally we need to choose $m$ which represent the maximum numbers of learners which will be trained at each dimension $\hat{p} > 1$ (i.e. we train all $p$ learners of dimension $1$). We can fix all these meta-parameters, together with a seed for replicability purposes and `verbose = TRUE` to get a message as each dimension is completed, thanks to the *swagcontrol()* function which behaves similarly to the `trControl = ` argument of **caret**.  
 
-```{r control-swag, eval=T}
+```{r control-swag, eval=T, cache = T}
 # Meta-parameters chosen for the breast cancer dataset
 swagcon <- swagControl(pmax = 4L, 
                        alpha = 0.5, 
@@ -112,7 +112,7 @@ library(caret) # swag is build around caret and uses it to train each learner
 ```
 
 
-```{r SVM, eval=TRUE, warning=FALSE,message=FALSE}
+```{r SVM, eval=TRUE, warning=FALSE,message=FALSE, cache = T}
 ## SVM Linear Learner
 ## `kernlab` is needed
 ## if not installed, install.packages("kernlab")
@@ -154,7 +154,7 @@ train_swag_svml$cv_alpha
 
 The other two learners that we have carefully implemented on **swag** are: lasso (**glmnet** package required) and random forest (**party** package required). The training phase for these learners, differs a little with respect to the svm one. We start looking at the lasso:
 
-```{r lasso, eval=TRUE}
+```{r lasso, eval=TRUE, cache =T}
 ## Lasso Learner
 ## `glmnet` is needed
 ## if not installed, install.packages("glmnet")
@@ -184,7 +184,7 @@ train_swag_lasso <- swag(
 The newly introduced argument `caret_args_dyn` enables the user to modify the hyper-parameters related to a given learner in a dynamic way since they can change as the dimension $\hat{p}$ grows up to the desired $p_{max}$. In the case of lasso, `caret_args_dyn =` clarifies that if we are training unitary $\mathcal{L}(\mathbf{y}, \mathbf{x}_{i})$  (i.e. learners with a unique attribute $\mathbf{x}_{i} \; \forall \;i \in \mathcal{S}$ ) then we will use a logistic regression (i.e. an un-penalized learner). This modification is in fact due to the implementation of the lasso in **glmnet** package as one attribute is not accepted (see this [discussion](https://stackoverflow.com/questions/29231123/why-cant-pass-only-1-coulmn-to-glmnet-when-it-is-possible-in-glm-function-in-r/59414707#59414707)). On the other hand, for the random forest case, we would ideally want to adapt the *mtry* hyper-parameter as the dimension grows. In the example below, we fix $mtry = \sqrt{\hat{p}}$ as it is usually done in practice.  
 
 
-```{r random-forest, eval=TRUE}
+```{r random-forest, eval=TRUE, cache = T}
 ## Random Forest Learner
 ## `randomForest` is needed
 ## if not installed, install.packages("randomForest")

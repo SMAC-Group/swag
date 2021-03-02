@@ -25,8 +25,8 @@ Encoding: UTF-8
 LazyData: false
 Depends: R (>= 4.0.0)
 Imports: 
-  lattice,
   caret,
+  lattice,
   Rdpack (>= 0.7),
   stats
 Suggests:
@@ -39,6 +39,7 @@ Suggests:
   iterators,
   kernlab,
   knitr,
+  lattice,
   methods,
   mlbench,
   ModelMetrics,
