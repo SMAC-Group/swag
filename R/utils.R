@@ -9,7 +9,6 @@
 #' @importFrom stats lm
 #' @export
 return_lm_beta_selected_models <- function(swag_summary) {
-  swag_summary <- summary(results_4_interactions_alpha_05)
 
   # stop if not object summary.swag
   if (class(swag_summary) != "summary.swag") {
