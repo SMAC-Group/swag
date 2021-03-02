@@ -75,7 +75,11 @@
                        variable_table = table_variable,
                        variable_table_prop = table_prop,
                        variable_index = variable_index,
-                       variable_name = variable_name
-                       ))
+                       variable_name = variable_name,
+                       x = swag_obj$x,
+                       y = swag_obj$y
+                       ),
+                  class="summary.swag"
+  )
   out
 }
