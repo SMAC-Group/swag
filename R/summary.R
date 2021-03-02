@@ -47,7 +47,7 @@
   index_model_select <- vector("list",dmax)
   for(i in dim_model){
     # save in these dimensions
-    index_model_select[[i]] = which(((CVs[[dim_model[i]]] <= quantile_value)))
+    index_model_select[[i]]  <- which(((CVs[[dim_model[i]]] <= quantile_value)))
   }
 
   n_models_selected = length(unlist(index_model_select))
@@ -74,14 +74,14 @@
   table_prop <- sort(table_prop, decreasing = T)
 
   # return out
-  out = structure(list(model_select = var_mat_select_list,
+  out <- structure(list(model_select = var_mat_select_list,
                        n_models_selected = n_models_selected,
                        variable_table = table_variable,
                        variable_table_prop = table_prop,
                        variable_index = variable_index,
                        variable_name = variable_name,
-                       x = swag_obj$x,
-                       y = swag_obj$y
+                       x = object$x,
+                       y = object$y
                        ),
                   class="summary.swag"
   )
