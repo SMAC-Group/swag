@@ -4,7 +4,14 @@
 \alias{swagControl}
 \title{Control for swag function}
 \usage{
-swagControl(pmax = 3, m = 100, alpha = 0.05, seed = 163L, verbose = FALSE)
+swagControl(
+  pmax = 3,
+  m = 100,
+  alpha = 0.05,
+  seed = 163L,
+  verbose = FALSE,
+  verbose_dim_1 = FALSE
+)
 }
 \arguments{
 \item{pmax}{A \code{integer} representing the maximum number of attributes per learner.}
