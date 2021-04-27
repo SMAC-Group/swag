@@ -231,6 +231,14 @@ swag <- function(x,
         cv_errors[i] <- 0.1e1 - max(learn$results$Accuracy)
 
       }
+
+      # print variable for first dimension
+      if(d == 1 && control$verbose_dim_1){
+        print(paste("Dimension 1: completed variable:", i))
+      }
+
+
+
     }
 
     # Store results
