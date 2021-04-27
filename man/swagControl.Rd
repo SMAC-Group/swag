@@ -23,6 +23,8 @@ swagControl(
 \item{seed}{An \code{integer} that controls the reproducibility.}
 
 \item{verbose}{A \code{boolean} for printing current progress of the algorithm.}
+
+\item{verbose_dim_1}{A \code{boolean} for printing the variable explored in the first screening.}
 }
 \description{
 The Spare Wrapper AlGorithm depends on some meta-parameters that are

@@ -11,6 +11,7 @@
 #' @param alpha A \code{double} representing the proportion of screening.
 #' @param seed  An \code{integer} that controls the reproducibility.
 #' @param verbose A \code{boolean} for printing current progress of the algorithm.
+#' @param verbose_dim_1 A \code{boolean} for printing the variable explored in the first screening.
 #' @seealso \code{\link[swag]{swag}}
 #' @export swagControl
 swagControl <- function(
