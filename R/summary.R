@@ -26,6 +26,9 @@
     stop("Please provide a swag object")
   }
 
+
+
+
   # define CV and varmat
   CVs <- object$CVs
   VarMat <- object$VarMat
@@ -80,6 +83,9 @@
 
   # order table prop
   table_prop <- sort(table_prop, decreasing = T)
+
+  # get the procedure, classification or regression
+
 
   # return out
   out <- structure(list(
