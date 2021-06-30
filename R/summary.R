@@ -68,6 +68,12 @@
     var_mat_select_list[[d]] <- VarMat[[dim_model[d]]][, index_model_select[[d]]]
   }
 
+  cv_selected_model = vector("list", dmax)
+  for (d in dim_model) {
+    cv_selected_model[[d]] <- CVs[[d]][index_model_select[[d]]]
+  }
+
+
   # tabulate variables per appearance in selected models
   table_variable <- table(unlist(var_mat_select_list))
   variable_index <- as.numeric(rownames(table_variable))
@@ -90,6 +96,7 @@
   # return out
   out <- structure(list(
     model_select = var_mat_select_list,
+    cv_selected_model = cv_selected_model,
     n_models_selected = n_models_selected,
     variable_table = table_variable,
     variable_table_prop = table_prop,
