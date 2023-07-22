@@ -19,7 +19,7 @@ code:
 ## if not installed
 ## install.packages("remotes")
 
-remotes::install_github("SMAC-Group/SWAG-R-Package")
+remotes::install_github("SMAC-Group/swag")
 
 library(swag) #load the new package
 ```
