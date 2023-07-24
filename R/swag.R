@@ -98,7 +98,6 @@ swag <- function(x,
                  metric = NULL,
                  ...){
 
-
   # Existence of arguments for `caret::train()`
   # with default values
   args_caret <- list(...)
@@ -137,12 +136,12 @@ swag <- function(x,
   if(missing(y)) stop("Please provide a response vector `y`")
 
   # Check missing observations (not supported currently)
-  if(sum(is.na(y)) > 0 || sum(is.na(x)) > 0){    stop("Please provide data without missing values")}
+  # removed so we can provide dataset with NA
+  # if(sum(is.na(y)) > 0 || sum(is.na(x)) > 0){    stop("Please provide data without missing values")}
 
   # transform y to factor if class task
   if(procedure == "class"){
     if(!is.factor(y)) y <- as.factor(y)
-
   }
 
   # verify y is binary
@@ -165,8 +164,6 @@ swag <- function(x,
 
   # define swag control if auto
   if(isTRUE(auto_control)) control <- auto_swagControl(x = x,y = y, control = control, procedure = procedure)
-
-
 
   # Add `y` to the list of arguments
   args_caret$y <- y
@@ -214,16 +211,28 @@ swag <- function(x,
     cv_errors <- rep(NA,ncol(var_mat))
     for(i in seq_len(ncol(var_mat))){
 
+
+
+      # merge x and y and remove rows with NA at this step
+      df_sub = suppressMessages(dplyr::bind_cols(y, x[,var_mat[,i]]))
+      df_sub_2 = as.data.frame(na.omit(df_sub))
+      # assign column
+      colnames(df_sub_2) = c("y", colnames(x)[var_mat[,i]])
+
+
+      # reasign x and y to arg caret
+      args_caret$x = df_sub_2 %>% select(-y)
+      args_caret$y = df_sub_2%>% pull(1)
+
+
       # select the variable
-      args_caret$x <- as.data.frame(x[,var_mat[,i]])
+      # args_caret$x <- as.data.frame(x[,var_mat[,i]])
 
       # learner
       set.seed(graine[1]+i)
       learn <- do.call(train,args_caret)
 
       # save performance of best model
-
-
       if(procedure == "reg"){
         cv_errors[i] <- min(learn$results$RMSE)
 
