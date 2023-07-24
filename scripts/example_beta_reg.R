@@ -146,6 +146,4 @@ train_swag_betareg <- swag(
   method = betaregression,
 )
 
-
-
-
+train_swag_betareg
