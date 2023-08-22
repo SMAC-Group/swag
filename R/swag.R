@@ -84,6 +84,7 @@ model_combination <- function(
 #' @importFrom caret trainControl
 #' @importFrom stats quantile
 #' @importFrom Rdpack reprompt
+#' @importFrom dplyr select pull
 #' @import lattice
 #' @import caret
 #' @references
@@ -137,7 +138,7 @@ swag <- function(x,
 
   # Check missing observations (not supported currently)
   # removed so we can provide dataset with NA
-  # if(sum(is.na(y)) > 0 || sum(is.na(x)) > 0){    stop("Please provide data without missing values")}
+  if(sum(is.na(y)) > 0 || sum(is.na(x)) > 0){    stop("Please provide data without missing values")}
 
   # transform y to factor if class task
   if(procedure == "class"){
@@ -212,21 +213,20 @@ swag <- function(x,
     for(i in seq_len(ncol(var_mat))){
 
 
-
-      # merge x and y and remove rows with NA at this step
-      df_sub = suppressMessages(dplyr::bind_cols(y, x[,var_mat[,i]]))
-      df_sub_2 = as.data.frame(na.omit(df_sub))
-      # assign column
-      colnames(df_sub_2) = c("y", colnames(x)[var_mat[,i]])
-
-
-      # reasign x and y to arg caret
-      args_caret$x = df_sub_2 %>% select(-y)
-      args_caret$y = df_sub_2%>% pull(1)
-
+      # this was done to potentially includes dataset with NA
+      # # merge x and y and remove rows with NA at this step
+      # df_sub = suppressMessages(dplyr::bind_cols(y, x[,var_mat[,i]]))
+      # df_sub_2 = as.data.frame(na.omit(df_sub))
+      # # assign column
+      # colnames(df_sub_2) = c("y", colnames(x)[var_mat[,i]])
+      #
+      #
+      # # reasign x and y to arg caret
+      # args_caret$x = df_sub_2 %>% dplyr::select(-y)
+      # args_caret$y = df_sub_2%>% dplyr::pull(1)
 
       # select the variable
-      # args_caret$x <- as.data.frame(x[,var_mat[,i]])
+      args_caret$x <- as.data.frame(x[,var_mat[,i]])
 
       # learner
       set.seed(graine[1]+i)

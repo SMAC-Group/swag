@@ -28,7 +28,8 @@ Imports:
   caret,
   lattice,
   Rdpack (>= 0.7),
-  stats
+  stats,
+  dplyr
 Suggests:
   doParallel,
   e1071,

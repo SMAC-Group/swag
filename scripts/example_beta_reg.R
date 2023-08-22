@@ -146,4 +146,6 @@ train_swag_betareg <- swag(
   method = betaregression,
 )
 
+train_swag_betareg$CVs
+train_swag_betareg$VarMat
 train_swag_betareg
